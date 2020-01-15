@@ -1,0 +1,110 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      py:strip="">
+<head py:match="head" py:attrs="select('@*')">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="${response.charset}" />
+  <title py:if="False">Your generic title goes here</title>
+  <link rel="stylesheet" type="text/css" media="screen" href="${tg.url('/css/bootstrap.min.css')}" />
+  <link rel="stylesheet" type="text/css" media="screen" href="${tg.url('/css/style.css')}" />
+  <link rel="stylesheet" type="text/css" media="screen" href="//cdnjs.cloudflare.com/ajax/libs/codemirror/5.9.0/codemirror.min.css"/>
+  <link rel="stylesheet" type="text/css" media="screen" href="  https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.2/toastr.min.css"/>
+  <script src="//code.jquery.com/jquery.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/5.9.0/codemirror.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/5.9.0/mode/sql/sql.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/5.9.0/addon/hint/sql-hint.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/5.9.0/mode/javascript/javascript.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/5.9.0/addon/hint/javascript-hint.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.2/toastr.min.js"></script>
+  <meta py:replace="select('*')"/>
+</head>
+
+<body py:match="body" py:attrs="select('@*')">
+  <!-- Navbar -->
+  <nav class="navbar navbar-default">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-content">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="${tg.url('/')}">
+                MOLEPAW
+            </a>
+        </div>
+
+        <div class="collapse navbar-collapse" id="navbar-content">
+                <ul class="nav navbar-nav">
+                  <!--
+                    <li py:if="request.identity" class="dropdown">
+                        <a href="${tg.url('/dashboard')}" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Dashboard</a>
+                        <ul class="dropdown-menu">
+                            <py:for each="dashboard in h.dashboards()">
+                            <li><a href="${tg.url('/dashboard?id=' + str(dashboard.uid))}">${dashboard.name}</a></li>
+                            </py:for>
+                            <li role="separator" class="divider"></li>
+                            <li><a href="${tg.url('/dashboard/new')}" onclick="return confirm('create a new dashboard?');">Create dashboard</a></li>
+                        </ul>
+                    </li> -->
+                    <li py:if="request.identity">
+                        <a href="${tg.url('/extractions')}">Extractions</a>
+                    </li>
+                    <li py:if="request.identity and 'admin' in request.identity['groups']">
+                        <a href="${tg.url('/datasets')}">Datasets</a>
+                    </li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li py:if="not request.identity">
+                        <a href="${tg.url('/login')}">Login</a>
+                    </li>
+                    <li py:if="request.identity">
+                        <a href="${tg.url('/logout_handler')}">Logout</a>
+                    </li>
+                    <li py:if="request.identity and 'admin' in request.identity['groups']">
+                        <a href="${tg.url('/admin')}">Admin</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+  <div class="container">
+    <!-- Flash messages -->
+    <py:with vars="flash=tg.flash_obj.render('flash', use_js=False)">
+      <div class="row">
+        <div class="col-md-8 col-md-offset-2">
+          <div py:if="flash" py:replace="Markup(flash)" />
+        </div>
+      </div>
+    </py:with>
+
+    <!-- Main included content -->
+    <div py:replace="select('*|text()')"/>
+  </div>
+
+
+  <!-- Footer -->
+  <footer class="footer hidden-xs hidden-sm">
+    <p>Copyright &copy; AXANT ${h.current_year()}</p>
+  </footer>
+
+  <script src="${tg.url('/javascript/bootstrap.min.js')}"></script>
+  <script>
+    $('.codetextarea-sql').each(function(idx, e) {
+      CodeMirror.fromTextArea(e, {
+        lineNumbers: true,
+        mode: "text/x-mysql"
+      });
+    });
+    $('.codetextarea-js').each(function(idx, e) {
+      CodeMirror.fromTextArea(e, {
+        lineNumbers: true,
+        mode: "text/javascript"
+      });
+    });
+  </script>
+</body>
+</html>

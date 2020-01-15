@@ -1,0 +1,12 @@
+<div onclick="window.location.href = '/extractions/view/${extraction.uid}'">
+  <h4 class="panel-title">${extraction.name}</h4>
+  <div py:if="visualization_type in ('pie', 'line', 'histogram')">${h.show_graph(visualization)}</div>
+  <div py:if="visualization_type == 'average'" class="visualization-number">
+        <h1>${'{0:.2f}'.format(visualization)}</h1>
+        <h4>${visualization_type} of ${axis[0]}</h4>
+  </div>
+  <div py:if="visualization_type == 'sum'" class="visualization-number">
+        <h1>${visualization}</h1>
+        <h4>${visualization_type} of ${axis[0]}</h4>
+  </div>
+</div>

@@ -1,0 +1,107 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html py:extends="master.xhtml" py:strip="True">
+<head py:block="head" py:strip="True">
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" py:replace="''"/>
+  <title>Query</title>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/jets/0.5.0/jets.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.24.6/js/jquery.tablesorter.combined.min.js"></script>
+  <style>
+    h1 {
+      margin-bottom: 20px;
+    }
+
+      .tablesorter-header {
+        cursor: pointer;
+      }
+
+    .tablesorter-header {
+      cursor: pointer;
+    }
+
+    .tablesorter-headerAsc .tablesorter-header-inner:after {
+      font-size: 12px;
+      content: "\e113";
+      position: relative;
+      top: 1px;
+      display: inline-block;
+      font-family: 'Glyphicons Halflings';
+      font-style: normal;
+      font-weight: 400;
+      line-height: 1;
+      -webkit-font-smoothing: antialiased;
+
+    }
+
+    .tablesorter-headerDesc .tablesorter-header-inner:after {
+      font-size: 12px;
+      content: "\e114";
+      position: relative;
+      top: 1px;
+      display: inline-block;
+      font-family: 'Glyphicons Halflings';
+      font-style: normal;
+      font-weight: 400;
+      line-height: 1;
+      -webkit-font-smoothing: antialiased;
+    }
+  </style>
+</head>
+
+<body py:block="body" py:strip="True">
+  <div class="row">
+    <div class="col-md-12">
+      <h1>${dataset.name}</h1>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-8">
+      <h3><span id="results-count">${count}</span> Results</h3>
+    </div>
+    <div class="col-md-4">
+      <a class="btn btn-default pull-right"
+         href="${tg.url('/datasets/view.csv', params=dict(dataset=dataset.uid))}">Export</a>
+      <div class="col-md-8 pull-right">
+        <input class="form-control" type="search" id="searchBox" placeholder="Search..."/>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-12 table-responsive">
+      <table class="tablesorter table table-striped">
+        <thead>
+          <tr>
+            <th py:for="col in columns">
+              ${col}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr py:for="row in results">
+            <td py:for="col in row[1:]">
+              ${col.decode('utf-8', "replace") if isinstance(col, str) and py2 else col}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+  </div>
+  <script type="text/javascript">
+//<![CDATA[
+    jQuery.tablesorter.getParserById('time').is = function() { return false; }
+    jQuery(".table").tablesorter({'dateformat': 'yyyy-mm-dd HH:mm:ss.SSS'});
+    var tagsJets = new Jets({
+      searchTag: '#searchBox',
+      contentTag: '.table > tbody',
+      didSearch: function(term) {
+        var count = $('.table > tbody > tr:visible').length;
+        if (count != ${count})
+          count = count + ' / ${count}';
+        $('#results-count').text(count);
+      }
+    });
+//]]>
+  </script>
+</body>
+</html>

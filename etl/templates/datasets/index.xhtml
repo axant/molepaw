@@ -1,0 +1,29 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html py:extends="master.xhtml" py:strip="True">
+
+<head  py:block="head" py:strip="True">
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" py:replace="''"/>
+  <title>Current Queries - ETL Manager</title>
+</head>
+
+<body py:block="body" py:strip="True">
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr py:for="dataset in datasets">
+        <td>${dataset.name}</td>
+        <td>
+          <a class="btn btn-primary"
+             href="${tg.url(['/datasets/view', str(dataset.uid)])}">VIEW</a>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</body>
+</html>

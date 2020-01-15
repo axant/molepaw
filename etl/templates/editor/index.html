@@ -1,0 +1,707 @@
+  <html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude">
+
+<xi:include href="layout.html"/>
+
+<head>
+    <title>Extraction Editor</title>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/ractive/0.7.3/ractive.min.js"></script>
+    <script src="${tg.url('/javascript/ractive-transitions-slide.min.js')}"></script>
+    <script src="${tg.url('/javascript/axw-req.js')}"></script>
+    <style>
+        /*<![CDATA[*/
+        #datasets {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 5px 10px;
+        }
+
+        .dataset-card {
+            border: 1px solid #ccc;
+            padding: 5px;
+            margin: 5px;
+            text-align: center;
+            min-height: 100px;
+            width: 100%;
+        }
+
+        .dataset-card-new {
+            opacity: 0.7;
+        }
+
+        .dataset-card-new > .btn {
+            display: block;
+        }
+
+        .dataset-card.btn > .glyphicon {
+            font-size: 22px;
+            line-height: 88px;
+        }
+
+        .stepbox {
+            margin-top: 25px;
+        }
+
+        .steparrow {
+            top: -10px;
+            width: 26px;
+            font-size: 26px;
+            margin: auto;
+            display: block;
+            color: #bf3e11;
+        }
+
+        .step {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 5px 10px;
+            min-height: 90px;
+        }
+
+        .step.disabled {
+            opacity: 0.4;
+        }
+
+        .error {
+            font-size: 12px;
+        }
+
+        .glyphicon-remove {
+            color: #880000;
+        }
+
+        .docstring {
+            white-space: pre;
+            word-break: break-all;
+            word-wrap: break-word;
+        }
+
+        .step h3 {
+            margin-top: 5px;
+        }
+
+        .step h3 .glyphicon {
+            font-size: 14px;
+        }
+
+        .step-doc {
+            color: #888;
+        }
+
+        .addstep a {
+            font-size: 22px;
+            display: block;
+        }
+
+        .step-actions span {
+            cursor: pointer;
+        }
+
+        .step-actions span:hover {
+            font-size: 16px;
+        }
+
+        .save ~ .step-actions .arrow-action,
+        .save ~ .step-actions .view-action{
+            display: none;
+        }
+
+        /*]]>*/
+    </style>
+</head>
+
+<body>
+<div class="row">
+    <div class="col-md-12">
+        <h1 class="page-title">Editing ${extraction.name}</h1>
+    </div>
+</div>
+<div class="row row-with-padding" id="visualization">
+
+    <script type="text/html" id="ExtractionVisualization_template">
+        <div class="col-lg-3">
+            <div class="pull-left" style="line-height: 39px">Visualization: &nbsp;  &nbsp;</div>
+            <select value="{{visualization.type}}"  class="form-control visualization">
+                <option py:for="v_type in visualization_types" value="${v_type[0]}">
+                        ${v_type[1]}
+                </option>
+            </select>
+
+        </div>
+        <div class="col-lg-2">
+              {{#if showAxis}}
+            <div class="form-group {{hasError}}">
+            <input class="form-control" type="text" placeholder="x,y,y,y" name="axis" value="{{visualization.axis}}" style="border-color: {{hasError.color}}"/>
+                {{#if hasError.error}}
+                 <span class="help-block" style="color: {{hasError.color}};">{{hasError.message}}</span>
+                {{/if}}
+                </div>
+             {{/if}}
+        </div>
+
+        <div class="col-lg-4">
+             {{#if disabled}}
+              <button class="btn btn-success" disabled="true">Save Visualization</button>
+            {{else}}
+              <button class="btn btn-success" on-click="saveVisualization()">Save Visualization</button>
+
+            {{/if}}
+        </div>
+    </script>
+</div>
+<div class="row row-with-padding">
+    <form action="${tg.url(['/editor', str(extraction.uid), 'save_category'])}">
+        <div class="col-lg-3">
+            <div class="pull-left" style="line-height: 39px">Category: &nbsp;  &nbsp;</div>
+            <select id="category" name="category" class="form-control visualization">
+                <option value="-1">No Category</option>
+
+                <py:for each="cat in category_list">
+                    <option py:if="cat._id==extraction.category_id" value="${cat._id}" selected="true">${cat.name}</option>
+                    <option py:if="not cat._id==extraction.category_id" value="${cat._id}">${cat.name}</option>
+                </py:for>
+
+            </select>
+        </div>
+        <div class="col-lg-4">
+            <button type="submit" class="btn btn-success">Save Category</button>
+        </div>
+    </form>
+</div>
+<div class="row" id="datasets">
+    <script type="text/html" id="DataSetsEditor_template">
+        {{#each datasets}}
+          <div class="col-md-{{getCols()}}">
+              <div class="dataset-card" on-click="editDataset(.)">
+                  {{#if .uid !== editingdataset.uid}}
+                    <h2>{{.name}}</h2>
+                    {{#if .join_self_col}}
+                      <div><strong>{{.join_type}}</strong> join on <em>{{.join_self_col}}</em> = {{.join_other_col}}</div>
+                    {{/if}}
+                  {{else}}
+                    <select value="{{.datasetid}}" class="form-control">
+                      {{#each available_datasets}}
+                        <option value="{{.[0]}}" id="{{#if .[1] === editingdataset.name}}editingdatset-dataset-selected{{/if}}">
+                          {{.[1]}}
+                        </option>
+                      {{/each}}
+                    </select>
+                    {{#if notEditingFirstDataset()}}
+                      <select value="{{editingdataset.join_self_col}}" class="form-control">
+                        {{#each datasets_columns[editingdataset.datasetid]}}
+                          <option value="{{.}}" id="{{#if . === editingdataset.join_self_col}}editingdataset-join_self_col-selected{{/if}}">{{.}}</option>
+                        {{/each}}
+                      </select>
+                      <select value="{{editingdataset.join_type}}" class="form-control">
+                          <option value="left" id="{{#if 'left' === editingdataset.join_type}}editingdataset-join_type-selected{{/if}}">Left Join</option>
+                          <option value="inner" id="{{#if 'inner' === editingdataset.join_type}}editingdataset-join_type-selected{{/if}}">Inner Join</option>
+                          <option value="right" id="{{#if 'right' === editingdataset.join_type}}editingdataset-join_type-selected{{/if}}">Right Join</option>
+                          <option value="outer" id="{{#if 'outer' === editingdataset.join_type}}editingdataset-join_type-selected{{/if}}">Outer Join</option>
+                      </select>
+                      <select value="{{editingdataset.join_other_col}}" class="form-control">
+                          {{#each sampledata.columns}}
+                          <option value="{{.}}" id="{{#if editingdataset.join_other_col === .}}editingdataset-join_other_col-selected{{/if}}">{{.}}</option>
+                          {{/each}}
+                      </select>
+                      {{/if}}
+                      <br/>
+                      <a class="btn btn-success" on-click="modifyDataset()" title="save">
+                          <span class="glyphicon glyphicon-floppy-disk"></span>
+                      </a>
+                      <!-- ractive seems broken, maybe we should update it, disabling dismiss, just save
+                      <a class="btn btn-danger" on-click="dismissEdit()" title="dismiss">
+                        <span class="glyphicon glyphicon-remove"></span>
+                      </a> -->
+                      <a class="btn btn-danger" on-click="deleteDataset(.)" title="delete">
+                        <span class="glyphicon glyphicon-trash"></span>
+                      </a>
+                    {{/if}}
+              </div>
+          </div>
+        {{/each}}
+        <div class="col-md-{{getCols()}}">
+            {{#if addingdataset}}
+            <div class="dataset-card dataset-card-new">
+                <h2>Add a DataSet</h2>
+                <select value="{{newdataset.datasetid}}" class="form-control">
+                    <option py:for="datasetid, datasetname in available_datasets"
+                            value="${datasetid}">${datasetname}</option>
+                </select>
+                {{#if hasAtLeastOneDataset()}}
+                <select value="{{newdataset.join_self_col}}" class="form-control">
+                    {{#each datasets_columns[newdataset.datasetid]}}
+                    <option value="{{.}}">{{.}}</option>
+                    {{/each}}
+                </select>
+                <select value="{{newdataset.join_type}}" class="form-control">
+                    <option value="left">Left Join</option>
+                    <option value="inner">Inner Join</option>
+                    <option value="right">Right Join</option>
+                    <option value="outer">Outer Join</option>
+                </select>
+                <select value="{{newdataset.join_other_col}}" class="form-control">
+                    {{#each sampledata.columns}}
+                    <option value="{{.}}">{{.}}</option>
+                    {{/each}}
+                </select>
+                {{/if}}
+                <br/>
+                <a class="btn btn-success" on-click="addDataSet()">
+                    <span class="glyphicon glyphicon-plus"></span>
+                </a>
+            </div>
+            {{else}}
+            <div class="dataset-card btn btn-success" on-click="set('addingdataset', true)">
+                <span class="glyphicon glyphicon-plus"></span>
+            </div>
+            {{/if}}
+        </div>
+        <div class="col-md-12 table-responsive">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>IDX</th>
+                    {{#each sampledata.columns}}
+                    <th>{{.}}</th>
+                    {{/each}}
+                </tr>
+                </thead>
+                <tbody>
+                {{#each sampledata.data}}
+                <tr>
+                    {{#each .}}
+                    <td>{{.}}</td>
+                    {{/each}}
+                </tr>
+                {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </script>
+</div>
+<div class="row" id="steps">
+    <script type="text/html" id="StepsEditor_template">
+        {{#each steps:stepidx}}
+
+        <div class="col-md-12 stepbox" intro-outro='slide'>
+            <span class="steparrow glyphicon glyphicon-chevron-down"></span>
+            <div class="step row {{.enabled ? '' : 'disabled'}}">
+                <div class="col-xs-6">
+                    {{#if .editing}}
+                    <select value="{{.function}}" class="form-control"
+                            on-blur="set('steps.'+stepidx+'.editing', false)">
+                        <option py:for="steptype in stepsformfields" value="${steptype}">${steptype}</option>
+                    </select>
+                    {{else}}
+                    <h3>
+                        {{#if .modified}}
+                        <span on-click="saveStep(.)" class="glyphicon save glyphicon-floppy-save"></span>
+                        {{/if}}
+                        <span on-click="set('steps.'+stepidx+'.editing', true)">{{.function}}</span>
+
+                        <div class="step-actions pull-right">
+                            {{#if .enabled}}
+                            <span on-click="toggleStep(., false)" class="glyphicon glyphicon-eye-close view-action"></span>
+                            {{else}}
+                            <span on-click="toggleStep(., true)" class="glyphicon glyphicon-eye-open"></span>
+                            {{/if}}
+                            <span on-click="raiseStep(.)" class="glyphicon glyphicon-arrow-up arrow-action"></span>
+                            <span on-click="lowerStep(.)" class="glyphicon glyphicon-arrow-down arrow-action"></span>
+                            &nbsp;
+                            <span on-click="deleteStep(.)" class="glyphicon glyphicon-remove"></span>
+                        </div>
+                    </h3>
+                    {{/if}}
+                    <div class="step-doc">
+                        <em class="docstring" value="{{steps[stepidx].function}}">
+                          {{#if .function_doc}}
+                            {{.function_doc}}
+                          {{else}}
+                            {{docstring[steps[stepidx].function]}}
+                          {{/if}}
+                        </em>
+                    </div>
+                    <div class="step-form">
+                        {{${Markup('>')}.function}}
+                    </div>
+                </div>
+                <div class="col-xs-6 table-responsive">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>IDX</th>
+                            {{#each testrun[stepidx].columns}}
+                            <th>{{.}}</th>
+                            {{/each}}
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {{#each testrun[stepidx].data}}
+                        <tr>
+                            {{#each .}}
+                            <td>{{.}}</td>
+                            {{/each}}
+                        </tr>
+                        {{/each}}
+                        </tbody>
+                    </table>
+                    {{#if testrun[stepidx].errors}}
+                    <div class="error">
+                        <pre class="alert alert-danger">{{testrun[stepidx].errors}}</pre>
+                    </div>
+                    {{/if}}
+                </div>
+            </div>
+        </div>
+        {{/each}}
+        <div class="col-md-12 stepbox">
+            <span class="steparrow glyphicon glyphicon-chevron-down"></span>
+            <div class="row addstep">
+                <div class="col-xs-offset-5 col-xs-2">
+                    <a class="btn btn-success" on-click="addStep()">
+                        <span class="glyphicon glyphicon-plus"></span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <py:for each="fname, ffields in stepsformfields.items()">
+
+            {{#partial ${fname}}}
+            <div class="form-horizontal">
+                <div class="form-group" py:for="field in ffields">
+                    <label for="${field.id}" class="col-sm-3 control-label">${field.label}</label>
+                    <div class="col-sm-9">${field.display(css_class='form-control')}</div>
+                </div>
+            </div>
+            {{/partial}}
+        </py:for>
+    </script>
+</div>
+<script>
+    //<![CDATA[
+    var DataSetsEditor = Ractive.extend({
+        template: '#DataSetsEditor_template',
+        data: {
+            datasets_columns: ${h.script_json_encode(datasets_columns)},
+            available_datasets: ${h.script_json_encode(available_datasets)},
+            getCols: function () {
+                var datasets_count = 0;
+                var datasets = this.get('datasets');
+                if (datasets)
+                    datasets_count = datasets.length;
+                return Math.max(3, Math.round(12 / (datasets_count + 1)));
+            },
+            hasAtLeastOneDataset: function () {
+                var datasets = this.get('datasets');
+                if (datasets)
+                    return datasets.length >= 1;
+                return false;
+            },
+            notEditingFirstDataset: function () {
+                var datasets = this.get('datasets');
+                var editingdataset = this.get('editingdataset')
+                return datasets[0].uid !== editingdataset.uid
+            }
+        },
+        oninit: function () {
+            var self = this;
+            self.updateDataSets();
+        },
+        updateDataSets: function () {
+            var self = this;
+            $.get("${tg.url(['/editor', str(extraction.uid), 'datasets'])}", function (res) {
+                self.set('datasets', res.datasets);
+                self.set('sampledata', res.sampledata);
+            });
+        },
+        addDataSet: function () {
+            var self = this;
+            AXW.Requests.POST(
+                    "${tg.url(['/editor', str(extraction.uid), 'datasets'])}",
+                    self.get('newdataset')
+            ).done(function (response) {
+                toastr.info("Successfully added dataset");
+                self.set('addingdataset', false);
+                self.set('newdataset', {});
+                self.updateDataSets();
+            }).fail(function (response) {
+                toastr.error("Failed to add dataset: " + JSON.stringify(response.responseJSON.errors));
+            });
+        },
+        dismissEdit: function() {
+          this.set({'editingdataset': false, 'addingdataset': false});
+          this.updateDataSets();
+        },
+        editDataset: function(dataset) {
+          var self = this;
+          self.set({'editingdataset': dataset, 'addingdataset': false})
+          var dataset = document.getElementById('editingdatset-dataset-selected');
+          if (dataset) dataset.selected = 'selected';
+          var join_self_col = document.getElementById('editingdataset-join_self_col-selected');
+          if (join_self_col) join_self_col.selected = 'selected';
+          var join_type = document.getElementById('editingdataset-join_type-selected');
+          if (join_type) join_type.selected = 'selected';
+          var join_other_col = document.getElementById('editingdataset-join_other_col-selected')
+          if (join_other_col) join_other_col.selected = 'selected';
+        },
+        modifyDataset: function () {
+            var self = this;
+            AXW.Requests.PUT(
+              "${tg.url(['/editor', str(extraction.uid), 'datasets'])}",
+              self.get('editingdataset'),
+            ).done(function (response) {
+              toastr.info('dataset updated');
+              self.set('editingdataset', false);
+              self.updateDataSets();
+            }).fail(function (response) {
+              toastr.error("failed to modify dataset: " + JSON.stringify(response.responseJSON.errors));
+            })
+        },
+        deleteDataset: function (dataset) {
+          var self = this;
+          if (confirm("Really delete this dataset?")) {
+            $.ajax({
+              url: "${tg.url(['/editor', str(extraction.uid), 'datasets'])}" + '/' + dataset.uid,
+              type: 'DELETE',
+            }).done(function (response) {
+              toastr.info('dataset deleted');
+              self.updateDataSets();
+            }).fail(function (response) {
+              toastr.error("failed to delete dataset: " + JSON.stringify(response.responseJSON.errors));
+            })
+          }
+        }
+    });
+
+    var StepsEditor = Ractive.extend({
+        template: '#StepsEditor_template',
+        data: {docstring: JSON.parse('${docstring}')},
+        oninit: function () {
+            var self = this;
+            self.updateSteps();
+            self.observe('steps.*.function', function (newValue, oldValue, keypath) {
+                if (self.get('loaded') === true) {
+                    var stepkeypath = keypath.substring(0, keypath.lastIndexOf('.'));
+                    self.set(stepkeypath + '.modified', true);
+                }
+            });
+            self.observe('steps.*.options', function (newValue, oldValue, keypath) {
+                if (self.get('loaded') === true) {
+                    var stepkeypath = keypath.substring(0, keypath.lastIndexOf('.'));
+                    self.set(stepkeypath + '.modified', true);
+                }
+            });
+        },
+        updateSteps: function () {
+            var self = this;
+            self.set('loaded', false);
+            $.get("${tg.url(['/editor', str(extraction.uid), 'steps'])}", function (res) {
+                self.set('steps', res.steps);
+                self.set('loaded', true);
+		    self.set('steps_legth_at_last_update', self.get('steps').length);
+            });
+            $.get("${tg.url(['/editor', str(extraction.uid), 'test_pipeline'])}", function (res) {
+                self.set('testrun', res.results);
+            });
+        },
+        checkSaved: function () {
+            console.log("OOOOOOOOOOOOLA")
+            console.log(this)
+            var self = this;
+            return self.get('steps_legth_at_last_update') == self.get('steps').length;
+        },
+        addStep: function () {
+            var self = this;
+            var priority = 0;
+            if (self.get('steps').length)
+                priority = self.get('steps')[self.get('steps').length - 1].priority + 1;
+            self.push('steps', {
+                'function': 'slice',
+                'editing': true,
+                'priority': priority,
+                'enabled': true
+            });
+        },
+        performAction: function (step, action, promise) {
+            var self = this;
+            promise.done(function (response) {
+                toastr.info("Successfully " + action + " step");
+                step.modified = false;
+                self.updateSteps();
+            }).fail(function (response) {
+		var step_error = response.responseJSON.errors || response.responseJSON.detail
+                toastr.error("Failed to " + action + " step: " + JSON.stringify(step_error));
+            });
+            self.observe('self',function (newValue, oldValue, keypath) {
+              extractionvisualization.saveVisualization();
+            });
+        },
+        toggleStep: function (step, status) {
+            var self = this;
+	        if (!self.checkSaved()) return;
+            self.performAction(
+                    step,
+                    "update",
+                    AXW.Requests.POST(
+                            "${tg.url(['/editor', str(extraction.uid), 'steps', 'toggle'])}",
+                            $.extend({}, step, {'enabled': status})
+                    )
+            );
+
+
+        },
+        raiseStep: function (step, status) {
+            var self = this;
+	    if (!self.checkSaved()) return;
+            self.performAction(
+                    step,
+                    "update",
+                    AXW.Requests.PUT(
+                            "${tg.url(['/editor', str(extraction.uid), 'steps'])}",
+                            {uid: step.uid, priority: step.priority - 1}
+                    )
+            );
+        },
+        lowerStep: function (step, status) {
+            var self = this;
+	    if (!self.checkSaved()) return;
+            self.performAction(
+                    step,
+                    "update",
+                    AXW.Requests.PUT(
+                            "${tg.url(['/editor', str(extraction.uid), 'steps'])}",
+                            {uid: step.uid, priority: step.priority + 1}
+                    )
+            );
+        },
+        deleteStep: function (step) {
+            var self = this;
+	    if (!self.checkSaved() && step.modified) self.updateSteps();
+	    if (!self.checkSaved()) return;
+            if (confirm("Really delete this step?")) {
+                self.performAction(
+                        step,
+                        "delete",
+                        AXW.Requests.DELETE(
+                                "${tg.url(['/editor', str(extraction.uid), 'steps'])}/" + step.uid
+                        )
+                );
+            }
+        },
+        saveStep: function (step) {
+            var self = this;
+            if (step.uid !== undefined) {
+                self.performAction(
+                        step,
+                        "update",
+                        AXW.Requests.PUT(
+                                "${tg.url(['/editor', str(extraction.uid), 'steps'])}",
+                                step
+                        )
+                );
+            }
+            else {
+                self.performAction(
+                        step,
+                        "create",
+                        AXW.Requests.POST(
+                                "${tg.url(['/editor', str(extraction.uid), 'steps'])}",
+                                step
+                        )
+                );
+            }
+        }
+    });
+    var ExtractionVisualization = Ractive.extend({
+        template: '#ExtractionVisualization_template',
+        data: function () {
+    return {
+       showAxis: false,
+            disabled: true,
+            hasError: {
+              error: false,
+              message: "",
+              color: ""
+            },
+            visualization: {type: "${extraction.visualization}",
+                            original:  "${extraction.visualization}",
+                            axis: "${extraction.graph_axis}",
+                            original_axis: "${extraction.graph_axis}"}
+    };
+  },
+        oninit: function () {
+            var self=this;
+            self.observe('visualization.type', function (newValue, oldValue) {
+                if(newValue !== "table"){
+                    self.set("showAxis", true);
+                }else{
+                     self.set("showAxis", false);
+                }
+
+                if(newValue===self.get('visualization.original') && self.get('visualization.axis')===self.get('visualization.original_axis') ){
+                    self.set('disabled', true);
+                    self.set('hasError.error', false);
+                }
+                else {
+                    self.set('disabled', false);
+                }
+        });
+
+            self.observe('visualization.axis', function (newValue, oldValue) {
+               if(newValue===self.get('visualization.original_axis') && self.get("visualization.type")===self.get("visualization.original")){
+                    self.set('disabled', true);
+                    self.set('hasError.error', false);
+                }
+                else {
+                    self.set('disabled', false);
+                }
+        });
+
+        },
+        saveVisualization: function () {
+            let self=this;
+            let re = ".+,.+";
+            if(self.get("visualization.type")!== "table" && (self.get("visualization.axis")==="" ||
+                                                                self.get("visualization.axis").match(re)===null))
+            {
+              self.set("hasError.error", true);
+              self.set("hasError.message", "Please insert at least two valid columns name (x, y axis).");
+              self.set("hasError.color", "red");
+
+            }
+            else {
+                let data= {visualization: self.get('visualization'), extraction: "${extraction.uid}"};
+                $.ajax({
+                url: "${tg.url(['/editor', str(extraction.uid)])}",
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                type: 'POST',
+                success: function (data, textStatus, jqXHR) {
+                    self.set("visualization.original", self.get("visualization.type"));
+                    self.set("visualization.original_axis", self.get("visualization.axis"));
+                    self.set("disabled", true);
+                    self.set("hasError.error", false);
+                    self.set("hasError.color", "");
+                    toastr.success("Successfully updated visualization");
+                },
+                error: function (xhr, ajaxOptions, thrownError){
+                  var error_msg = xhr.responseText.match("<strong>(.*)</strong>");
+                  self.set("hasError.error", true);
+                  self.set("hasError.message", error_msg[1]);
+                  self.set("hasError.color", "red");
+                }
+                });
+
+            }
+        }
+    });
+
+    var datasetseditor = new DataSetsEditor({el: '#datasets'});
+    var stepseditor = new StepsEditor({el: "#steps"});
+    var extractionvisualization = new ExtractionVisualization({el: '#visualization'});
+
+    //]]>
+</script>
+</body>
+</html>

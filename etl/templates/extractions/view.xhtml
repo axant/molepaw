@@ -1,0 +1,380 @@
+<html py:extends="master.xhtml" py:strip="True">
+
+<head py:block="head" py:strip="True">
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" py:replace="''"/>
+    <title>Query</title>
+    <link rel="stylesheet" href="http://cdn.pydata.org/bokeh/release/bokeh-1.0.4.min.css"/>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jets/0.5.0/jets.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.24.6/js/jquery.tablesorter.combined.min.js"></script>
+    <script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-1.0.4.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/ractive/0.7.3/ractive.min.js"></script>
+    <script src="${tg.url('/javascript/ractive-transitions-slide.min.js')}"></script>
+    <script src="${tg.url('/javascript/axw-req.js')}"></script>
+    <style>
+        /*<![CDATA[*/
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        h3 {
+            margin-top: 20px;
+            margin-bottom: 10px;
+            line-height: 36px;
+        }
+
+        .bk-plot-wrapper > * {
+            margin: auto;
+        }
+
+        .table td:first-child, .table th:first-child {
+            opacity: 0.5;
+        }
+
+        .tablesorter-header {
+            cursor: pointer;
+        }
+
+        .tablesorter-headerAsc .tablesorter-header-inner:after {
+            font-size: 12px;
+            content: "\e113";
+            position: relative;
+            top: 1px;
+            display: inline-block;
+            font-family: 'Glyphicons Halflings';
+            font-style: normal;
+            font-weight: 400;
+            line-height: 1;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .tablesorter-headerDesc .tablesorter-header-inner:after {
+            font-size: 12px;
+            content: "\e114";
+            position: relative;
+            top: 1px;
+            display: inline-block;
+            font-family: 'Glyphicons Halflings';
+            font-style: normal;
+            font-weight: 400;
+            line-height: 1;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        #filters-and-search{
+            margin: 25px -15px;
+        }
+
+        #filters-form {
+            margin-top: 35px;
+            margin-bottom: 35px;
+            display: none;
+        }
+
+        /*]]>*/
+    </style>
+     <script type="text/html" id="filters_template">
+         <![CDATA[
+         <div class="pull-left">
+             <a class="btn btn-success" on-click="toggle_form_new()" id="new-filter">New</a>
+             {{#if selected !== -1}}
+             <a class="btn btn-warning" on-click="toggle_form_edit()">Edit</a>
+             {{else}}
+             <button class="btn btn-warning" disabled="true">Edit</button>
+             {{/if}}
+         </div>
+         <div class="filters">
+             <ul class="pagination">
+                 {{#each e_filters}}
+
+                 <li {{#if selected == .uid}}class="active"{{/if}}><a href="${tg.url('/extractions/view/%s/{{.uid}}' % extraction.uid)}">
+                     {{.name}}
+                 </a></li>
+                 {{/each}}
+             </ul>
+         </div>
+
+
+             <div class="Cateol-md-12">
+                <form class="form-horizontal" id="filters-form">
+                    <div class="form-group {{errorName}}">
+                        <label for="name" class="col-sm-2 control-label">Name</label>
+                        <div class="col-sm-10">
+
+                     <input type="text" class="form-control" id="query" value="{{filter.name}}"
+                                   placeholder="Insert your filter name here"/>
+                               {{#if errorName}}
+                            <span class="help-block">Please insert a value.</span>
+                            {{/if}}
+                        </div>
+                    </div>
+                    <div class="form-group {{errorQuery}}">
+                        <label for="query" class="col-sm-2 control-label">Query</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="query" value="{{filter.query}}"
+                                   placeholder="e.g. first_name == 'Joe' and age > 18"/>
+                            {{#if errorQuery}}
+                            <span class="help-block">Please insert a value.</span>
+                            {{/if}}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                         <div class="col-sm-10 col-sm-offset-2">
+                              {{#if filter.default}}
+                                 <input id="default" type="checkbox" on-click="make_filter_default()" checked="on"/> Default
+                             {{else}}
+                                 <input id="default" type="checkbox" on-click="make_filter_default()"/> Default
+
+                             {{/if}}
+                         </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-offset-2 col-sm-10">
+                            <a on-click="save_filter()" class="btn btn-success">Save</a>
+                            {{#if edit_mode}}
+                             <a class="btn btn-danger" on-click="delete_filter()">Delete</a>
+                            {{/if}}
+                        </div>
+                    </div>
+                </form>
+
+            </div>
+                     ]]>
+        </script>
+    <script>
+         <![CDATA[
+
+
+        var Filters = Ractive.extend({
+            template: '#filters_template',
+            data: function () {
+                return {
+                    e_filters: ${Markup(h.script_json_encode(filters))},
+                        ${"selected:" + str(extraction_filter.uid) if extraction_filter else "selected: -1"}
+                };
+            },
+            oninit: function () {
+                var self=this;
+                if(self.get('e_filters').length === 0)
+                {
+                   self.set("default.disabled", true);
+                }
+                else {
+                    let index_of_selected;
+                    if(self.get("selected")===null){
+                        self.set("selected", self.get("e_filters")[0].uid);
+                        index_of_selected = 0;
+                    }else {
+                        index_of_selected = self.get_selected_index();
+                    }
+                    self.set("selected_index", index_of_selected);
+                }
+                self.unshift("e_filters", {name: "All", uid: -1});
+            },
+            get_selected_index: function(){
+              var self=this;
+              return self.get("e_filters").map(function(e) { return e.uid; }).indexOf(self.get("selected"));
+            },
+            save_filter: function () {
+                var self = this;
+                var valid = true;
+                console.log(self.get("filter"));
+                if (self.get("filter.name") === "") {
+                    self.set('errorName', 'has-error');
+                    valid = false;
+                } else {
+                    self.set('errorName', '');
+                }
+                if (self.get("filter.query") === "") {
+                    self.set('errorQuery', 'has-error');
+                    valid = false;
+                } else {
+                    self.set('errorQuery', '');
+                }
+                if (valid) {
+                    let data = {filter: self.get('filter'), extraction: "${extraction.uid}"};
+                    if(self.get("edit_mode")===false){
+                           $.ajax({
+                            url: "${tg.url(['/extractions/filter'])}",
+                            contentType: 'application/json',
+                            data: JSON.stringify(data),
+                            type: 'POST',
+                        }).done(function (result) {
+                            window.location.replace("${tg.url('/extractions/view/%s/' % extraction.uid)}" + result['filter']['uid']);
+                        }).fail(function () {
+
+                        });
+
+                        }
+                    else {
+                        $.ajax({
+                            url: "${tg.url(['/extractions/filter'])}",
+                            contentType: 'application/json',
+                            data: JSON.stringify(data),
+                            type: 'PUT',
+                        }).done(function (result) {
+                            window.location.replace("${tg.url('/extractions/view/%s/' % extraction.uid)}" + result['filter']['uid']);
+
+                        }).fail(function () {
+
+                        });
+
+                    }
+
+                }
+
+            },
+            toggle_form: function () {
+                var self = this;
+                self.set('errorName', '');
+                self.set('errorQuery', '');
+                $("#filters-form").slideToggle();
+            },
+            toggle_form_new: function() {
+                var self = this;
+                if(self.get("edit_mode")===false){
+                    self.set('filter', {name: '', query: '', uid: ''});
+                    self.toggle_form();
+                }
+                else {
+                    $("#filters-form").slideUp(function () {
+                        self.set('edit_mode', false);
+                      self.set('filter', {name: '', query: '', uid: ''});
+                    });
+                    $("#filters-form").slideDown();
+                }
+
+            },
+            toggle_form_edit: function() {
+                var self=this;
+                if(self.get("edit_mode")===true){
+                    self.set('filter', self.get('e_filters')[self.get_selected_index()]);
+                    console.log(self.get("e_filters"));
+                    self.toggle_form();
+                }
+                else {
+                    $("#filters-form").slideUp(function () {
+                        self.set('edit_mode', true);
+                        self.set('filter', self.get('e_filters')[self.get_selected_index()]);
+                    });
+                    $("#filters-form").slideDown();
+                }
+            },
+            delete_filter: function () {
+                var self = this;
+                var r = confirm("Are you sure you want to delete the selected filter?");
+                if (r === true) {
+                    window.location.href = "${tg.url('/extractions/filter/delete/')}" + self.get("selected")
+                }
+            },
+            make_filter_default: function () {
+                var self = this;
+                if(self.get("filter.default")===true){
+                     self.set("filter.default", false);
+                }
+                else {
+                     self.set("filter.default", true);
+                }
+
+                console.log(self.get("filter"));
+            }
+        });
+        ]]>
+    </script>
+</head>
+
+<body py:block="body" py:strip="True">
+  <div class="row">
+    <div class="col-md-8">
+      <h1>${extraction.name}${" - filtered by " + extraction_filter.name if extraction_filter else ""}</h1>
+    </div>
+     <div class="col-md-4">
+            <h3 class="pull-right"><span id="results-count">${count}</span> Results</h3>
+        </div>
+</div>
+<div class="row" id="graphs">
+    <div class="col-md-12">
+        <div id="histogram-visualization" py:if="'histogram' in visualizations">
+                ${h.show_graph(visualizations['histogram'])}
+        </div>
+        <div id="linechart-visualization" py:if="'linechart' in visualizations">
+                ${h.show_graph(visualizations['linechart'])}
+        </div>
+        <div id="pie-visualization" py:if="'pie' in visualizations">
+                ${h.show_graph(visualizations['pie'])}
+        </div>
+        <script>
+            function resize_graph() {
+                var graph_ids = Object.keys(Bokeh.index);
+                graph_ids.forEach(function (graph_id) {
+                    var graph = Bokeh.index[graph_id];
+                    graph.model.set('plot_width', $(graph.el).width() * 0.9);
+                });
+            }
+
+            $(window).resize(resize_graph);
+            $(window).load(resize_graph);
+        </script>
+    </div>
+</div>
+<div id="table-visualization" py:if="'table' in visualizations">
+        <div class="row" id="filters-and-search">
+            <div class="col-md-8" id="filters"></div>
+             <script>
+        var filters = new Filters({el: '#filters'});
+        console.log(filters);
+    </script>
+        <div class="col-md-4">
+            <a class="btn btn-default pull-right"
+               href="${tg.url('/extractions/view.csv', params=dict(extraction=extraction.uid))}">Export</a>
+            <div class="col-md-8 pull-right">
+                <input class="form-control" type="search" id="searchBox" placeholder="Search..."/>
+            </div>
+
+
+
+        </div>
+
+
+
+    </div>
+
+    <div class="row">
+        <div class="col-md-12 table-responsive">
+            <table class="tablesorter table table-striped">
+                <thead>
+                <tr>
+                    <th>IDX</th>
+                    <th py:for="col in columns">
+                            ${col}
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr py:for="row in results">
+                    <td py:for="col in row">
+                            ${col.decode('utf-8', 'replace') if isinstance(col, str) and py2 else col}
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script type="text/javascript">
+
+        jQuery(".table").tablesorter();
+        var tagsJets = new Jets({
+            searchTag: '#searchBox',
+            contentTag: '.table > tbody',
+            didSearch: function (term) {
+                var count = $('.table > tbody > tr:visible').length;
+                if (count != ${count})
+                    count = count + ' / ${count}';
+                $('#results-count').text(count);
+            }
+        });
+
+    </script>
+
+</div>
+</body>
+</html>

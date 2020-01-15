@@ -1,0 +1,15 @@
+
+<div style="width: 100%;">
+    <py:block name="body">
+      <h3>Error ${code}</h3>
+
+<?python
+import re
+mf = re.compile(r'(</?)script', re.IGNORECASE)
+def fixmessage(message):
+    return mf.sub(r'\1noscript', message)
+?>
+  <div style="max-width: 100%;">${Markup(fixmessage(message))}</div>
+    </py:block>
+</div>
+
