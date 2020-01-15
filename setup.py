@@ -49,7 +49,7 @@ install_requires = [
     "bokeh == 1.0.4",
     "tgext.evolve >= 0.0.5",
     "numexpr",
-    "requests == 2.8.1",
+    "requests == 2.20.0",
     "axf == 0.0.19",
     "kajiki == 0.7.2",
     "tgext.pluggable == 0.8.0",
