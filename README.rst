@@ -2,6 +2,8 @@ An easy and flexible tool to extract and mash up data from different sources and
 
 internally it's called just etl https://en.wikipedia.org/wiki/Extract,_transform,_load
 
+Molepaw is compatible with python2.7 and python3.6+
+
 Installation and Setup
 ======================
 
@@ -10,9 +12,9 @@ Clone the repository::
     $ git clone http://github.com/axant/molepaw.git
     $ cd molepaw
     
-Create a python2 virtualenv::
+Create a python virtualenv::
 
-    $ virtualenv -p python2 venv
+    $ virtualenv -p python3 venv
     $ source venv/bin/activate
     
 Install ``etl`` using the setup.py script::
@@ -33,11 +35,6 @@ While developing you may want the server to reload after changes in package file
 
 Then you are ready to go.
 For further informations: https://turbogears.readthedocs.io/en/latest/cookbook/contributing/prepenv.html
-
-Vagrant Environment
-===================
-
-You can use vagrant for both development and simulating a production environment. refer to the README inside ansible folder
 
 Infrastructure
 ==============
@@ -82,13 +79,14 @@ All extractions are exposed as html, csv and json, you could make a json datasou
 Production
 ==========
 
-It's suggested to wrap molepaw with ``chausette`` and chausette in ``circus``. refer to the ansible playbook to set them up
+It's suggested to wrap molepaw with ``chausette`` and chausette in ``circus``.
 https://pypi.org/project/chausette/
 https://circus.readthedocs.io/en/latest/
 
 Database Migrations
 ===================
 
+You will need to migrate the database when you change the models defined in ``etl/model``
 Molepaw has 2 ways to migrate the db, choose your preferred one:
 
 alembic

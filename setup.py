@@ -49,9 +49,9 @@ install_requires = [
     "bokeh == 1.0.4",
     "tgext.evolve >= 0.0.5",
     "numexpr",
-    "requests == 2.8.1",
+    "requests == 2.8.4",
     "axf == 0.0.19",
-    "kajiki == 0.7.2",
+    "kajiki >= 0.8.0",  # at least this version for python3.8 support
     "tgext.pluggable == 0.8.0",
     "tgapp-categories == 0.3.0"
 ]
