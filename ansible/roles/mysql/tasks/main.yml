@@ -1,0 +1,33 @@
+- name: Install Mysql client packages
+  become: yes
+  apt:
+    name: ['mysql-client', 'python3-dev', 'python3-mysqldb', 'libmysqlclient-dev']
+    update_cache: yes
+    state: present
+
+- name: Install mysql-connector-python
+  pip:
+    name: mysql-connector-python
+    executable: pip3
+
+- name: try to install python mysql client for ansible (python3-pymysql) (ubuntu18)
+  become: yes
+  apt: name={{ansible_mysql}} update_cache=yes state=present
+  when: ansible_mysql is defined
+
+- name: Start Mysql Service
+  service: name=mysql state=started enabled=yes
+
+- name: Create Application DB User
+  shell: |
+          mysql -e "CREATE USER '{{name_app}}'@'localhost' IDENTIFIED BY '{{name_app}}';
+          GRANT ALL PRIVILEGES ON {{name_app}}.* TO '{{name_app}}'@'localhost' WITH GRANT OPTION;"
+          mysql -e "CREATE USER '{{name_app}}'@'{{groups['circus'][0]}}' IDENTIFIED BY '{{name_app}}';
+          GRANT ALL PRIVILEGES ON {{name_app}}.* TO '{{name_app}}'@'{{groups['circus'][0]}}' WITH GRANT OPTION;
+          FLUSH PRIVILEGES;"
+  become: yes
+  ignore_errors: yes
+
+- name: Create Application Database
+  mysql_db: name={{ dbname }} state=present login_user={{name_app}} login_password={{name_app}}
+  become: yes

@@ -1,0 +1,16 @@
+- name: install nginx packages
+  apt:
+    name: nginx
+    state: present
+
+- name: copy conf file
+  template:
+    src: molepaw.conf.j2
+    dest: /etc/nginx/sites-enabled/{{virtualhost}}
+    force: yes
+  notify:  restart nginx service
+
+- name: start nginx service
+  service:
+    name: nginx
+    state: started

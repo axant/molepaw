@@ -1,0 +1,24 @@
+repository: http://github.com/axant/molepaw.git
+repository_id: molepaw
+app_package: molepaw
+deploy_path: /var/www/{{name_app}}
+ini_path: /var/www/{{name_app}}/app/{{ini_file}}
+public_rel_path: molepaw/etl/public
+extra_args: "--no-binary :all: -e"
+python_version: python3
+pip_executable: pip3
+
+
+mysql_host: 127.0.0.1
+mysql_port: 3306
+dbuser: molepaw
+dbname: molepaw
+upassword: molepaw
+folder_app_name: etl
+ansible_mysql: python-pymysql
+
+group_name: molepaw
+user_name: molepaw
+name_app: molepaw
+env_name: venv
+circus_port: 9300

@@ -4,6 +4,9 @@ from __future__ import print_function
 
 from tg import config
 import transaction
+import logging
+
+logger = logging.getLogger('etl.websetup.schema')
 
 
 def setup_schema(command, conf, vars):
@@ -15,11 +18,12 @@ def setup_schema(command, conf, vars):
     # <websetup.websetup.schema.after.model.import>
 
     # <websetup.websetup.schema.before.metadata.create_all>
-    print("Creating tables")
+    logger.info("Creating tables")
+    # import pdb; pdb.set_trace()
     model.metadata.create_all(bind=config['tg.app_globals'].sa_engine)
     # <websetup.websetup.schema.after.metadata.create_all>
     transaction.commit()
-    print('Initializing Migrations')
+    logger.info('Initializing Migrations')
     import alembic.config
     alembic_cfg = alembic.config.Config()
     alembic_cfg.set_main_option("script_location", "migration")

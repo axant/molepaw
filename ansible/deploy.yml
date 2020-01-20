@@ -1,0 +1,75 @@
+- name: install python3 (at least it's required for current vagrant box ubuntu bionic64)
+  hosts: circus
+  become: yes
+  tasks:
+    - name: install python3 and pip3
+      apt:
+        name: ['python3', 'python3-pip']
+        update_cache: yes
+        state: present
+
+- hosts: databases
+  name: set up mysql
+  roles:
+    - mysql
+  
+- hosts: databases
+  name: Find out if database has been initialized
+  tasks:
+    - name: Find out Database has been initialized
+      shell: |
+        mysql -u {{ dbuser }} --password="{{ upassword }}" -D {{dbname}} -e "SHOW TABLES;"
+      register: output_db
+
+- name: Create user
+  hosts: circus
+  become: yes
+  tasks:
+    - name: Create Group
+      group:
+        name: "{{group_name}}"
+        state: present
+
+    - name: Create User
+      user:
+        name: "{{user_name}}"
+        group: "{{group_name}}"
+
+
+- name: Checkout code and install dependencies
+  hosts: circus
+  become: yes
+  roles:
+    - Configure-Circus
+    - Circus
+
+- name: Setup Application
+  hosts: circus
+  tasks:
+    - name: Install tg.devtools if Database Init is required
+      become: yes
+      pip: virtualenv={{ deploy_path }}/{{env_name}} name='tg.devtools==2.3.4'
+
+    - name: Init Database if it does not exists
+      args:
+        executable: /bin/bash
+      shell: >
+        cd {{deploy_path}} ;
+        source venv/bin/activate ;
+        cd app/{{folder_app_name}} ;
+        gearbox setup-app -c {{ini_path}} ;
+        # /usr/local/bin/circusctl restart
+      when: hostvars[groups['databases'][0]]['output_db'].stdout.find('tg_user') == -1
+      become: yes
+
+    - name: Reload circus
+      shell: >
+        /usr/local/bin/circusctl restart
+      become: yes
+
+
+- name: install and start nginx
+  hosts: nginx
+  become: yes
+  roles:
+    - nginx

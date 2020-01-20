@@ -20,8 +20,6 @@ debug = true
 trace_errors.from_address = turbogears@localhost
 trace_errors.smtp_server = localhost
 
-tgext.evolve.enabled = true
-
 # Uncomment if email server requires authentication
 #trace_errors.smtp_use_tls = true
 #trace_errors.smtp_username = unknown
@@ -43,10 +41,12 @@ tgext.evolve.enabled = true
 [server:main]
 use = egg:gearbox#wsgiref
 host = 127.0.0.1
-port = 8080
+port = 8081
 
 [app:main]
 use = egg:etl
+
+tgext.evolve.enabled = True
 
 # Default application language, when available this will be
 # used when none of the browser requested languages is available.
@@ -90,13 +90,13 @@ toscawidgets.framework.resource_variant=debug
 # %(here) may include a ':' character on Windows environments; this can
 # invalidate the URI when specifying a SQLite db via path name
 # sqlalchemy.url=postgres://username:password@hostname:port/databasename
-sqlalchemy.url=mysql://root@localhost:3306/molepaw
+sqlalchemy.url=mysql://{{dbuser}}:{{upassword}}@localhost:3306/{{dbname}}
 
 
 # If you have sqlite, here's a simple default to get you started
 # in development
-
-#sqlalchemy.url = sqlite:///%(here)s/devdata.db
+# it seems that you can have only a process if you choose sqlite
+#sqlalchemy.url = sqlite:///%(here)s/proddata.db
 #sqlalchemy.echo = false
 #sqlalchemy.echo_pool = false
 #sqlalchemy.pool_recycle = 3600
