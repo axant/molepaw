@@ -30,7 +30,9 @@ testing = [
     'WebTest >= 1.2.3',
     'nose',
     'coverage',
-    'tg.devtools'
+    'tg.devtools',
+    'flaky',
+    'tox',
 ]
 
 install_requires = [
