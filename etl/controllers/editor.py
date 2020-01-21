@@ -50,8 +50,6 @@ class DatasetsEditorController(RestController):
     # }, error_handler=validation_errors_response)
     @validate(validators=MergeValidatorSchema(), error_handler=validation_errors_response)
     def post(self, datasetid=None, join_type=None, join_self_col=None, join_other_col=None, **kwargs):
-        print('^' * 40)
-        print('^' * 40)
         try:
             priority = tmpl_context.extraction.datasets[-1].priority + 1
         except:
