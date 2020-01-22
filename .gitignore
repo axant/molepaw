@@ -24,3 +24,4 @@ venv
 deploy-demo.retry
 penv
 ansible/.vagrant/
+/ansible-demo/

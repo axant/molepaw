@@ -33,6 +33,8 @@ testing = [
     'tg.devtools',
     'flaky',
     'tox',
+    'mock',
+    'mongomock'
 ]
 
 install_requires = [
