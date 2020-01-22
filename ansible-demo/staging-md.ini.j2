@@ -11,39 +11,20 @@
 # WARNING: *THE LINE BELOW MUST BE FALSE ON A PRODUCTION ENVIRONMENT*
 # Debug mode will enable the interactive debugging tool, allowing ANYONE to
 # execute malicious code after an exception is raised.
-debug = true
+debug = false
 
 # ERROR REPORTING BY EMAIL
-# Uncomment to enable email error reporting, you probably want this
-# on production to receive application crashes by email
-#trace_errors.error_email = you@yourdomain.com
-trace_errors.from_address = turbogears@localhost
-trace_errors.smtp_server = localhost
-
-tgext.evolve.enabled = true
-
-# Uncomment if email server requires authentication
-#trace_errors.smtp_use_tls = true
-#trace_errors.smtp_username = unknown
-#trace_errors.smtp_password = unknown
-
-# Uncomment to enable additional context data for email error reporting
-#trace_errors.dump_request = true
-#trace_errors.dump_local_frames = true
-
-# ERROR REPORTING TO SENTRY
-# Uncomment to enable reporting errors to a Sentry server
-#trace_errors.sentry_dsn = http://public:secret@example.com/1
-
-# REPORT SLOW REQUESTS
-#trace_slowreqs.enable = true
-#trace_slowreqs.interval = 25
-#trace_slowreqs.exclude = /tw2/resources
+trace_errors.error_email = crashreport+molepawdemo@axant.it
+trace_errors.smtp_server = mail.axantweb.com
+trace_errors.smtp_username = no-reply@axantweb.com
+trace_errors.smtp_password = Inutile01
+trace_errors.smtp_use_tls = true
+trace_errors.from_address = no-reply+molepawdemo@axantweb.com
 
 [server:main]
 use = egg:gearbox#wsgiref
 host = 127.0.0.1
-port = 8080
+port = 8081
 
 [app:main]
 use = egg:etl
@@ -90,16 +71,14 @@ toscawidgets.framework.resource_variant=debug
 # %(here) may include a ':' character on Windows environments; this can
 # invalidate the URI when specifying a SQLite db via path name
 # sqlalchemy.url=postgres://username:password@hostname:port/databasename
-# sqlalchemy.url=mysql://root@localhost:3306/molepaw
-sqlalchemy.url = sqlite:///%(here)s/devdata.db
+# sqlalchemy.url=mysql://username:password@hostname:port/databasename
 
 # If you have sqlite, here's a simple default to get you started
 # in development
-
-#sqlalchemy.url = sqlite:///%(here)s/devdata.db
-#sqlalchemy.echo = false
-#sqlalchemy.echo_pool = false
-#sqlalchemy.pool_recycle = 3600
+sqlalchemy.url = mysql://movieday:m0vi3d4y$@10.135.247.126:3306/molepaw
+sqlalchemy.echo = false
+sqlalchemy.echo_pool = false
+sqlalchemy.pool_recycle = 3600
 
 # This line ensures that Genshi will render xhtml when sending the
 # output. Change to html or xml, as desired.
@@ -123,7 +102,6 @@ templating.mako.compiled_templates_dir = %(here)s/data/templates
 # Max number of row * columns rendered
 extraction.max_elements = 10000
 
-
 set depot_backend_type = depot.io.local.LocalFileStorage
 set depot_storage_path = %(here)s/depot
 
@@ -137,7 +115,7 @@ get depot.category_images.storage_path = depot_storage_path
 # Uses python's logging config file format
 # http://docs.python.org/lib/logging-config-fileformat.html
 [loggers]
-keys = root, etl, sqlalchemy, auth
+keys = root, etl, molepaw, sqlalchemy, auth
 
 [handlers]
 keys = console
@@ -152,8 +130,13 @@ handlers = console
 
 [logger_etl]
 level = DEBUG
-handlers =
+handlers = console
 qualname = etl
+
+[logger_molepaw]
+level = DEBUG
+handlers = console
+qualname = molepaw
 
 [logger_sqlalchemy]
 level = WARN

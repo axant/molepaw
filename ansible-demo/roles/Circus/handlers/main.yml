@@ -1,0 +1,5 @@
+---
+# handlers file for Circus
+- name: restart circus
+  command: /usr/local/bin/circusctl restart
+

@@ -1,0 +1,15 @@
+repository: http://repo.axant.it/git/molepaw.git
+project_id: 5af97c9a5d37c909aca81daa
+repository_id: molepaw
+app_package: molepaw
+deploy_path: /var/www/{{name_app}}
+ini_path: /var/www/{{name_app}}/app/{{ini_file}}
+public_rel_path: molepaw/etl/public
+extra_args: "--no-binary :all: -e"
+
+mysql_host: 10.135.247.126
+mysql_port: 3306
+dbuser: movieday
+dbname: movieday
+upassword: m0vi3d4y$
+folder_app_name: etl

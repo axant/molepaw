@@ -1,0 +1,39 @@
+- hosts: webserver
+  user: root
+  tasks:
+    - name: Get code from repository
+      git: repo={{ repository }} dest=/var/www/{{app_package}}
+
+    - name: Install Python Dependencies
+      pip: virtualenv=/var/www/{{app_package}}/venv name='file:///var/www/{{app_package}}' extra_args={{extra_args}}  virtualenv_site_packages=no
+
+    - name: Configure staging.ini
+      template: src=staging-md.ini.j2 dest=/var/www/{{app_package}}/production.ini
+
+    - name: Install tg.devtools
+      pip: virtualenv=/var/www/{{app_package}}/venv name='tg.devtools==2.3.4'
+
+    - name: Find out Database has been initialized
+      command: >
+        mysql -u {{ dbuser }} --password="{{ upassword }}" -h {{ mysql_host }} -D molepaw -e "SHOW TABLES;"
+      register: output_db
+
+    - name: Init Database if it does not exists
+      args:
+        executable: /bin/bash
+      shell: >
+        cd /var/www/{{app_package}};
+        source venv/bin/activate;
+        gearbox setup-app -c /var/www/{{app_package}}/production.ini
+      when: output_db.stdout.find('tg_user') == -1
+
+    - name: Execute Migrations if Availables
+      args:
+        executable: /bin/bash
+      shell: >
+        cd /var/www/{{app_package}};
+        source venv/bin/activate;
+        gearbox migrate -c /var/www/{{app_package}}/production.ini upgrade
+
+    - name: restart apache2
+      service: name=apache2 state=restarted
