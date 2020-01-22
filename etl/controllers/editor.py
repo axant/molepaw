@@ -45,9 +45,6 @@ class DatasetsEditorController(RestController):
 
     @expose('json')
     @decode_params('json')
-    # @validate({
-    #     'datasetid': validators.NotEmpty()
-    # }, error_handler=validation_errors_response)
     @validate(validators=MergeValidatorSchema(), error_handler=validation_errors_response)
     def post(self, datasetid=None, join_type=None, join_self_col=None, join_other_col=None, **kwargs):
         try:
