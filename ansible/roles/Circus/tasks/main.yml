@@ -1,0 +1,39 @@
+---
+# tasks file for Circus
+
+- name: Install python dependencies
+  pip: name={{item}} virtualenv={{ deploy_path }}/{{env_name}} virtualenv_site_packages=no virtualenv_python={{python_version}}
+  with_items:
+    - chaussette
+    - waitress==0.9.0
+    - backlash
+
+- name: Install mysqlclient
+  pip: name=mysqlclient virtualenv={{ deploy_path }}/{{env_name}} virtualenv_site_packages=no virtualenv_python={{python_version}}
+
+- name: Get code from repository
+  git: repo={{repository}} dest={{deploy_path}}/app
+  when: mount_code is not defined
+
+- name: Install WebApp Python Dependencies
+  pip: virtualenv={{ deploy_path }}/{{env_name}} name='file://{{deploy_path}}/app/{{folder_app_name}}' extra_args='-e' virtualenv_site_packages=no virtualenv_python={{python_version}}
+
+- name: webapp config file
+  template:
+    src: "{{ini_file}}.j2"
+    dest: "{{ini_path}}"
+
+- name: Set repository dir permissions
+  file: dest={{deploy_path}}/app state=directory
+         owner={{user_name}} group={{group_name}}
+         mode=0775
+         recurse=yes
+  become: yes
+  when: mount_code is not defined
+
+- name: Set virtualenv dir permissions
+  file: dest={{deploy_path}}/{{env_name}} state=directory
+         owner={{user_name}} group={{group_name}}
+         mode=0775
+         recurse=yes
+  become: yes

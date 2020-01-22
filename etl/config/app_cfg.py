@@ -153,7 +153,7 @@ tgext.evolve.plugme(base_config, options={
 
 
 from tgext.pluggable import plug
-plug(base_config, 'tgappcategories', 'categories', global_models=True)
+plug(base_config, 'tgappcategories', 'categories', global_models=True, plug_bootstrap=True)
 
 def enable_depot():
     import logging

@@ -1,0 +1,31 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.
+Vagrant.configure("2") do |config|
+  config.vm.box = "kikitux/bionic64-mysql"
+  config.vm.box_version = "20.01.12"  # tested with this version
+  config.vm.synced_folder "../", "/var/www/molepaw/app/etl/", type: "nfs"
+  
+  config.vm.define "webmachine" do |web|
+    web.vm.hostname = "molepaw-vm"
+    web.vm.network :forwarded_port, guest: 22, host: 2246, id: "ssh"
+    web.vm.network :forwarded_port, guest: 80, host: 8082, id: "nginx"
+    web.vm.network :forwarded_port, guest: 9300, host: 9300, id: "circus"
+    web.vm.network :forwarded_port, guest: 8081, host: 8081, id: "gearbox"
+    web.vm.network :private_network, ip: "192.168.50.9"
+    web.ssh.port = 2246
+  end
+  config.vm.provision :ansible do |ansible|
+    ansible.playbook = "deploy.yml"
+    ansible.become = true
+    ansible.inventory_path="inventory-vagrant"
+    ansible.limit = "all"
+    ansible.verbose="vvvv"
+    ansible.config_file="ansible.cfg"
+  end
+
+end

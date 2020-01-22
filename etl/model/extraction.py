@@ -46,6 +46,12 @@ class Extraction(DeclarativeBase):
     visualization = Column(Unicode(64), default='table', nullable=False)
     category_id = Column(Integer, LazyForeignKey(lambda: app_model.Category._id), nullable=True)
     category = relationship(lambda: app_model.Category, backref=backref("extractions"))
+    # TODO:
+    # there is a issue with LazyForeignKey and the order in wich tables are created by sqlalchemy
+    # in mysql, you can create them without it and then enabling it to serve the app
+    # this bug will be fixed in the future
+    # category_id = Column(Integer, ForeignKey('tgappcategories_categories._id'), nullable=True)
+    # category = relationship('Category', backref=backref("extractions", lazy='noload'))
     graph_axis = Column(Unicode(64), nullable=True)
     datasets = relationship('ExtractionDataSet', cascade='all, delete-orphan', order_by="ExtractionDataSet.priority")
     steps = relationship('ExtractionStep', cascade='all, delete-orphan', order_by="ExtractionStep.priority")

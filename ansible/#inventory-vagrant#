@@ -1,0 +1,18 @@
+[circus]
+127.0.0.1 
+
+[databases]
+127.0.0.1
+
+[nginx]
+127.0.0.1
+
+[all:vars]
+ansible_ssh_port=2246
+ansible_ssh_user=vagrant
+hostname=127.0.0.1
+
+ini_file=testing.ini
+# remove mount_code for non-vagrant enviroments
+mount_code=True
+virtualhost=molepaw.vagrant.local
