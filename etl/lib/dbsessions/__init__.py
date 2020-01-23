@@ -4,6 +4,7 @@ from .sqla import SQLAlchemyDBSession
 from .mongodb import MongoDBSession
 from .http_csv import HTTPCSVSession
 
+
 def session_factory(url):
     for schema in DBSESSION_SCHEMAS:
         if url.startswith(schema):

@@ -23,7 +23,7 @@ class MongoDBSession(object):
             )
 
     def extract_directive_value(self, query, directive_pattern):
-        pattern = r'^#' + re.escape(directive_pattern) + r'.*'
+        pattern = r'^#' + re.escape(directive_pattern) + r'.*' + re.escape('=') + r'.*'
         directive_match = re.search(pattern, query)
         if directive_match:
             value = directive_match.group(0).split('=')[-1].strip()
@@ -35,14 +35,20 @@ class MongoDBSession(object):
 
     def parse_q(self, q):
         collection_name, sub_re = self.extract_directive_value(q, 'collection')
-        self.set_collection(collection_name)
-        return re.sub(sub_re.group(0), '', q)
-
-    def execute(self, q):
+        if collection_name not in self._session.get_default_database().list_collection_names():
+            raise HTTPPreconditionFailed(
+                detail='The requested collection: %s doesn\'t exist, check it' % collection_name
+            )
+        query = re.sub(sub_re.group(0), '', q)
         try:
-            query = json.loads(self.parse_q(q))
+            query = json.loads(query)
         except (TypeError, ValueError) as ex:
             raise HTTPPreconditionFailed(_('Wrong query format, query must be valid json'))
+        return query, collection_name
+
+    def execute(self, q):
+        query, collection = self.parse_q(q)
+        self.set_collection(collection)
         if isinstance(query, dict):
             data = self._collection.find(query)
         elif isinstance(query, list):

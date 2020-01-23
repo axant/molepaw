@@ -40,8 +40,7 @@ class DataSet(DeclarativeBase):
             return cache.get(str(self.uid))
         except KeyError:
             try:
-
-                        ##################### START CHECKING DATA-TYPE #####################
+                ##################### START CHECKING DATA-TYPE #####################
                 df = self.datasource.dbsession.execute(self.query)
                 for i in df.columns:
                     if collections.Counter(
