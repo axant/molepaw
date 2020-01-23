@@ -64,8 +64,8 @@ class Group(DeclarativeBase):
     group_id = Column(Integer, autoincrement=True, primary_key=True)
     group_name = Column(Unicode(16), unique=True, nullable=False)
     display_name = Column(Unicode(255))
-    created = Column(DateTime, default=datetime.now)
     users = relation('User', secondary=user_group_table, backref='groups')
+    created = Column(DateTime, default=datetime.utcnow)
 
     def __repr__(self):
         return '<Group: name=%s>' % repr(self.group_name)
@@ -89,7 +89,7 @@ class User(DeclarativeBase):
     email_address = Column(Unicode(255), unique=True, nullable=False)
     display_name = Column(Unicode(255))
     _password = Column('password', Unicode(128))
-    created = Column(DateTime, default=datetime.now)
+    created = Column(DateTime, default=datetime.utcnow)
 
     def __repr__(self):
         return '<User: name=%s, email=%s, display=%s>' % (

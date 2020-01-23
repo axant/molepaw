@@ -33,17 +33,16 @@ testing = [
     'tg.devtools',
     'flaky',
     'tox',
-    'mock',
-    'mongomock'
+    'pymongo',
 ]
 
 install_requires = [
     "TurboGears2",
     "Beaker",
     "Genshi",
-    "zope.sqlalchemy == 1.2",
-    "sqlalchemy==0.9",
-    "alembic==1.0",
+    "zope.sqlalchemy>=1.2",
+    "sqlalchemy>=1.3.12",  # should work even with older versions
+    "alembic>=1.0",
     "repoze.who",
     "tw2.forms",
     "tgext.admin >= 0.6.1",
@@ -57,7 +56,7 @@ install_requires = [
     "axf == 0.0.19",
     "kajiki >= 0.8.0",  # at least this version for python3.8 support
     "tgext.pluggable",
-    "tgapp-categories == 0.3.1",
+    "tgapp-categories == 0.3.1",  # 0.4.0 introduces nested categories, we should upgrade
 ]
 
 if py_version != (3, 2):

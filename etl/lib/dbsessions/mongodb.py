@@ -23,7 +23,7 @@ class MongoDBSession(object):
             )
 
     def extract_directive_value(self, query, directive_pattern):
-        pattern = r'^#' + re.escape(directive_pattern) + r'.*' + re.escape('=') + r'.*'
+        pattern = r'^[\s]*#' + re.escape(directive_pattern) + r'.*' + re.escape('=') + r'.*'
         directive_match = re.search(pattern, query)
         if directive_match:
             value = directive_match.group(0).split('=')[-1].strip()
