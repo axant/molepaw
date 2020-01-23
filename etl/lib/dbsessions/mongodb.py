@@ -34,7 +34,7 @@ class MongoDBSession(object):
     def extract_directive_value(self, query, directive_pattern):
         pattern = r'^[\s]*#' + re.escape(directive_pattern) + r'.*' + re.escape('=') + r'.*'
         directive_match = re.search(pattern, query)
-        if directive_match:
+        if directive_match and self._collection is None:
             value = directive_match.group(0).split('=')[-1].strip()
             return value, directive_match
         elif not directive_match and self._collection is not None:
