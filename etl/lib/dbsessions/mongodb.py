@@ -15,7 +15,7 @@ class MongoDBSession(object):
         if u'#' in url:
             url, collection = url.rsplit('#', 1)
         self.set_session(url)
-        if collection:
+        if collection is not None:
             self.set_collection(collection)
 
     def set_session(self, url):
@@ -23,28 +23,22 @@ class MongoDBSession(object):
         self._session = MongoClient(url)
 
     def set_collection(self, collection):
-        if collection in self._session.get_default_database().list_collection_names():
-            self._collection = self._session.get_default_database() \
-                .get_collection(collection)
-        else:
-            raise HTTPPreconditionFailed(
-                detail='The requested collection: %s doesn\'t exist, check it' % collection
-            )
+        self._collection = self._session.get_default_database() \
+            .get_collection(collection)
 
     def extract_directive_value(self, query, directive_pattern):
         pattern = r'^[\s]*#' + re.escape(directive_pattern) + r'.*' + re.escape('=') + r'.*'
         directive_match = re.search(pattern, query)
-        if directive_match and self._collection is None:
+        if directive_match:
             value = directive_match.group(0).split('=')[-1].strip()
             return value, directive_match
         elif not directive_match and self._collection is not None:
             return None, None
         else:
             raise HTTPPreconditionFailed(
-                detail=_(
-                    'Missing collection, it should be something like "#collection=collectionname" in the query or'
-                    'specify the url in form mongodb://user:pass@host:port/database#collection'
-                )
+                detail=
+                'Missing collection, it should be something like "#collection=collectionname" in the query or'
+                'specify the url in form mongodb://user:pass@host:port/database#collection'
             )
 
     def parse_q(self, q):
@@ -61,7 +55,7 @@ class MongoDBSession(object):
         try:
             query = json.loads(query)
         except (TypeError, ValueError) as ex:
-            raise HTTPPreconditionFailed(_('Wrong query format, query must be valid json'))
+            raise HTTPPreconditionFailed('Wrong query format, query must be valid json')
         return query
 
     def execute(self, q):
