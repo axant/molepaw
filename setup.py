@@ -34,6 +34,7 @@ testing = [
     'flaky',
     'tox',
     'pymongo',
+    'mock',
 ]
 
 install_requires = [
