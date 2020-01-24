@@ -71,7 +71,7 @@ class ApplicationAuthMetadata(TGAuthMetadata):
         if login is None:
             try:
                 from urllib.parse import parse_qs, urlencode
-            except ImportError:
+            except ImportError:  # pragma: no cover
                 from urlparse import parse_qs
                 from urllib import urlencode
             from tg.exceptions import HTTPFound
@@ -135,7 +135,7 @@ try:
     # Enable DebugBar if available, install tgext.debugbar to turn it on
     from tgext.debugbar import enable_debugbar
     enable_debugbar(base_config)
-except ImportError:
+except ImportError:  # pragma: no cover
     pass
 
 

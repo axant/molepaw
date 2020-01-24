@@ -2,25 +2,27 @@ from pandas import DataFrame
 from etl.lib.dbsessions import session_factory
 from webob.exc import HTTPPreconditionFailed
 from nose.tools import assert_raises
-
+from sqlalchemy.exc import OperationalError
 
 class AbstractDBSessions(object):
-    _session = None
-    _db = None
     _url = None
-    _query = None
+
+    def get_session(self):
+        return session_factory(self._url)
 
     def test_execute_query_users(self):
-        result = self._session.execute(self._query_users)
+        result = self.get_session().execute(self._query_users)
         assert isinstance(result, DataFrame), type(result)
         assert len(result) == 1, result
 
     def test_execute_wrong_table(self):
         try:
-            result = self._session.execute(self._query_wrong_table)
+            result = self.get_session().execute(self._query_wrong_table)
             assert False, 'should raise'
         except HTTPPreconditionFailed as e:
             assert "doesn't exist, check it" in str(e)
+        except OperationalError as e:
+            assert 'no such table: this_does_not_exists' in str(e)
 
 
 class TestMongoDBSession(AbstractDBSessions):
@@ -34,8 +36,7 @@ class TestMongoDBSession(AbstractDBSessions):
     _query_no_directive = '[{"$match": {"user_name" : "admin"}}, {"$project": {"age": 1}}]'
 
     def setUp(self):
-        self._session = session_factory(self._url)
-        self._db = self._session._session.get_default_database()
+        self._db = self.get_session()._session.get_default_database()
         self._db.create_collection('tg_user')
         self._db.create_collection('other_users')
         self._db.tg_user.insert_many([
@@ -54,7 +55,7 @@ class TestMongoDBSession(AbstractDBSessions):
         self._db.drop_collection('other_users')
 
     def test_execute_aggregation_no_directive(self):
-        result = self._session.execute(self._query_no_directive)
+        result = self.get_session().execute(self._query_no_directive)
         assert isinstance(result, DataFrame)
         assert result['age'][0] == 675
 
@@ -76,20 +77,6 @@ class TestMongoDBSession(AbstractDBSessions):
 
 
 class TestSQLite3DBSession(AbstractDBSessions):
-    _url = 'sqlite:///moletest'
-    _query_users = 'SELECT * FROM tg_user'
+    _url = 'sqlite:///etl/tests/testdatasource.db'
+    _query_users = 'SELECT * FROM tg_user WHERE user_name = \'admin\''
     _query_wrong_table = 'SELECT * FROM this_does_not_exists'
-    
-    def setUp(self):
-        self._session = session_factory(self._url)
-        self._db = self._session._session
-        self._db.execute('CREATE TABLE tg_user (user_name VARCHAR PRIMARY KEY, age INTEGER')
-        self._db.execute('''
-INSERT INTO tg_user (user_name, age)
-VALUES
-(admin, 675), 
-(editor, 806),
-(guest, 0)''')
-
-    def tearDown(self):
-        self._db.execute('DROP TABLE tg_user')

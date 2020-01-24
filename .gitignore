@@ -21,6 +21,7 @@ pip-log.txt
 .tox
 
 test.db
+moletest
 
 venv
 deploy-demo.retry
