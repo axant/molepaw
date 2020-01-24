@@ -43,27 +43,28 @@ class MongoDBSession(object):
 
     def parse_q(self, q):
         collection_name, sub_re = self.extract_directive_value(q, 'collection')
+        collection = self._collection
         if collection_name is not None and sub_re is not None:
             if collection_name not in self._session.get_default_database().list_collection_names():
                 raise HTTPPreconditionFailed(
                     detail='The requested collection: %s doesn\'t exist, check it' % collection_name
                 )
             query = re.sub(sub_re.group(0), '', q)
-            self.set_collection(collection_name)
+            collection = self._session.get_default_database().get_collection(collection_name)
         else:
             query = q
         try:
             query = json.loads(query)
         except (TypeError, ValueError) as ex:
             raise HTTPPreconditionFailed('Wrong query format, query must be valid json')
-        return query
+        return query, collection
 
     def execute(self, q):
-        query = self.parse_q(q)
+        query, collection = self.parse_q(q)
         if isinstance(query, dict):
-            data = self._collection.find(query)
+            data = collection.find(query)
         elif isinstance(query, list):
-            data = self._collection.aggregate(query)
+            data = collection.aggregate(query)
         return DataFrame(list(data))
 
     def rollback(self):
