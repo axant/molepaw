@@ -31,7 +31,7 @@ from tgext.pluggable import app_model
 
 try:
     unicode('test Python2')
-except Exception:
+except Exception:               # PRAGMA NO COVER
     unicode = str
 py_version = sys.version_info[:2][0]
 log = logging.getLogger('molepaw')

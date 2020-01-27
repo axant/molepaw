@@ -6,8 +6,7 @@ from webob.exc import HTTPPreconditionFailed
 from nose.tools import assert_raises
 from sqlalchemy.exc import OperationalError
 from mock import patch, Mock
-import json
-import requests
+
 
 class AbstractDBSessions(object):
     _url = None
@@ -74,11 +73,14 @@ class TestMongoDBSession(AbstractDBSessions):
 
     def test_errors(self):
         _session = session_factory('mongodb://127.0.0.1:27017/moletest')
+        # both url and query don't contain the collection so the session
+        # doesn't know where to execute the query
         assert_raises(
             HTTPPreconditionFailed,
             _session.execute,
             self._query_no_directive
         )
+        # query is not valid json
         query = '''
             #collection=tg_user
             {'user_name' : "admin"}'''

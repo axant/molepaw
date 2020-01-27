@@ -17,26 +17,30 @@ class MergeValidator(validators.FieldsMatch):
     validate_partial_form = True
 
     def _validate_python(self, value_dict, state=None):
-        extraction = tmpl_context.extraction
-        df = extraction.fetch()
-        try:
-            dataset = DBSession.query(DataSet).get(int(value_dict['datasetid']))
-            pd.merge(
-                df,
-                dataset.fetch(),
-                how=value_dict['join_type'],
-                left_on=value_dict['join_other_col'],
-                right_on=value_dict['join_self_col'],
-                suffixes=('', '_j_' + dataset.name.lower())
-            )
+        if 'join_type' not in value_dict.keys() and 'join_other_col' not in value_dict.keys() \
+                and 'join_self_col' not in value_dict.keys():
             return None
-        except ValueError as ex:
-            raise Invalid(
-                ex.__repr__(),
-                value_dict,
-                state,
-                error_dict={}
-            )
+        else:
+            extraction = tmpl_context.extraction
+            df = extraction.fetch()
+            try:
+                dataset = DBSession.query(DataSet).get(int(value_dict['datasetid']))
+                pd.merge(
+                    df,
+                    dataset.fetch(),
+                    how=value_dict['join_type'],
+                    left_on=value_dict['join_other_col'],
+                    right_on=value_dict['join_self_col'],
+                    suffixes=('', '_j_' + dataset.name.lower())
+                )
+                return None
+            except ValueError as ex:
+                raise Invalid(
+                    ex.__repr__(),
+                    value_dict,
+                    state,
+                    error_dict={}
+                )
 
 
 class MergeValidatorSchema(Schema):
