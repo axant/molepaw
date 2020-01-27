@@ -152,8 +152,10 @@ class ExtractionsController(BaseController):
                         return abort(404)
                     result = e_filter.perform(result)
             else:
-                default = DBSession.query(ExtractionFilter).filter(ExtractionFilter.default == True,
-                                                                   ExtractionFilter.extraction_id == extraction.uid).first()
+                default = DBSession.query(ExtractionFilter).filter(
+                    ExtractionFilter.default == True,
+                    ExtractionFilter.extraction_id == extraction.uid
+                ).first()
                 if default:
                     e_filter = default
                     result = default.perform(result)

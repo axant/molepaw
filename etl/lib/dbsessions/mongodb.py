@@ -2,7 +2,6 @@
 import json
 from pandas import DataFrame
 import re
-from tg.i18n import ugettext as _
 from tg.exceptions import HTTPPreconditionFailed
 
 

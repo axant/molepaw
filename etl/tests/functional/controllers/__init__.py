@@ -3,6 +3,7 @@ from etl.model import DBSession
 from etl import model
 import json
 import transaction
+from tgext.pluggable import app_model
 
 
 class BaseTestController(TestController):
@@ -11,25 +12,40 @@ class BaseTestController(TestController):
     extraction = None
     filter = None
     step = None
+    category = None
+    extractiondataset = None
     filter_data = dict(
         name='custom_flt',
-        default=False,
-        query=json.dumps(dict(property={'$ne': None}))
+        default=True,
+        query="user_name <> 'viewer'"
     )
 
     def setUp(self):
         super(BaseTestController, self).setUp()
-        ds = self.create_datasource('default_ds')
+        cat = app_model.Category(
+            name='Default category 1'
+        )
+        DBSession.add(cat)
+        DBSession.flush()
+        ds = self.create_datasource(
+            name='default_ds'
+        )
         DBSession.add(ds)
         DBSession.flush()
         dt = self.create_dataset(
-            ds, 'default_dts'
+            ds, name='default_dts'
         )
-        DBSession.add(dt)
         DBSession.flush()
-        ext = self.create_extraction(name='default_ext')
-        DBSession.add(ext)
+        ext = self.create_extraction(
+            name='default_ext',
+            category=cat
+        )
         DBSession.flush()
+        extdt = model.ExtractionDataSet(
+            dataset_id=dt.uid,
+            extraction_id=ext.uid
+        )
+        DBSession.add(extdt)
         flt = model.ExtractionFilter(extraction_id=ext.uid, name='default_flt')
         DBSession.add(flt)
         DBSession.flush()
@@ -48,4 +64,6 @@ class BaseTestController(TestController):
         self.extraction = ext.uid
         self.filter = flt.uid
         self.step = step.uid
+        self.category = cat._id
+        self.extractiondataset = extdt.uid
         transaction.commit()
