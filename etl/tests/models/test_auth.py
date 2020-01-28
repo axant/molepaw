@@ -40,7 +40,11 @@ class TestUser(ModelTest):
 
     def test_getting_by_email(self):
         """Users should be fetcheable by their email addresses"""
-        him = model.User.by_email_address("ignucius@example.org")
+        him = self.klass.by_email_address("ignucius@example.org")
+        eq_(him, self.obj)
+
+    def test_getting_by_user_name(self):
+        him = self.klass.by_user_name('ignucius')
         eq_(him, self.obj)
 
 
