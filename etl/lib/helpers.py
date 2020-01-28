@@ -45,6 +45,9 @@ def is_boolean(x):
 
 
 def is_datetime(x):
+    # parse('675') -> datetime.datetime(675, 1, 28, 0, 0)
+    if is_number(x):
+        return False
     from datetime import datetime
     from dateutil.parser import parse
     try:

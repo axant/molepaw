@@ -62,3 +62,6 @@ class ModelTest(object):
         obj = DBSession.query(self.klass).one()
         for key, value in self.attrs.items():
             eq_(getattr(obj, key), value)
+
+    def test_repr_obj(self):
+        assert repr(self.obj).startswith('<') and self.klass.__name__ in repr(self.obj), self.obj

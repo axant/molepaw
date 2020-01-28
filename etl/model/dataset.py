@@ -7,8 +7,8 @@ import pandas as pd
 import collections
 
 from etl.model import DeclarativeBase
-from ..lib.widgets import CodeTextArea, SmartWidgetTypes
-from ..lib.helpers import is_number, is_boolean, is_datetime
+from etl.lib.widgets import CodeTextArea, SmartWidgetTypes
+from etl.lib.helpers import is_number, is_boolean, is_datetime
 import logging
 
 
