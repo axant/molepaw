@@ -30,7 +30,6 @@ class BaseTestController(TestController):
         ds = self.create_datasource(
             name='default_ds'
         )
-        DBSession.add(ds)
         DBSession.flush()
         dt = self.create_dataset(
             ds, name='default_dts'
@@ -46,7 +45,11 @@ class BaseTestController(TestController):
             extraction_id=ext.uid
         )
         DBSession.add(extdt)
-        flt = model.ExtractionFilter(extraction_id=ext.uid, name='default_flt')
+        flt = model.ExtractionFilter(
+            extraction_id=ext.uid,
+            name='default_flt',
+            default=True
+        )
         DBSession.add(flt)
         DBSession.flush()
         step = model.ExtractionStep(

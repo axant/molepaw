@@ -52,9 +52,9 @@ class TestMongoDBSession(AbstractDBSessions):
         self._db.create_collection('tg_user')
         self._db.create_collection('other_users')
         self._db.tg_user.insert_many([
-            {"user_name": "admin",  "age" : 675, "token" : ""},
-            {"user_name": "editor", "age" : 806,"token" : ""},
-            {"user_name": "guest", "age" : 0, "token" : "9ecf82c7e7ba11dbfea20cb84773339aff4d5f79"}
+            {"user_name": "admin",  "age": 675, "token": ""},
+            {"user_name": "editor", "age": 806, "token": ""},
+            {"user_name": "guest", "age": 0, "token": "9ecf82c7e7ba11dbfea20cb84773339aff4d5f79"}
         ])
         self._db.other_users.insert_many([
             {"user_name": "admin", "age": 675, "token": ""},

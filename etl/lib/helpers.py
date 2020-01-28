@@ -15,16 +15,20 @@ def current_year():
     now = datetime.now()
     return now.strftime('%Y')
 
+
 def icon(icon_name):
     return Markup('<i class="glyphicon glyphicon-%s"></i>' % icon_name)
+
 
 def color_gen():
     for c in itertools.cycle(Category10[10]):
         yield c
 
+
 def show_graph(graph):
     script, div = components(graph, INLINE)
     return Markup(div + '\n' + script)
+
 
 def is_number(x):
     try:
@@ -32,11 +36,13 @@ def is_number(x):
     except:
         return False
 
+
 def is_boolean(x):
     try:
         return int(x) == 0 or int(x) == 1
     except:
         return False
+
 
 def is_datetime(x):
     from datetime import datetime
@@ -46,6 +52,7 @@ def is_datetime(x):
     except:
         return False
 
+
 # PROVVISORIO, DA SOSTITUIRE CON REGEX IN FUTURO
 def escape_string_to_js(s):
     s = {key:value.replace("\n", "\\n") for (key, value) in list(s.items())}
@@ -53,9 +60,11 @@ def escape_string_to_js(s):
     s = {key:value.replace(""" "value == value" """, """ \\"value == value\\" """) for (key, value) in list(s.items())}
     return s
 
+
 def dashboards():
     from etl.model import DBSession, Dashboard
     return DBSession.query(Dashboard).all()
+
 
 row = '<div class="row">'
 close_row = '</div>'

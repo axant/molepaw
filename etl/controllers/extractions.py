@@ -36,6 +36,7 @@ except Exception:               # PRAGMA NO COVER
 py_version = sys.version_info[:2][0]
 log = logging.getLogger('molepaw')
 
+
 class CreateExtractionForm(twf.Form):
     class child(axf.bootstrap.BootstrapFormLayout):
         name = twf.TextField(label='Extraction Name',
@@ -228,6 +229,11 @@ class ExtractionsController(BaseController):
                 result['color'] = Category20c[len(result)]
             else:
                 result['color'] = [u'#3182bd', u'#6baed6']
+            # if dataframe comes from mongodb collection then _id is not json serializable
+            # and bockeh returns an error due to source=result
+            # this is a bad hack
+            if '_id' in result.columns:
+                del result['_id']
             visualizations['pie'].wedge(x=0, y=1, radius=0.4, start_angle=cumsum('angle', include_zero=True),
                     end_angle=cumsum('angle'), line_color="white",
                     fill_color='color', legend=axis[0], source=result)
