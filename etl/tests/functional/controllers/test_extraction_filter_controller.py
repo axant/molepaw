@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from etl.tests.functional.controllers import BaseTestController
 from etl.model import DBSession
 from etl import model

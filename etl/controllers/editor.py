@@ -105,7 +105,9 @@ class StepsEditorController(RestController):
 
         if options is not None:
             try:
-                step.options = json.dumps(ExtractionStep.formfor(function or step.function).validate(options))
+                step.options = json.dumps(
+                    ExtractionStep.formfor(function or step.function).validate(options)
+                )
             except Exception as e:
                 response.status = 412
                 return dict(errors=str(e))

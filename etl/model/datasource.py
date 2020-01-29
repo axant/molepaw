@@ -13,6 +13,11 @@ from etl.lib.dbsessions import session_factory
 SESSIONS_CACHE = {}
 
 
+def reset_cache():
+    for k in SESSIONS_CACHE.keys():
+        del SESSIONS_CACHE[k]
+
+
 class Datasource(DeclarativeBase):
     __tablename__ = 'datasources'
 

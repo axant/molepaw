@@ -4,6 +4,7 @@ from etl import model
 import json
 import transaction
 from tgext.pluggable import app_model
+from etl.model.datasource import reset_cache
 
 
 class BaseTestController(TestController):
@@ -21,6 +22,7 @@ class BaseTestController(TestController):
     )
 
     def setUp(self):
+        reset_cache()
         super(BaseTestController, self).setUp()
         cat = app_model.Category(
             name='Default category 1'
@@ -58,7 +60,8 @@ class BaseTestController(TestController):
             options=json.dumps({
                 'expression': self.filter_data['query']
             }),
-            extraction_filter_id=flt.uid
+            extraction_filter_id=flt.uid,
+            extraction_id=ext.uid
         )
         DBSession.add(step)
         DBSession.flush()

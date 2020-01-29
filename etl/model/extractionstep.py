@@ -79,6 +79,7 @@ class ExtractionStep(DeclarativeBase):
 
     @classmethod
     def formfor(cls, func):
+        print('func', func)
         return BaseLayout(children=FUNCTIONS[func].form_fields)
 
     @property
