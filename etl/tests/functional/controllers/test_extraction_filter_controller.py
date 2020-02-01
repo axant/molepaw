@@ -50,6 +50,20 @@ class TestExtractionFilterController(BaseTestController):
         flt = DBSession.query(model.ExtractionFilter).get(1)
         assert flt.name == 'custom_flt'
 
+    def test_put_no_default(self):
+        self.filter_data.update({
+            'uid': 1,
+            'steps': [{'uid': self.step}]
+        })
+        del self.filter_data['default']
+        self.app.put_json(
+            '/extractions/filter/put.json',
+            {'filter': self.filter_data, 'extraction': self.extraction},
+            extra_environ=self.admin_env
+        )
+        flt = DBSession.query(model.ExtractionFilter).get(1)
+        assert flt.name == 'custom_flt'    
+
     def test_put_404s(self):
         self.filter_data.update({
             'uid': 1000

@@ -5,7 +5,8 @@ from etl.model import DBSession
 from tgext.pluggable import app_model
 import transaction
 from datetime import datetime, timedelta
-
+from mock import Mock, patch
+from bokeh.plotting import figure
 
 class TestChartVisualization(BaseTestController):
     _db = None
@@ -82,6 +83,22 @@ class TestChartVisualization(BaseTestController):
         assert 'Fruits Extraction' in response.body.decode('utf-8')
         assert response.html.find(id='results-count').get_text() == '6'
         assert response.html.find(id='histogram-visualization') is not None
+
+    @patch('etl.controllers.extractions.figure', Mock(side_effect=Exception('figure not figuring')))
+    def test_view_histogram_visualization_exception(self):
+        entities = self.populate_for_chart_visualization('histogram', 'name,value')
+        response = self.app.get(
+            '/extractions/view',
+            params=dict(
+                extraction=entities['extractiondataset_uid']
+            ),
+            extra_environ=self.admin_env,
+            status=200
+        )
+        assert 'Fruits Extraction' in response.body.decode('utf-8')
+        assert response.html.find(id='results-count').get_text() == '6'
+        assert response.html.find(id='histogram-visualization') is not None, response.html
+
 
     def test_view_linechart_visualization(self):
         entities = self.populate_for_chart_visualization('linechart', 'name,value')

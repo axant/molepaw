@@ -1,3 +1,7 @@
+services:
+  - mongodb
+before_script:
+  - mongo mydb_test --eval 'db.createUser({user:"molepaw",pwd:"molepaw",roles:["readWrite"]});'
 language: python
 python:
   - "2.7"

@@ -14,8 +14,7 @@ SESSIONS_CACHE = {}
 
 
 def reset_cache():
-    for k in SESSIONS_CACHE.keys():
-        del SESSIONS_CACHE[k]
+    SESSIONS_CACHE.clear()
 
 
 class Datasource(DeclarativeBase):

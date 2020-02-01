@@ -179,15 +179,15 @@ class ExtractionsController(BaseController):
             x = [j.encode('utf8') if isinstance(j, unicode) else j for j in result[axis[0]].values.tolist()]
             y = result[axis[1]].values.tolist()
             legend = 0
-            if 'histogram' in visualizations:
-                try:
-                    visualizations['histogram'] = figure(x_range=x, width=800, height=600)
-                    visualizations['histogram'].vbar(x=x, top=y, width=0.1, color='red', legend=axis[legend])
-                    visualizations['histogram'].y_range.start = 0
-                    visualizations['histogram'].y_range.end = max(y)
-                    visualizations['histogram'].xaxis.major_label_orientation = "vertical"
-                except:
-                    pass
+            try:
+                visualizations['histogram'] = figure(x_range=x, width=800, height=600)
+                visualizations['histogram'].vbar(x=x, top=y, width=0.1, color='red', legend=axis[legend])
+                visualizations['histogram'].y_range.start = 0
+                visualizations['histogram'].y_range.end = max(y)
+                visualizations['histogram'].xaxis.major_label_orientation = "vertical"
+            except Exception as e:
+                log.exception('failed histogram visualization setup with exception: %s' % e)
+                del visualizations['histogram']
 
         if 'linechart' in visualizations:
             if not isinstance(result.index, (pandas.Index,
