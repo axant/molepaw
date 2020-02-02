@@ -10,7 +10,7 @@ from bokeh.plotting import figure
 
 class TestChartVisualization(BaseTestController):
     _db = None
-    url = 'mongodb://127.0.0.1:27017/moletest#fruits'
+    url = 'mongodb://molepaw:molepaw@127.0.0.1:27017/moletest#fruits'
     fruits = ['Apples', 'Pears', 'Nectarines', 'Plums', 'Grapes', 'Strawberries']
     counts = [5, 3, 4, 2, 4, 6]
     deltas = [10, 20, 30, 40, 50, 60]
@@ -19,6 +19,9 @@ class TestChartVisualization(BaseTestController):
         return session_factory(self.url)
 
     def setUp(self):
+        # remember that whatever setUp fails, the tearDown is not called
+        # and all following tests will fail
+        # for example a connection ploblem with mongo
         super(TestChartVisualization, self).setUp()
         self._db = self.get_session()._session.get_default_database()
         self._db.create_collection('fruits')
@@ -84,6 +87,22 @@ class TestChartVisualization(BaseTestController):
         assert response.html.find(id='results-count').get_text() == '6'
         assert response.html.find(id='histogram-visualization') is not None
 
+    def test_view_histogram_visualization_filter_required(self):
+        self._db.fruits.insert_many({'name': n, 'value': v} for (n,v) in (('a', j) for j in range(10000)))
+        entities = self.populate_for_chart_visualization('histogram', 'name,value')
+        response = self.app.get(
+            '/extractions/view',
+            params=dict(
+                extraction=entities['extractiondataset_uid']
+            ),
+            extra_environ=self.admin_env,
+            status=200
+        )
+        assert 'Fruits Extraction' in response.body.decode('utf-8')
+        assert response.html.find(id='results-count').get_text() == '10006'
+        assert response.html.find(id='histogram-visualization') is not None
+
+
     @patch('etl.controllers.extractions.figure', Mock(side_effect=Exception('figure not figuring')))
     def test_view_histogram_visualization_exception(self):
         entities = self.populate_for_chart_visualization('histogram', 'name,value')
@@ -97,7 +116,8 @@ class TestChartVisualization(BaseTestController):
         )
         assert 'Fruits Extraction' in response.body.decode('utf-8')
         assert response.html.find(id='results-count').get_text() == '6'
-        assert response.html.find(id='histogram-visualization') is not None, response.html
+        # is None because of exception
+        assert response.html.find(id='histogram-visualization') is None, response.html
 
 
     def test_view_linechart_visualization(self):
@@ -113,6 +133,24 @@ class TestChartVisualization(BaseTestController):
         assert 'Fruits Extraction' in response.body.decode('utf-8')
         assert response.html.find(id='results-count').get_text() == '6'
         assert response.html.find(id='linechart-visualization') is not None
+
+    def test_view_linechart_visualization_unsupported_index(self):
+        entities = self.populate_for_chart_visualization('linechart', 'name,value')
+        from etl.controllers.extractions import LINECHART_SUPPORTED_INDEXES
+        del LINECHART_SUPPORTED_INDEXES[:]  # clear
+        response = self.app.get(
+            '/extractions/view',
+            params=dict(
+                extraction=entities['extraction_uid']
+            ),
+            extra_environ=self.admin_env,
+            status=200
+        )
+        assert 'Fruits Extraction' in response.body.decode('utf-8')
+        assert response.html.find(id='results-count').get_text() == '6'
+        # None because of unsupported index
+        assert response.html.find(id='linechart-visualization') is None
+
 
     def test_view_linechart_datetime_visualization(self):
         entities = self.populate_for_chart_visualization('linechart', 'day,value')
@@ -140,4 +178,19 @@ class TestChartVisualization(BaseTestController):
         )
         assert 'Fruits Extraction' in response.body.decode('utf-8')
         assert response.html.find(id='results-count').get_text() == '6'
+        assert response.html.find(id='pie-visualization') is not None
+
+    def test_view_piechart_visualization_bicolor(self):
+        entities = self.populate_for_chart_visualization('pie', 'name,value')
+        self._db.fruits.remove({"value": {"$gt": 3}})
+        response = self.app.get(
+            '/extractions/view',
+            params=dict(
+                extraction=entities['extraction_uid']
+            ),
+            extra_environ=self.admin_env,
+            status=200
+        )
+        assert 'Fruits Extraction' in response.body.decode('utf-8')
+        assert response.html.find(id='results-count').get_text() == '2'
         assert response.html.find(id='pie-visualization') is not None

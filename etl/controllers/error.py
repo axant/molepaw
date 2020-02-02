@@ -26,7 +26,7 @@ class ErrorController(BaseController):
         try:
             # tg.abort exposes the message as .detail in response
             message = resp.detail
-        except:
+        except:  # pragma: no cover
             message = None
 
         if not message:
@@ -47,3 +47,7 @@ class ErrorController(BaseController):
                       code=request.params.get('code', resp.status_int),
                       message=request.params.get('message', message))
         return values
+
+    @expose()
+    def test(self, *a, **k):
+        raise Exception('this is for testing the xhr error above')

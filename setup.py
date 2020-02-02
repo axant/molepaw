@@ -31,7 +31,6 @@ testing = [
     'nose',
     'coverage',
     'tg.devtools',
-    'flaky',
     'tox',
     'pymongo',
     'mock',
@@ -49,7 +48,7 @@ install_requires = [
     "tgext.admin >= 0.6.1",
     "WebHelpers2",
     "cython",
-    "pandas == 0.24.2",
+    "pandas == 0.24.2",  # this version of pandas does not work on python3.8
     "bokeh == 1.0.4",
     "tgext.evolve >= 0.0.5",
     "numexpr",

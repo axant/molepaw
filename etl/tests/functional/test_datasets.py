@@ -34,7 +34,7 @@ class TestDatasets(TestController):
 
     def test_broken_fetch(self):
         extraction = self.create_extraction()
-        datasource = self.create_datasource(url='nonenonenone')
+        datasource = self.create_datasource(url=u'nonenonenone')
         dataset = self.create_dataset(datasource=datasource)
         self.flush()
         dataset = model.DBSession.merge(dataset)

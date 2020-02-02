@@ -3,11 +3,14 @@
 
 # Default development database
 devdata.db
+# I copied it for local testing using sqlite:////path for datasource
+devdata.copy.db
 
 # Default data directory
 data/*
 
 # Packages
+.eggs
 *.egg
 *.egg-info
 dist

@@ -38,7 +38,7 @@ class AbstractDBSessions(object):
 
 
 class TestMongoDBSession(AbstractDBSessions):
-    _url = 'mongodb://127.0.0.1:27017/moletest#other_users'
+    _url = 'mongodb://molepaw:molepaw@127.0.0.1:27017/moletest#other_users'
     _query_users = '''
 #collection=tg_user
 {"user_name" : "admin"}'''

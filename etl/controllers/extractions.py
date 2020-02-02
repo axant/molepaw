@@ -37,6 +37,14 @@ py_version = sys.version_info[:2][0]
 log = logging.getLogger('molepaw')
 
 
+LINECHART_SUPPORTED_INDEXES = [
+    pandas.Index,
+    pandas.DatetimeIndex,
+    pandas.Int64Index,
+    pandas.Float64Index,
+]
+
+
 class CreateExtractionForm(twf.Form):
     class child(axf.bootstrap.BootstrapFormLayout):
         name = twf.TextField(label='Extraction Name',
@@ -190,10 +198,7 @@ class ExtractionsController(BaseController):
                 del visualizations['histogram']
 
         if 'linechart' in visualizations:
-            if not isinstance(result.index, (pandas.Index,
-                                             pandas.DatetimeIndex,
-                                             pandas.Int64Index,
-                                             pandas.Float64Index)):
+            if not isinstance(result.index, tuple(LINECHART_SUPPORTED_INDEXES)):
                 flash('LineChart graph is only supported for scalar indexes, currently {}'.format(
                     type(result.index)
                 ), 'warning')

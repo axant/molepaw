@@ -19,3 +19,27 @@ class TestRoot(TestController):
         r = self.app.get('/', status=302, extra_environ=self.manager_env)
         assert 'http://localhost/extractions' == r.location, r.location
         r = r.follow(extra_environ=self.manager_env, status=200)
+
+    def test_error_xhr(self):
+        r = self.app.get('/error/test?detail=sfiga', status=500, extra_environ=self.manager_env, xhr=True)
+        assert '''<!DOCTYPE html>
+<div style="width: 100%;">
+    
+      <h3>Error 500</h3>
+
+
+  <div style="max-width: 100%;">sfiga</div>
+    
+</div>''' == r.body
+
+    def test_error_xhr_no_detail(self):
+        r = self.app.get('/error/test', status=500, extra_environ=self.manager_env, xhr=True)
+        assert '''<!DOCTYPE html>
+<div style="width: 100%;">
+    
+      <h3>Error 500</h3>
+
+
+  <div style="max-width: 100%;"><p>We're sorry but we weren't able to process  this request.</p></div>
+    
+</div>''' == r.body, r.body
