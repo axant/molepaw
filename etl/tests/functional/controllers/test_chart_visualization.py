@@ -132,7 +132,7 @@ class TestChartVisualization(BaseTestController):
         )
         assert 'Fruits Extraction' in response.body.decode('utf-8')
         assert response.html.find(id='results-count').get_text() == '6'
-        assert response.html.find(id='linechart-visualization') is not None
+        assert response.html.find(id='linechart-visualization') is not None, response.html
 
     def test_view_linechart_visualization_unsupported_index(self):
         entities = self.populate_for_chart_visualization('linechart', 'name,value')

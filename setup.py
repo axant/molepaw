@@ -48,7 +48,6 @@ install_requires = [
     "tgext.admin >= 0.6.1",
     "WebHelpers2",
     "cython",
-    "pandas == 0.24.2",  # this version of pandas does not work on python3.8
     "bokeh == 1.0.4",
     "tgext.evolve >= 0.0.5",
     "numexpr",
@@ -62,6 +61,11 @@ install_requires = [
 if py_version != (3, 2):
     # Babel not available on 3.2
     install_requires.append("Babel")
+
+if py_version[0] < 3:
+    install_requires.append("pandas == 0.24.2")  # latest version for python2
+else:
+    install_requires.append('pandas >= 1.0')
 
 setup(
     name='etl',

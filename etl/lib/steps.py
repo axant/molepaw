@@ -6,7 +6,10 @@ from markupsafe import Markup
 from tw2.core import Validator
 from tw2.forms import TextField, SingleSelectField
 from tg.i18n import lazy_ugettext as l_
-from pandas.core.groupby.groupby import groupby
+try:
+    from pandas.core.groupby.groupby import groupby
+except ImportError:
+    pass
 from etl.lib.utils import force_text
 from etl.lib.validators import CommaSeparatedListValidator
 
@@ -26,7 +29,7 @@ slice_dataframe.form_fields = [
 
 def group(df, aggregation, **kwargs):
     """Groups the data by one or more columns and applies an aggregation function"""
-    g = groupby(df, as_index=bool(kwargs.pop('as_index', False)), **kwargs)
+    g = df.groupby(as_index=bool(kwargs.pop('as_index', False)), **kwargs)
     return g.agg(aggregation)
 group.form_fields = [
     TextField('by', label=l_('Group By'), validator=CommaSeparatedListValidator(required=True),

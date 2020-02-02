@@ -13,7 +13,7 @@ class TestStepsEditorController(BaseTestController):
             extra_environ=self.admin_env,
             status=200
         )
-        assert response.json == {u'steps': [{u'function': u'query', u'extraction_id': 1, u'uid': 1, u'enabled': True, u'priority': 0, u'function_doc': u'Filters the rows for those matching the given expression.\n\n    - Use "value != value" to get only rows where value is NaN\n    - Use "value == value" to get only rows where value is not NaN\n\n    Special values:\n\n    * @utcnow -> current date and time in UTC\n    * @datevalue -> current date and time in UTC\n    ', u'options': {u'expression': u"user_name <> 'viewer'"}}]}
+        assert response.json == {u'steps': [{u'function': u'query', u'extraction_id': 1, u'uid': 1, u'enabled': True, u'priority': 0, u'function_doc': u'Filters the rows for those matching the given expression.\n\n    - Use "value != value" to get only rows where value is NaN\n    - Use "value == value" to get only rows where value is not NaN\n\n    Special values:\n\n    * @utcnow -> current date and time in UTC\n    * @datevalue -> current date and time in UTC\n    ', u'options': {u'expression': u"user_name != 'viewer'"}}]}
 
     def test_put(self):
         response = self.app.put_json(

@@ -32,7 +32,7 @@ from tgext.pluggable import app_model
 try:
     unicode('test Python2')
 except Exception:               # PRAGMA NO COVER
-    unicode = str
+    unicode = str  # this is bad
 py_version = sys.version_info[:2][0]
 log = logging.getLogger('molepaw')
 
@@ -184,7 +184,10 @@ class ExtractionsController(BaseController):
             axis = [x.strip() for x in extraction.graph_axis.split(',')]
 
         if 'histogram' in visualizations:
-            x = [j.encode('utf8') if isinstance(j, unicode) else j for j in result[axis[0]].values.tolist()]
+            if py_version < 3:
+                x = [j.encode('utf8') if isinstance(j, unicode) else j for j in result[axis[0]].values.tolist()]
+            else:
+                x = [j for j in result[axis[0]].values.tolist()]
             y = result[axis[1]].values.tolist()
             legend = 0
             try:
@@ -206,8 +209,11 @@ class ExtractionsController(BaseController):
 
             if 'linechart' in visualizations:
                 # Check it is still available after checks.
-                
-                x = [j.encode('utf8') if isinstance(j, unicode) else j for j in result[axis[0]].values.tolist()]
+
+                if py_version < 3:
+                    x = [j.encode('utf8') if isinstance(j, unicode) else j for j in result[axis[0]].values.tolist()]
+                else:
+                    x = [j for j in result[axis[0]].values.tolist()]
                 try:
                     visualizations['linechart'] = figure(x_range=x,width=800, height=600)
                 except:
@@ -218,7 +224,10 @@ class ExtractionsController(BaseController):
                     visualizations['linechart'] = figure(width=800, height=600, x_axis_type='datetime')
 
                 for i, c in zip(range(1,len(axis)), color_gen()):
-                    y = [j.encode('utf8') if isinstance(j, unicode) else j for j in result[axis[i]].values.tolist()]
+                    if py_version < 3:
+                        y = [j.encode('utf8') if isinstance(j, unicode) else j for j in result[axis[i]].values.tolist()]
+                    else:
+                        y = [j for j in result[axis[i]].values.tolist()]
                     try:
                         visualizations['linechart'] = figure(y_range=y,width=800, height=600)
                     except:

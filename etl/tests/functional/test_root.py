@@ -22,7 +22,7 @@ class TestRoot(TestController):
 
     def test_error_xhr(self):
         r = self.app.get('/error/test?detail=sfiga', status=500, extra_environ=self.manager_env, xhr=True)
-        assert '''<!DOCTYPE html>
+        assert b'''<!DOCTYPE html>
 <div style="width: 100%;">
     
       <h3>Error 500</h3>
@@ -34,7 +34,7 @@ class TestRoot(TestController):
 
     def test_error_xhr_no_detail(self):
         r = self.app.get('/error/test', status=500, extra_environ=self.manager_env, xhr=True)
-        assert '''<!DOCTYPE html>
+        assert b'''<!DOCTYPE html>
 <div style="width: 100%;">
     
       <h3>Error 500</h3>

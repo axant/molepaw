@@ -18,7 +18,7 @@ class BaseTestController(TestController):
     filter_data = dict(
         name='custom_flt',
         default=True,
-        query="user_name <> 'viewer'"
+        query="user_name != 'viewer'"
     )
 
     def setUp(self):
