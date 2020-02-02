@@ -6,16 +6,12 @@ from markupsafe import Markup
 from tw2.core import Validator
 from tw2.forms import TextField, SingleSelectField
 from tg.i18n import lazy_ugettext as l_
-try:
-    from pandas.core.groupby.groupby import groupby
-except ImportError:
-    pass
 from etl.lib.utils import force_text
 from etl.lib.validators import CommaSeparatedListValidator
 
 try:
     unicode('test Python2')
-except Exception:
+except Exception:  # pragma: no cover
     unicode = str
 
 def slice_dataframe(df, fields):
@@ -51,6 +47,7 @@ def setvalue(df, field, value):
 
         * @utcnow -> current date and time in UTC
         * @nan -> NaN
+        * @null -> None
     """
 
     expr = '{} = {}'.format(field, value)
@@ -144,7 +141,8 @@ def query(df, expression):
     Special values:
 
     * @utcnow -> current date and time in UTC
-    * @datevalue -> current date and time in UTC
+    * @nan -> NaN
+    * @null -> None
     """
     return df.query(expression, local_dict={
         'null': None,
@@ -159,7 +157,9 @@ query.form_fields = [
 
 def setindex(df, index):
     """Marks the Given column as the index of the data"""
-    def _stringyindex(series):
+    def _stringyindex(series):  # pragma: no cover
+        # no cover because of py2 and 3 compatibility. (we should make pragma for specific python version)
+        # this code is tested in etl/tests/functional/test_steps.py
         v = series[index]
         if isinstance(v, bytes):
             return unicode(v, 'utf-8').encode('ascii', 'replace')
