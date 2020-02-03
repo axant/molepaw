@@ -15,6 +15,7 @@ from math import pi
 import pandas
 import pandas.tseries
 from bokeh.plotting import figure
+from bokeh.palettes import Category20
 from bokeh.transform import cumsum
 from etl.lib.helpers import color_gen
 

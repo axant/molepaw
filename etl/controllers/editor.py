@@ -118,6 +118,8 @@ class StepsEditorController(RestController):
     @decode_params('json')
     def post(self, function=None, priority=None, options=None, **kwargs):
         try:
+            if options is None:
+                options = {}
             options = ExtractionStep.formfor(function).validate(options)
         except Exception as e:
             response.status = 412

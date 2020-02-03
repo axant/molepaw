@@ -17,6 +17,7 @@ from etl.model import DeclarativeBase, metadata, DBSession
 from etl.lib import steps
 
 FUNCTIONS = {
+    'select function': steps.select_function,
     'slice': steps.slice_dataframe,
     'group': steps.group,
     'striptime': steps.striptime,
@@ -29,7 +30,7 @@ FUNCTIONS = {
     'sort': steps.sort,
     'timeago': steps.timeago,
     'linkize': steps.linkize,
-    'cast_to_int': steps.cast_to_int,
+    'cast to int': steps.cast_to_int,
 }
 
 

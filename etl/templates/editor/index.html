@@ -102,6 +102,11 @@
             font-size: 16px;
         }
 
+	.step-actions span.delete-text {
+	    color: #f00;
+	    font-size: 14px;
+	}
+
         .save ~ .step-actions .arrow-action,
         .save ~ .step-actions .view-action{
             display: none;
@@ -298,13 +303,12 @@
                     </select>
                     {{else}}
                     <h3>
+                        <span on-click="set('steps.'+stepidx+'.editing', true)">{{.function}}</span>
+
                         {{#if .modified}}
-                        <span on-click="saveStep(.)"
-                              class="glyphicon save glyphicon-floppy-save"></span>
+                        <div class="step-actions pull-right">&nbsp;<span on-click="saveStep(.)"
+                              class="glyphicon save glyphicon-floppy-save"></span></div>
                         {{/if}}
-                        <span on-click="set('steps.'+stepidx+'.editing', true)">
-                          {{.function}}
-                        </span>
                         <div class="step-actions pull-right">
                             {{#if .enabled}}
                             <span on-click="toggleStep(., false)" class="glyphicon glyphicon-eye-close view-action"></span>
@@ -313,8 +317,7 @@
                             {{/if}}
                             <span on-click="raiseStep(.)" class="glyphicon glyphicon-arrow-up arrow-action"></span>
                             <span on-click="lowerStep(.)" class="glyphicon glyphicon-arrow-down arrow-action"></span>
-                            &nbsp;
-                            <span on-click="deleteStep(.)" class="glyphicon glyphicon-remove"></span>
+                            <span on-click="deleteStep(.)" class="delete-text">${_('Delete')}</span>
                         </div>
                     </h3>
                     {{/if}}
@@ -373,7 +376,7 @@
         </div>
         <py:for each="fname, ffields in stepsformfields.items()">
 
-            {{#partial ${fname}}}
+            {{#partial ${fname.replace(' ', '_')}}}
             <div class="form-horizontal" on-click="showSave(event, stepidx)">
                 <div class="form-group" py:for="field in ffields">
                     <label for="${field.id}" class="col-sm-3 control-label">${field.label}</label>
@@ -521,7 +524,7 @@
             if (self.get('steps').length)
                 priority = self.get('steps')[self.get('steps').length - 1].priority + 1;
             self.push('steps', {
-                'function': 'slice',
+                'function': 'select function',
                 'editing': true,
                 'priority': priority,
                 'enabled': true
