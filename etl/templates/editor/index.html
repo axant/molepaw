@@ -291,15 +291,20 @@
                     {{#if .editing}}
                     <select value="{{.function}}" class="form-control"
                             on-blur="set('steps.'+stepidx+'.editing', false)">
-                        <option py:for="steptype in stepsformfields" value="${steptype}">${steptype}</option>
+                        <option py:for="steptype in stepsformfields"
+                                value="${steptype}">
+                          ${steptype}
+                        </option>
                     </select>
                     {{else}}
                     <h3>
                         {{#if .modified}}
-                        <span on-click="saveStep(.)" class="glyphicon save glyphicon-floppy-save"></span>
+                        <span on-click="saveStep(.)"
+                              class="glyphicon save glyphicon-floppy-save"></span>
                         {{/if}}
-                        <span on-click="set('steps.'+stepidx+'.editing', true)">{{.function}}</span>
-
+                        <span on-click="set('steps.'+stepidx+'.editing', true)">
+                          {{.function}}
+                        </span>
                         <div class="step-actions pull-right">
                             {{#if .enabled}}
                             <span on-click="toggleStep(., false)" class="glyphicon glyphicon-eye-close view-action"></span>
@@ -326,7 +331,8 @@
                         {{${Markup('>')}.function}}
                     </div>
                 </div>
-                <div class="col-xs-6 table-responsive">
+                <div class="col-xs-6 table-responsive"
+                    on-click="showSave(event, stepidx)">
                     <table class="table">
                         <thead>
                         <tr>
@@ -368,7 +374,7 @@
         <py:for each="fname, ffields in stepsformfields.items()">
 
             {{#partial ${fname}}}
-            <div class="form-horizontal">
+            <div class="form-horizontal" on-click="showSave(event, stepidx)">
                 <div class="form-group" py:for="field in ffields">
                     <label for="${field.id}" class="col-sm-3 control-label">${field.label}</label>
                     <div class="col-sm-9">${field.display(css_class='form-control')}</div>
@@ -506,10 +512,8 @@
             });
         },
         checkSaved: function () {
-            console.log("OOOOOOOOOOOOLA")
-            console.log(this)
-            var self = this;
-            return self.get('steps_legth_at_last_update') == self.get('steps').length;
+          var self = this;
+          return self.get('steps_legth_at_last_update') == self.get('steps').length;
         },
         addStep: function () {
             var self = this;
@@ -537,8 +541,15 @@
               extractionvisualization.saveVisualization();
             });
         },
+        showSave: function(event, stepidx) {
+          event.original.preventDefault();
+          var self = this;
+          if (self.get('steps.' + stepidx + '.editing')) {
+            self.set('steps.' + stepidx + '.editing', false);
+          }
+        },
         toggleStep: function (step, status) {
-            var self = this;
+          var self = this;
 	        if (!self.checkSaved()) return;
             self.performAction(
                     step,

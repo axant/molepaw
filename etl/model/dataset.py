@@ -42,19 +42,20 @@ class DataSet(DeclarativeBase):
             try:
                 ##################### START CHECKING DATA-TYPE #####################
                 df = self.datasource.dbsession.execute(self.query)
-                for i in df.columns:
+                sample_df = df.sample(100) if len(df.index) >= 100 else df
+                for i in sample_df.columns:
                     if collections.Counter(
-                        [is_boolean(j) for j in df[i].head(100).tolist()]
+                        [is_boolean(j) for j in sample_df[i].tolist()]
                     ).most_common(1)[0][0]:
                         log.info('column: %s type: %s' % (i, 'bool'))
                         df[i] = df[i].astype('bool', errors='ignore')
                     elif collections.Counter(
-                        [is_datetime(j) for j in df[i].head(100).tolist()]
+                        [is_datetime(j) for j in sample_df[i].tolist()]
                     ).most_common(1)[0][0]:
                         log.info('column: %s type: %s' % (i, 'datetime'))
                         df[i] = pd.to_datetime(df[i], errors='coerce')
                     elif collections.Counter(
-                        [is_number(j) for j in df[i].head(100).tolist()]
+                        [is_number(j) for j in sample_df[i].tolist()]
                     ).most_common(1)[0][0]:
                         log.info('column: %s type: %s' % (i, 'numeric'))
                         df[i] = pd.to_numeric(df[i], errors='coerce')
