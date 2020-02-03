@@ -252,12 +252,18 @@
                 </select>
                 {{/if}}
                 <br/>
-                <a class="btn btn-success" on-click="addDataSet()">
-                    <span class="glyphicon glyphicon-plus"></span>
-                </a>
+                <div class="row" style="margin-left: 0; margin-right: 0;">
+                  <a class="btn btn-danger col-xs-6" on-click="set('addingdataset', false)">
+                    <span class="glyphicon glyphicon-trash"></span>
+                  </a>
+                  <a class="btn btn-success col-xs-6" on-click="addDataSet()">
+                      <span class="glyphicon glyphicon-plus"></span>
+                  </a>
+                </div>
             </div>
             {{else}}
-            <div class="dataset-card btn btn-success" on-click="set('addingdataset', true)">
+            <div class="dataset-card btn btn-success"
+                 on-click="set('addingdataset', true)">
                 <span class="glyphicon glyphicon-plus"></span>
             </div>
             {{/if}}
