@@ -10,7 +10,7 @@ from bokeh.plotting import figure
 
 class TestChartVisualization(BaseTestController):
     _db = None
-    url = 'mongodb://molepaw:molepaw@127.0.0.1:27017/moletest#fruits'
+    url = 'mongodb://127.0.0.1:27017/moletest#fruits'
     fruits = ['Apples', 'Pears', 'Nectarines', 'Plums', 'Grapes', 'Strawberries']
     counts = [5, 3, 4, 2, 4, 6]
     deltas = [10, 20, 30, 40, 50, 60]

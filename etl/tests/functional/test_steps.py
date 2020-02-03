@@ -148,7 +148,6 @@ class TestSteps(object):
         assert df['population'][0] == 500
 
     def test_sort(self):
-        # descending sorting currently not supported
         df = pd.DataFrame({
             'value': pd.Series([1, 2, 3]),
             'population': pd.Series([500, 100, 600]),
@@ -160,6 +159,20 @@ class TestSteps(object):
         assert df['city'][df.index[0]] == 'AL'
         assert df['population'][df.index[1]] == 500
         assert df['city'][df.index[1]] == 'TO'
+
+    def test_sort_descending(self):
+        df = pd.DataFrame({
+            'value': pd.Series([1, 2, 3]),
+            'population': pd.Series([500, 100, 600]),
+            'city': pd.Series(['TO', 'AL', 'MI']),
+        })
+        df = steps.sort(df, ['-population'])
+        # remember to use the index for getting if tou rely on sort
+        assert df['population'][df.index[0]] == 600
+        assert df['city'][df.index[0]] == 'MI'
+        assert df['population'][df.index[1]] == 500
+        assert df['city'][df.index[1]] == 'TO'
+
 
     def test_linkize(self):
         df = pd.DataFrame({
