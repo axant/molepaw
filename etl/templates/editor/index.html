@@ -6,7 +6,8 @@
 
 <head>
     <title>Extraction Editor</title>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/ractive/0.7.3/ractive.min.js"></script>
+    <!-- we're stuck because since 0.10.0 there is a TypeError: _0 is not a function -->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/ractive/0.10.0-build-2/ractive.js"></script>
     <script src="${tg.url('/javascript/ractive-transitions-slide.min.js')}"></script>
     <script src="${tg.url('/javascript/axw-req.js')}"></script>
     <style>
@@ -293,15 +294,13 @@
             <span class="steparrow glyphicon glyphicon-chevron-down"></span>
             <div class="step row {{.enabled ? '' : 'disabled'}}">
                 <div class="col-xs-6">
-                    {{#if .editing}}
-                    <select value="{{.function}}" class="form-control"
+                    <select value="{{.function}}" class="form-control" style="{{.editing? 'opacity: 100' : 'opacity: 0'}}"
                             on-blur="set('steps.'+stepidx+'.editing', false)">
                         <option py:for="steptype in stepsformfields"
                                 value="${steptype}">
                           ${steptype}
                         </option>
                     </select>
-                    {{else}}
                     <h3>
                         <span on-click="set('steps.'+stepidx+'.editing', true)">{{.function}}</span>
 
@@ -320,7 +319,6 @@
                             <span on-click="deleteStep(.)" class="delete-text">${_('Delete')}</span>
                         </div>
                     </h3>
-                    {{/if}}
                     <div class="step-doc">
                         <em class="docstring" value="{{steps[stepidx].function}}">
                           {{#if .function_doc}}
@@ -391,7 +389,7 @@
     //<![CDATA[
     var DataSetsEditor = Ractive.extend({
         template: '#DataSetsEditor_template',
-        data: {
+        data: function() { return {
             datasets_columns: ${h.script_json_encode(datasets_columns)},
             available_datasets: ${h.script_json_encode(available_datasets)},
             getCols: function () {
@@ -412,7 +410,7 @@
                 var editingdataset = this.get('editingdataset')
                 return datasets[0].uid !== editingdataset.uid
             }
-        },
+        }},
         oninit: function () {
             var self = this;
             self.updateDataSets();
@@ -485,7 +483,9 @@
 
     var StepsEditor = Ractive.extend({
         template: '#StepsEditor_template',
-        data: {docstring: JSON.parse('${docstring}')},
+        data: function () { return {
+	    docstring: JSON.parse('${docstring}')
+	}},
         oninit: function () {
             var self = this;
             self.updateSteps();
@@ -630,20 +630,21 @@
     var ExtractionVisualization = Ractive.extend({
         template: '#ExtractionVisualization_template',
         data: function () {
-    return {
-       showAxis: false,
-            disabled: true,
-            hasError: {
-              error: false,
-              message: "",
-              color: ""
-            },
-            visualization: {type: "${extraction.visualization}",
-                            original:  "${extraction.visualization}",
-                            axis: "${extraction.graph_axis}",
-                            original_axis: "${extraction.graph_axis}"}
-    };
-  },
+	    return {
+		showAxis: false,
+		disabled: true,
+		hasError: {
+		    error: false,
+		    message: "",
+		    color: ""
+		},
+		visualization: {
+		    type: "${extraction.visualization}",
+		    original:  "${extraction.visualization}",
+                    axis: "${extraction.graph_axis}",
+                    original_axis: "${extraction.graph_axis}"}
+	    };
+	},
         oninit: function () {
             var self=this;
             self.observe('visualization.type', function (newValue, oldValue) {
