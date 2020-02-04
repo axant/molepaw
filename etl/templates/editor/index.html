@@ -78,6 +78,12 @@
             word-wrap: break-word;
         }
 
+	.step select.function {
+	    position: absolute;
+	    width: 70%;
+	    opacity: 0;
+	}
+
         .step h3 {
             margin-top: 5px;
         }
@@ -300,15 +306,14 @@
             <span class="steparrow glyphicon glyphicon-chevron-down"></span>
             <div class="step row {{.enabled ? '' : 'disabled'}}">
                 <div class="col-xs-6">
-                    <select value="{{.function}}" class="form-control" style="{{.editing? 'opacity: 100; position: absolute; width: 70%' : 'opacity: 0; position: absolute; width: 70%'}}"
-                            on-blur="set('steps.'+stepidx+'.editing', false)">
+                    <select value="{{.function}}" class="form-control function">
                         <option py:for="steptype in stepsformfields"
                                 value="${steptype}">
-                          ${steptype}
+    ${steptype.replace('_', ' ')}
                         </option>
                     </select>
                     <h3>
-                        <span on-click="set('steps.'+stepidx+'.editing', true)">{{.function}}</span>
+                        <span>{{.function.replace(/_/g, ' ')}}</span>
 
                         {{#if .modified}}
                         <div class="step-actions pull-right">&nbsp;<span on-click="saveStep(.)"
@@ -335,7 +340,7 @@
                         </em>
                     </div>
                     <div class="step-form">
-                        {{${Markup('>')}.function}}
+                        {{${Markup('>')}.function.replace(/\ /g, '_')}}
                     </div>
                 </div>
                 <div class="col-xs-6 table-responsive"
@@ -380,7 +385,7 @@
         </div>
         <py:for each="fname, ffields in stepsformfields.items()">
 
-            {{#partial ${fname.replace(' ', '_')}}}
+            {{#partial ${fname}}}
             <div class="form-horizontal" on-click="showSave(event, stepidx)">
                 <div class="form-group" py:for="field in ffields">
                     <label for="${field.id}" class="col-sm-3 control-label">${field.label}</label>
@@ -530,8 +535,7 @@
             if (self.get('steps').length)
                 priority = self.get('steps')[self.get('steps').length - 1].priority + 1;
             self.push('steps', {
-                'function': 'select function',
-                'editing': true,
+                'function': 'select_function',
                 'priority': priority,
                 'enabled': true
             });
@@ -553,9 +557,6 @@
         showSave: function(event, stepidx) {
           event.original.preventDefault();
           var self = this;
-          if (self.get('steps.' + stepidx + '.editing')) {
-            self.set('steps.' + stepidx + '.editing', false);
-          }
         },
         toggleStep: function (step, status) {
           var self = this;
