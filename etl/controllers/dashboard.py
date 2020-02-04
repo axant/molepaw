@@ -165,7 +165,7 @@ class DashboardController(BaseController):
             ).one()
         except (NoResultFound, KeyError):
             de = DashboardExtractionAssociation()
-            de.dashboard_id = dashboard_id
+            de.dashboard_id = int(dashboard_id)
             de.extraction_id = request.json['extraction_id']
             DBSession.add(de)
         de.extraction_id = request.json['extraction_id']
@@ -219,7 +219,6 @@ class DashboardController(BaseController):
             other_de = None
         de.index = new_index
         return dict(de=de, other_de=other_de)
-
 
     @expose('json')
     @require(predicates.in_group('admin'))
