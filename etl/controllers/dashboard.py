@@ -354,11 +354,6 @@ class DashboardController(BaseController):
         else:
             # return abort(400, detail='%s not supported' % de.visualization)
             return redirect('/error', params={'detail': '%s not supported' % de.visualization})
-        print(dict(
-            extraction=extraction, visualization=visualization,
-            visualization_type=de.visualization, axis=axis,
-            columns=result.columns, results=result.itertuples(), count=len(result)
-        ))
         return dict(
             extraction=extraction, visualization=visualization,
             visualization_type=de.visualization, axis=axis,

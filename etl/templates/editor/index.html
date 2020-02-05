@@ -301,7 +301,6 @@
 <div class="row" id="steps">
     <script type="text/html" id="StepsEditor_template">
         {{#each steps:stepidx}}
-
         <div class="col-md-12 stepbox" intro-outro='slide'>
             <span class="steparrow glyphicon glyphicon-chevron-down"></span>
             <div class="step row {{.enabled ? '' : 'disabled'}}">
@@ -495,10 +494,11 @@
     var StepsEditor = Ractive.extend({
         template: '#StepsEditor_template',
         data: function () { return {
-	    docstring: JSON.parse('${docstring}')
-	}},
+	        docstring: JSON.parse('${docstring}')
+	      }},
         oninit: function () {
             var self = this;
+            self.set('testrun', []);
             self.updateSteps();
             self.observe('steps.*.function', function (newValue, oldValue, keypath) {
                 if (self.get('loaded') === true) {
@@ -512,6 +512,7 @@
                     self.set(stepkeypath + '.modified', true);
                 }
             });
+
         },
         updateSteps: function () {
             var self = this;
@@ -519,7 +520,7 @@
             $.get("${tg.url(['/editor', str(extraction.uid), 'steps'])}", function (res) {
                 self.set('steps', res.steps);
                 self.set('loaded', true);
-		    self.set('steps_legth_at_last_update', self.get('steps').length);
+		            self.set('steps_legth_at_last_update', self.get('steps').length);
             });
             $.get("${tg.url(['/editor', str(extraction.uid), 'test_pipeline'])}", function (res) {
                 self.set('testrun', res.results);
@@ -547,7 +548,7 @@
                 step.modified = false;
                 self.updateSteps();
             }).fail(function (response) {
-		var step_error = response.responseJSON.errors || response.responseJSON.detail
+		            var step_error = response.responseJSON.errors || response.responseJSON.detail;
                 toastr.error("Failed to " + action + " step: " + JSON.stringify(step_error));
             });
             self.observe('self',function (newValue, oldValue, keypath) {
