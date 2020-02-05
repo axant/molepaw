@@ -18,12 +18,14 @@ from bokeh.plotting import figure
 from bokeh.palettes import Category20
 from bokeh.transform import cumsum
 from etl.lib.helpers import color_gen
+import sys
+
 
 try:
     unicode('test Python2')
 except Exception:
     unicode = str
-
+py_version = sys.version_info[:2][0]
 
 log = logging.getLogger(__name__)
 visualizationtypes = ('histogram', 'line', 'pie', 'sum', 'average')
@@ -257,7 +259,10 @@ class DashboardController(BaseController):
             axis = [x.strip() for x in de.graph_axis.split(',')]
 
         if 'histogram' == de.visualization:
-            x = [j.encode('utf8') if isinstance(j, unicode) else j for j in result[axis[0]].values.tolist()]
+            if py_version < 3:
+                x = [j.encode('utf8') if isinstance(j, unicode) else j for j in result[axis[0]].values.tolist()]
+            else:
+                x = [j for j in result[axis[0]].values.tolist()]
             y = result[axis[1]].values.tolist()
             legend = 0
             try:
@@ -280,7 +285,11 @@ class DashboardController(BaseController):
                     type(result.index)
                 ))
 
-            x = [j.encode('utf8') if isinstance(j, unicode) else j for j in result[axis[0]].values.tolist()]
+            if py_version < 3:
+                x = [j.encode('utf8') if isinstance(j, unicode) else j for j in result[axis[0]].values.tolist()]
+            else:
+                x = [j for j in result[axis[0]].values.tolist()]
+
             try:
                 visualization = figure(x_range=x, sizing_mode='scale_width', height=400)
             except:
@@ -332,13 +341,24 @@ class DashboardController(BaseController):
             visualization.legend.glyph_width = 18
 
         elif 'sum' == de.visualization:
-            visualization = result[axis[0]].sum()
+            try:
+                visualization = result[axis[0]].sum()
+            except TypeError as ex:
+                visualization = 'Error: ' + str(ex)
         elif 'average' == de.visualization:
-            visualization = result[axis[0]].sum() / len(result[axis[0]])
+            try:
+                visualization = result[axis[0]].sum() / len(result[axis[0]])
+            except Exception as ex:
+                print(type(ex), str(ex))
+                visualization = 'Error: ' + str(ex)
         else:
             # return abort(400, detail='%s not supported' % de.visualization)
             return redirect('/error', params={'detail': '%s not supported' % de.visualization})
-
+        print(dict(
+            extraction=extraction, visualization=visualization,
+            visualization_type=de.visualization, axis=axis,
+            columns=result.columns, results=result.itertuples(), count=len(result)
+        ))
         return dict(
             extraction=extraction, visualization=visualization,
             visualization_type=de.visualization, axis=axis,

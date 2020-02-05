@@ -6,19 +6,27 @@ import transaction
 
 class TestDashboardController(BaseTestController):
 
-    def create_extraction_association(self, dashboard_uid, index):
+    def create_extraction_association(
+            self, dashboard_uid, index,
+            visualization='histogram',
+            graph_axis='email_address,user_id'
+    ):
         dashboard_extraction_association = model.DashboardExtractionAssociation(
             dashboard_id=dashboard_uid,
             extraction_id=self.extraction,
             index=index,
-            visualization='histogram',
-            graph_axis='email_address,user_id'
+            visualization=visualization,
+            graph_axis=graph_axis
         )
         DBSession.add(dashboard_extraction_association)
         DBSession.flush()
         return dashboard_extraction_association
 
-    def create_dashboard(self, name='Test purpose dashboard', index=0):
+    def create_dashboard(
+            self, name='Test purpose dashboard', index=0,
+            visualization='histogram',
+            graph_axis='email_address,user_id'
+    ):
         entities = dict()
         dashboard = model.Dashboard(
            name=name
@@ -28,7 +36,9 @@ class TestDashboardController(BaseTestController):
         DBSession.flush()
         entities.update(dict(dashboard=dashboard.uid))
         dashboard_extraction_association = self.create_extraction_association(
-            dashboard.uid, index
+            dashboard.uid, index,
+            visualization=visualization,
+            graph_axis=graph_axis
         )
         entities.update(dict(
             dashboard_extraction_association=dashboard_extraction_association.uid
@@ -301,4 +311,175 @@ class TestDashboardController(BaseTestController):
 
         assert response.json['de']['index'] == 0
         assert response.json['other_de']['index'] == 1
+        assert DBSession.query(
+            model.DashboardExtractionAssociation
+        ).get(entities['dashboard_extraction_association']).index == 1
+        assert DBSession.query(
+            model.DashboardExtractionAssociation
+        ).get(entities['dashboard_extraction_association_2']).index == 0
+
+    def test_extractions(self):
+        entities = self.create_dashboard()
+        # Case 1 - not admin
+        self.app.get(
+            '/dashboard/extractions/' + str(entities['dashboard']),
+            extra_environ=self.manager_env,
+            status=403
+        )
+
+        # Case 2 - admin
+        response = self.app.get(
+            '/dashboard/extractions/' + str(entities['dashboard']),
+            extra_environ=self.admin_env,
+            status=200
+        )
+
+        assert len(response.json['extractions']) == 1
+        assert response.json['extractions'][0]['uid'] == self.extraction
+        assert response.json['dashboard']['uid'] == entities['dashboard']
+
+        # Case 3 - wrong dashboard uid
+        self.app.get(
+            '/dashboard/extractions/' + str(69),
+            extra_environ=self.admin_env,
+            status=404
+        )
+
+    def test_get_extraction(self):
+        # Case 1 - no admin
+        self.app.get(
+            '/dashboard/get_extraction/' + str(self.extraction),
+            extra_environ=self.manager_env,
+            status=403
+        )
+
+        # Case 2 - Admin
+        response = self.app.get(
+            '/dashboard/get_extraction/' + str(self.extraction),
+            extra_environ=self.admin_env,
+            status=200
+        )
+
+        extraction = DBSession.query(model.Extraction).get(self.extraction)
+        for key in response.json['extraction'].keys():
+            assert response.json['extraction'][key] == getattr(extraction, key, None)
+
+        # Case 3 - wrong extraction uid
+        self.app.get(
+            '/dashboard/get_extraction/' + str(69),
+            extra_environ=self.admin_env,
+            status=404
+        )
+
+    def test_extraction_widget_histogram(self):
+        entities = self.create_dashboard()
+        response = self.app.get(
+            '/dashboard/extraction_widget/' + str(entities['dashboard']),
+            params=dict(uid=entities['dashboard_extraction_association']),
+            extra_environ=self.admin_env,
+            status=200
+        )
+
+        assert 'default_ext' in response.text
+        assert len(
+            response.html.find_all('div', class_="bk-root")
+        ) > 0
+
+    def test_extraction_widget_pie(self):
+        entities = self.create_dashboard(
+            visualization='pie', graph_axis='email_address,user_id'
+        )
+        response = self.app.get(
+            '/dashboard/extraction_widget/' + str(entities['dashboard']),
+            params=dict(uid=entities['dashboard_extraction_association']),
+            extra_environ=self.admin_env,
+            status=200
+        )
+        assert 'default_ext' in response.text
+        assert len(
+            response.html.find_all('div', class_="bk-root")
+        ) > 0
+
+    def test_extraction_widget_line(self):
+        entities = self.create_dashboard(
+            visualization='line', graph_axis='email_address,user_id'
+        )
+        response = self.app.get(
+            '/dashboard/extraction_widget/' + str(entities['dashboard']),
+            params=dict(uid=entities['dashboard_extraction_association']),
+            extra_environ=self.admin_env,
+            status=200
+        )
+        assert len(
+            response.html.find_all('div', class_="bk-root")
+        ) > 0
+        assert 'default_ext' in response.text
+
+    def test_extraction_widget_line_with_date(self):
+        entities = self.create_dashboard(
+            visualization='line', graph_axis='created,user_id'
+        )
+        response = self.app.get(
+            '/dashboard/extraction_widget/' + str(entities['dashboard']),
+            params=dict(uid=entities['dashboard_extraction_association']),
+            extra_environ=self.admin_env,
+            status=200
+        )
+
+        assert 'default_ext' in response.text
+        assert len(
+            response.html.find_all('div', class_="bk-root")
+        ) > 0
+
+    def test_extraction_widget_sum(self):
+        entities = self.create_dashboard(
+            visualization='sum', graph_axis='user_id'
+        )
+        response = self.app.get(
+            '/dashboard/extraction_widget/' + str(entities['dashboard']),
+            params=dict(uid=entities['dashboard_extraction_association']),
+            extra_environ=self.admin_env,
+            status=200
+        )
+        assert 'default_ext' in response.text
+        assert len(
+            response.html.find_all('div', class_="visualization-number")
+        ) > 0
+        assert '3', 'sum of user_id' in response.html.find_all('div', class_="visualization-number")[0].get_text()
+
+    def test_extraction_widget_sum_wrong_type(self):
+        entities = self.create_dashboard(
+            visualization='sum', graph_axis='created'
+        )
+        response = self.app.get(
+            '/dashboard/extraction_widget/' + str(entities['dashboard']),
+            params=dict(uid=entities['dashboard_extraction_association']),
+            extra_environ=self.admin_env,
+            status=200
+        )
+
+        assert 'default_ext' in response.text
+        assert len(
+            response.html.find_all('div', class_="visualization-number")
+        ) > 0
+        assert 'Error:' in response.html.find_all('div', class_="visualization-number")[0].get_text()
+
+    def test_extraction_widget_average(self):
+        entities = self.create_dashboard(
+            visualization='average', graph_axis='user_id'
+        )
+        response = self.app.get(
+            '/dashboard/extraction_widget/' + str(entities['dashboard']),
+            params=dict(uid=entities['dashboard_extraction_association']),
+            extra_environ=self.admin_env,
+            status=200
+        )
+
+        assert 'default_ext' in response.text
+        assert len(
+            response.html.find_all('div', class_="visualization-number")
+        ) > 0
+        assert '1.50' in response.html.find_all('div', class_="visualization-number")[0].get_text()
+        assert 'average of user_id' in response.html.find_all('div', class_="visualization-number")[0].get_text()
+
 
