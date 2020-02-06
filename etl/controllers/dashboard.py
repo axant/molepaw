@@ -1,3 +1,4 @@
+from __future__ import division
 from etl.lib.base import BaseController
 from etl.lib.validators import validate_axis_against_extraction_visualization
 from etl.model import Dashboard, DBSession, Extraction, DashboardExtractionAssociation
