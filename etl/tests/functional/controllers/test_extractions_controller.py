@@ -2,6 +2,8 @@ from etl.tests.functional.controllers import BaseTestController
 from etl import model
 from etl.model import DBSession
 from mock import patch, Mock, PropertyMock
+from tg.request_local import Request
+import json
 
 
 class TestExtractionsController(BaseTestController):
@@ -75,9 +77,8 @@ class TestExtractionsController(BaseTestController):
         assert 'manager@somedomain.com' in response.body.decode('utf-8')
         assert 'editor@somedomain.com' not in response.body.decode('utf-8')
 
-    @patch('etl.controllers.extractions.request')
+    @patch('etl.controllers.extractions.request', spec=Request)
     def test_view_table_visualization_json_format(self, mockrequest):
-        import json
         type(mockrequest).response_type = PropertyMock(return_value='application/json')
         response = self.app.get(
             '/extractions/view',
@@ -97,7 +98,7 @@ class TestExtractionsController(BaseTestController):
         except ValueError:
             assert False
 
-    @patch('etl.controllers.extractions.request')
+    @patch('etl.controllers.extractions.request', spec=Request)
     def test_view_table_visualization_csv_format(self, mockrequest):
         import csv
         type(mockrequest).response_type = PropertyMock(return_value='text/csv')
