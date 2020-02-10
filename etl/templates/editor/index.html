@@ -7,7 +7,7 @@
 <head>
     <title>Extraction Editor</title>
     <!-- we're stuck because since 0.10.0 there is a TypeError: _0 is not a function -->
-    <script src="//cdnjs.cloudflare.com/ajax/libs/ractive/0.10.0-build-2/ractive.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/ractive/0.7.3/ractive.min.js"></script>
     <script src="${tg.url('/javascript/ractive-transitions-slide.min.js')}"></script>
     <script src="${tg.url('/javascript/axw-req.js')}"></script>
     <style>
@@ -417,7 +417,7 @@
             },
             notEditingFirstDataset: function () {
                 var datasets = this.get('datasets');
-                var editingdataset = this.get('editingdataset')
+                var editingdataset = this.get('editingdataset');
                 return datasets[0].uid !== editingdataset.uid
             }
         }},
