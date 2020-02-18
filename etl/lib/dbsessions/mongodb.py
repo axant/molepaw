@@ -2,12 +2,12 @@
 import json
 from pandas import DataFrame
 import re
-from tg.exceptions import HTTPPreconditionFailed
+from pymongo import MongoClient
 
 
 class MongoDBSession(object):
     _session = None
-    _collection = None
+    default_collection = None  # the one specified in the connection url
 
     def __init__(self, url):
         collection = None
@@ -15,51 +15,38 @@ class MongoDBSession(object):
             url, collection = url.rsplit('#', 1)
         self.set_session(url)
         if collection is not None:
-            self.set_collection(collection)
+            self.default_collection = collection
 
     def set_session(self, url):
-        from pymongo import MongoClient
         self._session = MongoClient(url)
 
-    def set_collection(self, collection):
-        self._collection = self._session.get_default_database() \
-            .get_collection(collection)
-
-    def extract_directive_value(self, query, directive_pattern):
-        pattern = r'^[\s]*#' + re.escape(directive_pattern) + r'.*' + re.escape('=') + r'.*'
-        directive_match = re.search(pattern, query)
-        if directive_match:
-            value = directive_match.group(0).split('=')[-1].strip()
-            return value, directive_match
-        elif not directive_match and self._collection is not None:
-            return None, None
+    def get_collection(self, collection):
+        if collection in self._session.get_default_database().list_collection_names():
+            return self._session.get_default_database().get_collection(collection)
         else:
-            raise HTTPPreconditionFailed(
-                detail=
-                'Missing collection, it should be something like "#collection=collectionname" in the query or'
-                'specify the url in form mongodb://user:pass@host:port/database#collection'
-            )
+            raise ValueError('collection {} does not exists'.format(collection))
 
-    def parse_q(self, q):
-        collection_name, sub_re = self.extract_directive_value(q, 'collection')
-        collection = self._collection
-        if collection_name is not None and sub_re is not None:
-            if collection_name not in self._session.get_default_database().list_collection_names():
-                raise HTTPPreconditionFailed(
-                    detail='The requested collection: %s doesn\'t exist, check it' % collection_name
-                )
-            query = re.sub(sub_re.group(0), '', q)
-            collection = self._session.get_default_database().get_collection(collection_name)
-        else:
-            query = q
-        try:
-            query = json.loads(query)
-        except (TypeError, ValueError) as ex:
-            raise HTTPPreconditionFailed('Wrong query format, query must be valid json')
-        return query, collection
+    def parse_query(self, query):
+        q_parts = []
+        directives = {}
+        for line in query.split('\n'):
+            stripped_line = line.strip()
+            if stripped_line[:1] == "#":
+                key, value = [v.strip() for v in stripped_line.split("=", 1)]
+                directives[key.strip('#').strip()] = value
+            else:
+                q_parts.append(line)
+        q = json.loads('\n'.join(q_parts).strip())
+        return q, directives
 
     def execute(self, q):
-        query, collection = self.parse_q(q)
+        query, directives = self.parse_query(q)
+        if 'collection' in directives.keys():
+            collection = self.get_collection(directives['collection'])
+        elif self.default_collection is not None:
+            collection = self.get_collection(self.default_collection)
+        else:
+            raise ValueError('no collection specified')
         if isinstance(query, dict):
             data = collection.find(query)
         elif isinstance(query, list):
