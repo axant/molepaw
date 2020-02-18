@@ -1,6 +1,10 @@
 MOLEPAW
 =======
 
+.. image:: https://api.codacy.com/project/badge/Grade/da6ef3525601420fa1220cbda747e354
+   :alt: Codacy Badge
+   :target: https://app.codacy.com/gh/axant/molepaw?utm_source=github.com&utm_medium=referral&utm_content=axant/molepaw&utm_campaign=Badge_Grade_Dashboard
+
 An easy and flexible tool to mash up and to extract data from different sources in order to visualize them and to gain actionable info.
 Internally it's called just etl https://en.wikipedia.org/wiki/Extract,_transform,_load
 
