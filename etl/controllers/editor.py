@@ -211,7 +211,6 @@ class EditorController(RestController):
         'visualization': VisualizationTypeValidator()
     }, error_handler=abort(404, error_handler=True))
     def post(self, extraction=None, visualization=None, *args, **kw):
-        print('extr', extraction, 'vis', visualization)
         if visualization['axis']:
             validate_axis_against_extraction_visualization(
                 visualization['type'],
