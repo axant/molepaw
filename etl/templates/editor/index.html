@@ -308,7 +308,7 @@
                     <select value="{{.function}}" class="form-control function">
                         <option py:for="steptype in stepsformfields"
                                 value="${steptype}">
-    ${steptype.replace('_', ' ')}
+                            ${steptype.replace('_', ' ')}
                         </option>
                     </select>
                     <h3>
@@ -381,9 +381,15 @@
                     </a>
                 </div>
             </div>
-        </div>
-        <py:for each="fname, ffields in stepsformfields.items()">
+          </div>
 
+	{{#partial select_function}}
+          <div class="form-horizontal" on-click="false">
+            <div class="form-group">
+            </div>
+          </div>
+        {{/partial}}
+        <py:for each="fname, ffields in stepsformfields.items()">
             {{#partial ${fname}}}
             <div class="form-horizontal" on-click="showSave(event, stepidx)">
                 <div class="form-group" py:for="field in ffields">
@@ -494,17 +500,19 @@
     var StepsEditor = Ractive.extend({
         template: '#StepsEditor_template',
         data: function () { return {
-	        docstring: JSON.parse('${docstring}')
-	      }},
+	    docstring: JSON.parse('${docstring}'),
+	}},
         oninit: function () {
             var self = this;
             self.set('testrun', []);
             self.updateSteps();
             self.observe('steps.*.function', function (newValue, oldValue, keypath) {
-                if (self.get('loaded') === true) {
-                    var stepkeypath = keypath.substring(0, keypath.lastIndexOf('.'));
-                    self.set(stepkeypath + '.modified', true);
-                }
+		if (newValue !== 'select_function') {
+                    if (self.get('loaded') === true) {
+			var stepkeypath = keypath.substring(0, keypath.lastIndexOf('.'));
+			self.set(stepkeypath + '.modified', true);
+                    }
+		}
             });
             self.observe('steps.*.options', function (newValue, oldValue, keypath) {
                 if (self.get('loaded') === true) {
@@ -527,8 +535,8 @@
             });
         },
         checkSaved: function () {
-          var self = this;
-          return self.get('steps_legth_at_last_update') == self.get('steps').length;
+            var self = this;
+            return self.get('steps_legth_at_last_update') == self.get('steps').length;
         },
         addStep: function () {
             var self = this;
@@ -537,6 +545,7 @@
                 priority = self.get('steps')[self.get('steps').length - 1].priority + 1;
             self.push('steps', {
                 'function': 'select_function',
+		'function_doc': "${_('select the function for this step by clicking the title of the step')}",
                 'priority': priority,
                 'enabled': true
             });
@@ -599,6 +608,7 @@
         },
         deleteStep: function (step) {
             var self = this;
+	    if (step.function === 'select_function') self.updateSteps();
 	    if (!self.checkSaved() && step.modified) self.updateSteps();
 	    if (!self.checkSaved()) return;
             if (confirm("Really delete this step?")) {

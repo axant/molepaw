@@ -6,14 +6,6 @@ from datetime import datetime
 
 class TestSteps(object):
 
-    def test_select_function(self):
-        df = pd.DataFrame({
-            'value': pd.Series([1, 2, 3]),
-            'city': pd.Series(['TO', 'AL', 'MI']),
-        })
-        df = steps.select_function(df)
-        assert df['city'][0] == 'TO'
-    
     def test_slice(self):
         df = pd.DataFrame({
             'value': pd.Series([1, 2, 3]),

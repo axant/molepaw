@@ -51,7 +51,9 @@
 	    $('#extraction-${de.uid}-error').replaceWith('');
 	    $('#extraction-${de.uid}').replaceWith(response);
 	}).fail(function (error) {
-	    $('#extraction-${de.uid}-error').replaceWith('${de.uid} - ${de.extraction.name} - ' + error.responseText);
+	    console.log(error);
+	    $('#extraction-${de.uid}-error').replaceWith('${de.uid} - ${de.extraction.name} - '
+							 + (error.status === 500 ? error.statusText : error.responseText));
 	    $('#extraction-${de.uid}').replaceWith('');
 	});
       </script>

@@ -20,16 +20,28 @@ from bokeh.palettes import Category20
 from bokeh.transform import cumsum
 from etl.lib.helpers import color_gen
 import sys
+import logging
+
+log = logging.getLogger(__name__)
 
 
 try:
     unicode('test Python2')
 except Exception:
     unicode = str
-py_version = sys.version_info[:2][0]
+
 
 log = logging.getLogger(__name__)
 visualizationtypes = ('histogram', 'line', 'pie', 'sum', 'average')
+
+
+LINECHART_SUPPORTED_INDEXES = (
+    pandas.Index,
+    pandas.DatetimeIndex,
+    pandas.Int64Index,
+    pandas.Float64Index,
+)
+
 
 
 class DashboardChangeName(twf.Form):
@@ -260,11 +272,8 @@ class DashboardController(BaseController):
             axis = [x.strip() for x in de.graph_axis.split(',')]
 
         if 'histogram' == de.visualization:
-            if py_version < 3:
-                x = [j.encode('utf8') if isinstance(j, unicode) else j for j in result[axis[0]].values.tolist()]
-            else:
-                x = [j for j in result[axis[0]].values.tolist()]
-            y = result[axis[1]].values.tolist()
+            x = result[axis[0]].values
+            y = result[axis[1]].values
             legend = 0
             try:
                 visualization = figure(x_range=x, sizing_mode='scale_width', height=400)
@@ -278,19 +287,12 @@ class DashboardController(BaseController):
                 return redirect('/error', params={'detail': str(e)})
 
         elif 'line' == de.visualization:
-            if not isinstance(result.index, (pandas.Index,
-                                             pandas.DatetimeIndex,
-                                             pandas.Int64Index,
-                                             pandas.Float64Index)):
+            if not isinstance(result.index, LINECHART_SUPPORTED_INDEXES):
                 return dict(error='LineChart graph is only supported for scalar indexes, currently {}'.format(
                     type(result.index)
                 ))
 
-            if py_version < 3:
-                x = [j.encode('utf8') if isinstance(j, unicode) else j for j in result[axis[0]].values.tolist()]
-            else:
-                x = [j for j in result[axis[0]].values.tolist()]
-
+            x = result[axis[0]].values
             try:
                 visualization = figure(x_range=x, sizing_mode='scale_width', height=400)
             except:
@@ -350,7 +352,7 @@ class DashboardController(BaseController):
             try:
                 visualization = result[axis[0]].sum() / len(result[axis[0]])
             except Exception as ex:
-                print(type(ex), str(ex))
+                log.exception(type(ex), str(ex))
                 visualization = 'Error: ' + str(ex)
         else:
             # return abort(400, detail='%s not supported' % de.visualization)
