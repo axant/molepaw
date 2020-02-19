@@ -40,7 +40,7 @@ class MongoDBSession(object):
         q = json.loads('\n'.join(q_parts).strip())
         return q, directives
 
-    def execute(self, q):
+    def execute(self, q, limit=None):
         query, directives = self.parse_query(q)
         if 'collection' in directives.keys():
             collection = self.get_collection(directives['collection'])
@@ -51,6 +51,13 @@ class MongoDBSession(object):
         if isinstance(query, dict):
             data = collection.find(query)
         elif isinstance(query, list):
+            query_limit = [d for d in query if '$limit' in d.keys()]
+            if len(query_limit) == 1 and limit is not None:
+                query_limit = query_limit[0]
+                query_limit['$limit'] = limit
+            elif limit is not None:
+                query.append({u'$limit': limit})
+
             data = collection.aggregate(query)
         return DataFrame(list(data))
 

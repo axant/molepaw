@@ -7,7 +7,7 @@ class HTTPJSONSession(object):
     def __init__(self, url):
         self._url = url.replace('json://', 'http://')
 
-    def execute(self, q):
+    def execute(self, q, limit=None):
         r = requests.get(self._url)
         content_type = r.headers['content-type']
         if 'json' not in r.headers['content-type']:

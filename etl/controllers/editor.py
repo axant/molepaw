@@ -184,8 +184,9 @@ class EditorController(RestController):
 
         for d in DBSession.query(DataSet):
             try:
-                cols = [str(c) for c in d.fetch().columns]
-            except:
+                cols = [str(c) for c in d.sample.columns]
+            except Exception as ex:
+                log.exception(str(ex))
                 cols = []
             available_datasets.append((d.uid, d.name))
             datasets_columns[d.uid] = cols

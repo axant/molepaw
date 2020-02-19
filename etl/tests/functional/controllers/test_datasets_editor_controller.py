@@ -154,9 +154,9 @@ class TestDatasetsEditorController(BaseTestController):
         assert DBSession.query(model.ExtractionDataSet).get(self.extractiondataset) is None
 
     def test_dataset_cache(self):
-        from etl.model.dataset import DST_CACHE
+        from etl.model.dataset import DST_CACHE, DEFAULT_LIMIT_FOR_PERFORMANCE
         dataset = model.DBSession.query(model.DataSet).get(self.dataset)
-        cache_key = dataset.cache_key
+        cache_key = dataset.cache_key(DEFAULT_LIMIT_FOR_PERFORMANCE)
         assert dataset.sample is DST_CACHE.get_value(cache_key)
 
         dataset.query = 'SELECT * FROM tg_user LIMIT 10'

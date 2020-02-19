@@ -17,6 +17,8 @@ log = logging.getLogger(__name__)
 
 DST_CACHE = Cache('DST')
 
+DEFAULT_LIMIT_FOR_PERFORMANCE = 100
+
 
 class DataSet(DeclarativeBase):
     __tablename__ = 'datasets'
@@ -34,85 +36,66 @@ class DataSet(DeclarativeBase):
             'query': CodeTextArea(type='sql')
         })
 
-    @property
-    def cache_key(self):
-        return '%s%s' % (self.__tablename__, str(self.uid))
-
-    @staticmethod
-    def get_column_typed(sample, data):
-        for i in sample.columns:
-            if collections.Counter(
-                    [is_boolean(j) for j in sample[i].tolist()]
-            ).most_common(1)[0][0]:
-                log.info('column: %s type: %s' % (i, 'bool'))
-                data[i] = data[i].astype('bool', errors='ignore')
-            elif collections.Counter(
-                    [is_datetime(j) for j in sample[i].tolist()]
-            ).most_common(1)[0][0]:
-                log.info('column: %s type: %s' % (i, 'datetime'))
-                data[i] = pd.to_datetime(data[i], errors='coerce')
-            elif collections.Counter(
-                    [is_number(j) for j in sample[i].tolist()]
-            ).most_common(1)[0][0]:
-                log.info('column: %s type: %s' % (i, 'numeric'))
-                data[i] = pd.to_numeric(data[i], errors='coerce')
-            return data
+    def cache_key(self, limit=None):
+        return '%s%s-%s' % (self.__tablename__, self.uid, limit)
 
     @property
     def sample(self):
         try:
-            return DST_CACHE.get_value(self.cache_key)
+            return DST_CACHE.get_value(self.cache_key(DEFAULT_LIMIT_FOR_PERFORMANCE))
         except KeyError:
-            df = self.datasource.dbsession.execute(self.query)
-            df = df.sample(100) if len(df.index) >= 100 else df
-            cache = self.get_column_typed(df, df)
+            # df = self.fetch(limit=DEFAULT_LIMIT_FOR_PERFORMANCE)
+            df = self.datasource.dbsession.execute(self.query, limit=DEFAULT_LIMIT_FOR_PERFORMANCE)
+            cache = self.get_column_typed(df)
             DST_CACHE.set_value(
-                self.cache_key,
+                self.cache_key(DEFAULT_LIMIT_FOR_PERFORMANCE),
                 cache
             )
             return cache
 
-    def fetch(self):
+    @staticmethod
+    def get_column_typed(dataframe):
+        for i in dataframe.columns:
+            if collections.Counter(
+                    [is_boolean(j) for j in dataframe[i]]
+            ).most_common(1)[0][0]:
+                log.info('column: %s type: %s' % (i, 'bool'))
+                dataframe[i] = dataframe[i].astype('bool', errors='ignore')
+            elif collections.Counter(
+                    [is_datetime(j) for j in dataframe[i]]
+            ).most_common(1)[0][0]:
+                log.info('column: %s type: %s' % (i, 'datetime'))
+                dataframe[i] = pd.to_datetime(dataframe[i], errors='coerce')
+            elif collections.Counter(
+                    [is_number(j) for j in dataframe[i]]
+            ).most_common(1)[0][0]:
+                log.info('column: %s type: %s' % (i, 'numeric'))
+                dataframe[i] = pd.to_numeric(dataframe[i], errors='coerce')
+            return dataframe
+
+    def fetch(self, limit=None):
         if not self.datasource:
             raise ValueError('DataSet is not bound to any Datasource')
 
         def get_data():
             try:
-                ##################### START CHECKING DATA-TYPE #####################
-                df = self.datasource.dbsession.execute(self.query)
-                sample_df = df.sample(100) if len(df.index) >= 100 else df
-                for i in sample_df.columns:
-                    if collections.Counter(
-                        [is_boolean(j) for j in sample_df[i].tolist()]
-                    ).most_common(1)[0][0]:
-                        log.info('column: %s type: %s' % (i, 'bool'))
-                        df[i] = df[i].astype('bool', errors='ignore')
-                    elif collections.Counter(
-                        [is_datetime(j) for j in sample_df[i].tolist()]
-                    ).most_common(1)[0][0]:
-                        log.info('column: %s type: %s' % (i, 'datetime'))
-                        df[i] = pd.to_datetime(df[i], errors='coerce')
-                    elif collections.Counter(
-                        [is_number(j) for j in sample_df[i].tolist()]
-                    ).most_common(1)[0][0]:
-                        log.info('column: %s type: %s' % (i, 'numeric'))
-                        df[i] = pd.to_numeric(df[i], errors='coerce')
-                return df
-                        ##################### END CHECKING DATA-TYPE ########################
+                df = self.datasource.dbsession.execute(self.query, limit=limit)
+                return self.get_column_typed(df)
             except:
                 self.datasource.dbsession.rollback()
                 raise
 
         cache = tg.cache.get_cache('datasets_cache', expire=1800)
 
-        cached_value = cache.get_value(
-            key=self.cache_key,
+        return cache.get_value(
+            key=self.cache_key(limit),
             createfunc=get_data,
             expiretime=1800
         )
-        return cached_value
 
 
+# well, the cache should be invalidated even for limit specified datasets
+# even for values different from default
 @event.listens_for(DataSet, 'before_update')
 def receive_before_update(mapper, connection, target):
     fields = ['query', 'datasource_id']
@@ -121,19 +104,23 @@ def receive_before_update(mapper, connection, target):
         _attr = state.attrs.get(field)
         history = _attr.load_history()
         if history.has_changes():
-            DST_CACHE.remove_value(target.cache_key)
+            DST_CACHE.remove_value(target.cache_key())
+            DST_CACHE.remove_value(target.cache_key(DEFAULT_LIMIT_FOR_PERFORMANCE))
             try:
                 cache = tg.cache.get_cache('datasets_cache', expire=1800)
-                cache.remove_value(target.cache_key)
+                cache.remove_value(target.cache_key())
+                cache.remove_value(target.cache_key(DEFAULT_LIMIT_FOR_PERFORMANCE))
             except:
                 pass
 
 
 @event.listens_for(DataSet, 'before_delete')
 def receive_before_update(mapper, connection, target):
-    DST_CACHE.remove_value(target.cache_key)
+    DST_CACHE.remove_value(target.cache_key())
+    DST_CACHE.remove_value(target.cache_key(DEFAULT_LIMIT_FOR_PERFORMANCE))
     try:
         cache = tg.cache.get_cache('datasets_cache', expire=1800)
-        cache.remove_value(target.cache_key)
+        cache.remove_value(target.cache_key())
+        cache.remove_value(target.cache_key(DEFAULT_LIMIT_FOR_PERFORMANCE))
     except:
         pass

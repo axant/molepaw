@@ -78,4 +78,5 @@ class TestDatasets(TestController):
         assert r.json[0]['email_address'] == 'admin@somedomain.com'
         assert r.json[0]['display_name'] == 'Example Admin'
         assert r.json[0]['password'] == 'fba0f3a1d7c6ca3afd2d60d68ca61412f20e770bce6ee7b596d3b374d93716daef9e5e6f922d0b0aed1a4ded00c485a181bd6c46cfa1e7f40ae6559483b1f2a8'
-        assert r.json[0]['created'] == '2018-09-11T17:04:42.240Z', r.json[0]['created']
+        assert r.json[0]['created'] in ['2018-09-11T17:04:42.240Z',
+                                        '2018-09-11 17:04:42.240496'], r.json[0]['created']
