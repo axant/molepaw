@@ -14,15 +14,16 @@ class TestDatasetsEditorController(BaseTestController):
             extra_environ=self.admin_env,
             status=200
         )
+
         assert response.json[u"datasets"] == [{
-            u"extraction_id": 1,
+            u"extraction_id": self.extraction,
             u"join_other_col": None,
             u"join_self_col": None,
             u"name": u"default_dts",
             u"join_type": u"left",
             u"priority": 0,
             u"datasource": u"default_ds",
-            u"dataset_id": 1,
+            u"dataset_id": self.dataset,
             u"uid": 1
         }]
         assert response.json[u'sampledata'][u'errors'] is None
@@ -38,14 +39,14 @@ class TestDatasetsEditorController(BaseTestController):
             status=200
         )
         assert response.json[u"datasets"] == [{
-            u"extraction_id": 1,
+            u"extraction_id": self.extraction,
             u"join_other_col": None,
             u"join_self_col": None,
             u"name": u"default_dts",
             u"join_type": u"left",
             u"priority": 0,
             u"datasource": u"default_ds",
-            u"dataset_id": 1,
+            u"dataset_id": self.dataset,
             u"uid": 1
         }]
         assert response.json[u'sampledata'][u'errors'] is not None

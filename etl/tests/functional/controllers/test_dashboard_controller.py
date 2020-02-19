@@ -198,7 +198,7 @@ class TestDashboardController(BaseTestController):
         assert response.json == {
             'de': {
                 'dashboard_id': 1,
-                'extraction_id': 1,
+                'extraction_id': self.extraction,
                 'visualization': 'histogram',
                 'graph_axis': 'email_address,user_id',
                 'index': 1
@@ -225,7 +225,7 @@ class TestDashboardController(BaseTestController):
                 'dashboard_id': 1,
                 'index': 0,
                 'visualization': 'histogram',
-                'extraction_id': 1,
+                'extraction_id': self.extraction,
                 'uid': 1,
                 'graph_axis': 'display_name,user_id',
                 'dashboard': {
@@ -233,7 +233,7 @@ class TestDashboardController(BaseTestController):
                     'uid': 1
                 },
                 'extraction': {
-                    'uid': 1,
+                    'uid': self.extraction,
                     'visualization': 'table',
                     'graph_axis': None,
                     'name': 'default_ext',
@@ -245,7 +245,7 @@ class TestDashboardController(BaseTestController):
                 'uid': 1
             },
             'extraction': {
-                'uid': 1,
+                'uid': self.extraction,
                 'visualization': 'table',
                 'graph_axis': None,
                 'name': 'default_ext',
@@ -449,7 +449,7 @@ class TestDashboardController(BaseTestController):
 
     def test_extraction_widget_sum_wrong_type(self):
         entities = self.create_dashboard(
-            visualization='sum', graph_axis='created'
+            visualization='sum', graph_axis='email_address'
         )
         response = self.app.get(
             '/dashboard/extraction_widget/' + str(entities['dashboard']),
@@ -462,7 +462,8 @@ class TestDashboardController(BaseTestController):
         assert len(
             response.html.find_all('div', class_="visualization-number")
         ) > 0
-        assert 'Error:' in response.html.find_all('div', class_="visualization-number")[0].get_text()
+        assert 'admin@somedomain.commanager@somedomain.com'\
+               in response.html.find_all('div', class_="visualization-number")[0].get_text()
 
     def test_extraction_widget_average(self):
         entities = self.create_dashboard(

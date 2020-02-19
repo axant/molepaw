@@ -13,7 +13,7 @@ class TestStepsEditorController(BaseTestController):
             extra_environ=self.admin_env,
             status=200
         )
-        assert response.json == {u'steps': [{u'function': u'query', u'extraction_id': 1, u'uid': 1, u'enabled': True, u'priority': 0, u'function_doc': u"""Filters the rows for those matching the given expression.
+        assert response.json == {u'steps': [{u'function': u'query', u'extraction_id': self.extraction, u'uid': 1, u'enabled': True, u'priority': 0, u'function_doc': u"""Filters the rows for those matching the given expression.
 
     - Use "value != value" to get only rows where value is NaN
     - Use "value == value" to get only rows where value is not NaN
@@ -92,6 +92,12 @@ class TestStepsEditorController(BaseTestController):
 
         assert response.json == dict()
         assert DBSession.query(model.ExtractionStep).get(self.step) is None
+        self.app.get(
+            '/editor/' + str(self.extraction) + '/datasets/delete',
+            params=dict(uid=self.extractiondataset),
+            extra_environ=self.admin_env,
+            status=200
+        )
 
     def test_toggle(self):
         value = 1 if not DBSession.query(model.ExtractionStep).get(self.step).enabled else 0

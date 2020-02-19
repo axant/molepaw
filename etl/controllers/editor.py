@@ -4,7 +4,6 @@ import itertools
 import json
 import logging
 import tg
-from markupsafe import Markup
 from formencode import validators
 from tg import expose, redirect, validate, flash, abort, RestController, tmpl_context, decode_params, \
     response, validation_errors_response

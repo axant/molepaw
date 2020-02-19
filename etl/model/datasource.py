@@ -1,20 +1,19 @@
 # -*- coding: utf-8 -*-
 """Datasource model module."""
-from sqlalchemy import *
-from sqlalchemy import Table, ForeignKey, Column
-from sqlalchemy.types import Integer, Unicode, DateTime, LargeBinary
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy import Column, event, inspect
+from sqlalchemy.types import Integer, Unicode
 from tw2.forms import TextField
-
+from beaker.cache import Cache
 from etl.lib.widgets import SmartWidgetTypes
 from etl.model import DeclarativeBase
 from etl.lib.dbsessions import session_factory
 
-SESSIONS_CACHE = {}
+
+DS_CACHE = Cache('DS')
 
 
 def reset_cache():
-    SESSIONS_CACHE.clear()
+    DS_CACHE.clear()
 
 
 class Datasource(DeclarativeBase):
@@ -33,12 +32,31 @@ class Datasource(DeclarativeBase):
         }
 
     @property
+    def cache_key(self):
+        return '%s%s' % (self.__tablename__, str(self.uid))
+
+    @property
     def dbsession(self):
         try:
-            return SESSIONS_CACHE[self.uid]
-        except KeyError:
-            SESSIONS_CACHE[self.uid] = dbsession = session_factory(self.url)
+            return DS_CACHE.get_value(self.cache_key)
+        except KeyError as ex:
+            dbsession = session_factory(self.url)
+            DS_CACHE.set_value(self.cache_key, dbsession)
             return dbsession
+
+
+@event.listens_for(Datasource, 'before_update')
+def receive_before_update_url(mapper, connection, target):
+    state = inspect(target)
+    url_attr = state.attrs.get('url')
+    history = url_attr.load_history()
+    if history.has_changes():
+        DS_CACHE.remove_value(target.cache_key)
+
+
+@event.listens_for(Datasource, 'before_delete')
+def receive_before_update(mapper, connection, target):
+    DS_CACHE.remove_value(target.cache_key)
 
 
 __all__ = ['Datasource']

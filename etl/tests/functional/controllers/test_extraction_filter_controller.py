@@ -13,7 +13,12 @@ class TestExtractionFilterController(BaseTestController):
             extra_environ=self.admin_env,
             status=200
         )
-        assert response.json == {u'filter': {u'extraction_id': 1, u'name': u'custom_flt', u'default': True, u'steps': [{u'function': u'query', u'extraction_id': None, u'uid': 2, u'enabled': True, u'priority': 0, u'function_doc': u"""Filters the rows for those matching the given expression.
+        assert response.json == {
+            u'filter': {
+                u'extraction_id': self.extraction,
+                u'name': u'custom_flt',
+                u'default': True,
+                u'steps': [{u'function': u'query', u'extraction_id': None, u'uid': 2, u'enabled': True, u'priority': 0, u'function_doc': u"""Filters the rows for those matching the given expression.
 
     - Use "value != value" to get only rows where value is NaN
     - Use "value == value" to get only rows where value is not NaN

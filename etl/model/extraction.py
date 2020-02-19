@@ -2,16 +2,12 @@
 """Extraction model module."""
 import pandas
 from pandas import DataFrame
-from sqlalchemy import *
-from sqlalchemy import Table, ForeignKey, Column
+from sqlalchemy import ForeignKey, Column
 from sqlalchemy.ext.declarative import synonym_for
-from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.types import Integer, Unicode, DateTime, LargeBinary, Enum
-from sqlalchemy.orm import relationship, backref, class_mapper
+from sqlalchemy.types import Integer, Unicode
+from sqlalchemy.orm import relationship, backref
 from tgext.pluggable import LazyForeignKey, app_model
-from tw2.core import Deferred
 from tw2.forms import SingleSelectField
-
 from etl.lib.widgets import SmartWidgetTypes
 from etl.model import DeclarativeBase, metadata, DBSession
 
@@ -23,9 +19,9 @@ VISUALIZATION_TYPES = [('table', 'Table'),
                        ('pie', 'Pie'),
                        ('table+pie', 'Pie & Table')]
 
+
 class Extraction(DeclarativeBase):
     __tablename__ = 'extractions'
-
 
     class __sprox__(object):
         possible_field_names = {
@@ -73,13 +69,9 @@ class Extraction(DeclarativeBase):
         return df
 
     def perform(self):
-        print(self)
         df = self.fetch()
-        print(df)
-
         for step in self.steps:
             df = step.apply(df)
-
         return df
 
 
