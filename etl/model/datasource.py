@@ -7,10 +7,14 @@ from sqlalchemy.orm import relationship, backref
 from tw2.forms import TextField
 
 from etl.lib.widgets import SmartWidgetTypes
-from etl.model import DeclarativeBase, metadata, DBSession
+from etl.model import DeclarativeBase
 from etl.lib.dbsessions import session_factory
 
 SESSIONS_CACHE = {}
+
+
+def reset_cache():
+    SESSIONS_CACHE.clear()
 
 
 class Datasource(DeclarativeBase):

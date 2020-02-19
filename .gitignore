@@ -3,11 +3,14 @@
 
 # Default development database
 devdata.db
+# I copied it for local testing using sqlite:////path for datasource
+devdata.copy.db
 
 # Default data directory
 data/*
 
 # Packages
+.eggs
 *.egg
 *.egg-info
 dist
@@ -20,7 +23,19 @@ pip-log.txt
 .coverage
 .tox
 
+test.db
+moletest
+
 venv
 deploy-demo.retry
 penv
 ansible/.vagrant/
+
+/ansible-demo/
+
+# emacs files
+\#*\#
+.\#*
+
+# depot files
+depot/

@@ -43,7 +43,7 @@ class Extraction(DeclarativeBase):
 
     uid = Column(Integer, primary_key=True)
     name = Column(Unicode(99), nullable=False)
-    visualization = Column(Unicode(64), default='table', nullable=False)
+    visualization = Column(Unicode(64), default=u'table', nullable=False)
     category_id = Column(Integer, LazyForeignKey(lambda: app_model.Category._id), nullable=True)
     category = relationship(lambda: app_model.Category, backref=backref("extractions"))
     # TODO:
@@ -93,7 +93,7 @@ class ExtractionDataSet(DeclarativeBase):
     extraction_id = Column(Integer, ForeignKey('extractions.uid'), index=True)
     extraction = relationship('Extraction', uselist=False)
 
-    join_type = Column(Unicode(64), default='left')
+    join_type = Column(Unicode(64), default=u'left')
     join_self_col = Column(Unicode(64), default=None)
     join_other_col = Column(Unicode(64), default=None)
 

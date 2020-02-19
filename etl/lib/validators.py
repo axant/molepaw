@@ -17,10 +17,7 @@ class MergeValidator(validators.FieldsMatch):
     validate_partial_form = True
 
     def _validate_python(self, value_dict, state=None):
-        if 'join_type' not in value_dict.keys() and 'join_other_col' not in value_dict.keys()\
-                and 'join_self_col' not in value_dict.keys():
-            return None
-        else:
+        if {'join_type', 'join_other_col', 'join_self_col'} & set(value_dict.keys()):
             extraction = tmpl_context.extraction
             df = extraction.fetch()
             try:
@@ -33,7 +30,6 @@ class MergeValidator(validators.FieldsMatch):
                     right_on=value_dict['join_self_col'],
                     suffixes=('', '_j_' + dataset.name.lower())
                 )
-                return None
             except ValueError as ex:
                 raise Invalid(
                     ex.__repr__(),
@@ -80,36 +76,33 @@ def validate_axis_against_extraction_visualization(
 ):
     axis = [x.strip() for x in user_axis.split(',')]
     try:
-        extraction.perform()[axis]  # => ['users', 'month']
+        data = extraction.perform()
+        data[axis]  # => ['users', 'month']
     except Exception as e:
         abort(412, detail=Markup("<strong>{}</strong>".format(str(e))))
 
+    x_values = data[axis[0]].values
     if visualization_type in ('histogram', 'table+histogram'):
-        if not (extraction.perform()[axis[0]].values.dtype == object):
+        if not (x_values.dtype == object):
             abort(412, detail=Markup("<strong>x must be a string</strong>"))
 
-        if len(extraction.perform()[axis[0]].values.tolist()) != len(
-                set(extraction.perform()[axis[0]].values.tolist())):
-            abort(412, detail=Markup("<strong>histogram doens't allow multiplied</strong>"))
+        entries = x_values.tolist()
+        if len(entries) != len(set(entries)):
+            abort(412, detail=Markup("<strong>histogram doens't allow duplicated values on X axis</strong>"))
 
     if visualization_type in ('linechart', 'table+linechart'):
-        if not (
-                extraction.perform()[axis[0]].values.dtype and
-                extraction.perform()[axis[0]].values.dtype == int
-        ):
+        if not (x_values.dtype and x_values.dtype == int):
             try:
                 x = [
                     datetime(year=date.year, month=date.month, day=date.day)
-                    for date in pd.to_datetime(extraction.perform()[axis[0]].values)
+                    for date in pd.to_datetime(x_values)
                 ]
             except Exception as e:
                 abort(412, detail=Markup(
                     "<strong>Only digits and datetimes are allowed. found: %s, exception: %s</strong>" % (
-                    extraction.perform()[axis[0]].values.dtype, str(e))
+                    x_values.dtype, str(e))
                 ))
 
-        if (
-                len(extraction.perform()[axis[0]].values.tolist()) !=
-                len(set(extraction.perform()[axis[0]].values.tolist()))  # che senso ha?
-        ):
-            abort(412, detail=Markup("<strong>Line chart doens't allow multiplied data</strong>"))
+        entries = x_values.tolist()
+        if len(entries) != len(set(entries)):
+            abort(412, detail=Markup("<strong>Line chart doens't allow duplicated values on X axis</strong>"))
