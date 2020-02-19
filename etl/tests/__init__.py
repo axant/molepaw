@@ -74,20 +74,26 @@ class TestController(object):
         model.DBSession.flush()
         transaction.commit()
 
-    def create_extraction(self, name='extraction one'):
-        extraction = model.Extraction(name=name)
+    def create_extraction(self, name=u'extraction one', category=None):
+        extraction = model.Extraction(name=name, category=category)
         model.DBSession.add(extraction)
         return extraction
 
     def create_datasource(
-            self,
-            name='datasource one',
-            url='sqlite:///etl/tests/testdatasource.db'):
+        self,
+        name=u'datasource one',
+        url=u'sqlite:///etl/tests/testdatasource.db'
+    ):
         ds = model.Datasource(name=name, url=url)
         model.DBSession.add(ds)
         return ds
 
-    def create_dataset(self, datasource, name='dataset one', query='SELECT * FROM tg_user'):
+    def create_dataset(
+        self,
+        datasource,
+        name=u'dataset one',
+        query=u'SELECT * FROM tg_user'
+    ):
         dataset = model.DataSet(name=name, query=query, datasource=datasource)
         model.DBSession.add(dataset)
         return dataset

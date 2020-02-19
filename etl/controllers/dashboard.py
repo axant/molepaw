@@ -1,3 +1,4 @@
+from __future__ import division
 from etl.lib.base import BaseController
 from etl.lib.validators import validate_axis_against_extraction_visualization
 from etl.model import Dashboard, DBSession, Extraction, DashboardExtractionAssociation
@@ -15,17 +16,31 @@ from math import pi
 import pandas
 import pandas.tseries
 from bokeh.plotting import figure
+from bokeh.palettes import Category20
 from bokeh.transform import cumsum
 from etl.lib.helpers import color_gen
+import sys
+import logging
+
+log = logging.getLogger(__name__)
+
 
 try:
     unicode('test Python2')
 except Exception:
     unicode = str
 
-
 log = logging.getLogger(__name__)
 visualizationtypes = ('histogram', 'line', 'pie', 'sum', 'average')
+
+
+LINECHART_SUPPORTED_INDEXES = (
+    pandas.Index,
+    pandas.DatetimeIndex,
+    pandas.Int64Index,
+    pandas.Float64Index,
+)
+
 
 
 class DashboardChangeName(twf.Form):
@@ -164,7 +179,7 @@ class DashboardController(BaseController):
             ).one()
         except (NoResultFound, KeyError):
             de = DashboardExtractionAssociation()
-            de.dashboard_id = dashboard_id
+            de.dashboard_id = int(dashboard_id)
             de.extraction_id = request.json['extraction_id']
             DBSession.add(de)
         de.extraction_id = request.json['extraction_id']
@@ -219,7 +234,6 @@ class DashboardController(BaseController):
         de.index = new_index
         return dict(de=de, other_de=other_de)
 
-
     @expose('json')
     @require(predicates.in_group('admin'))
     def extractions(self, dashboard_id, **kw):
@@ -257,7 +271,7 @@ class DashboardController(BaseController):
             axis = [x.strip() for x in de.graph_axis.split(',')]
 
         if 'histogram' == de.visualization:
-            x = [j.encode('utf8') if isinstance(j, unicode) else j for j in result[axis[0]].values.tolist()]
+            x = result[axis[0]].values
             y = result[axis[1]].values.tolist()
             legend = 0
             try:
@@ -272,15 +286,12 @@ class DashboardController(BaseController):
                 return redirect('/error', params={'detail': str(e)})
 
         elif 'line' == de.visualization:
-            if not isinstance(result.index, (pandas.Index,
-                                             pandas.DatetimeIndex,
-                                             pandas.Int64Index,
-                                             pandas.Float64Index)):
+            if not isinstance(result.index, LINECHART_SUPPORTED_INDEXES):
                 return dict(error='LineChart graph is only supported for scalar indexes, currently {}'.format(
                     type(result.index)
                 ))
 
-            x = [j.encode('utf8') if isinstance(j, unicode) else j for j in result[axis[0]].values.tolist()]
+            x = result[axis[0]].values
             try:
                 visualization = figure(x_range=x, sizing_mode='scale_width', height=400)
             except:
@@ -332,13 +343,19 @@ class DashboardController(BaseController):
             visualization.legend.glyph_width = 18
 
         elif 'sum' == de.visualization:
-            visualization = result[axis[0]].sum()
+            try:
+                visualization = result[axis[0]].sum()
+            except TypeError as ex:
+                visualization = 'Error: ' + str(ex)
         elif 'average' == de.visualization:
-            visualization = result[axis[0]].sum() / len(result[axis[0]])
+            try:
+                visualization = result[axis[0]].sum() / len(result[axis[0]])
+            except Exception as ex:
+                log.exception(type(ex), str(ex))
+                visualization = 'Error: ' + str(ex)
         else:
             # return abort(400, detail='%s not supported' % de.visualization)
             return redirect('/error', params={'detail': '%s not supported' % de.visualization})
-
         return dict(
             extraction=extraction, visualization=visualization,
             visualization_type=de.visualization, axis=axis,

@@ -31,23 +31,23 @@ testing = [
     'nose',
     'coverage',
     'tg.devtools',
-    'flaky',
     'tox',
+    'pymongo',
+    'mock',
 ]
 
 install_requires = [
     "TurboGears2",
     "Beaker",
     "Genshi",
-    "zope.sqlalchemy == 1.2",
-    "sqlalchemy==0.9",
-    "alembic==1.0",
+    "zope.sqlalchemy>=1.2",
+    "sqlalchemy>=1.3.12",  # should work even with older versions
+    "alembic>=1.0",
     "repoze.who",
     "tw2.forms",
     "tgext.admin >= 0.6.1",
     "WebHelpers2",
     "cython",
-    "pandas == 0.24.2",
     "bokeh == 1.0.4",
     "tgext.evolve >= 0.0.5",
     "numexpr",
@@ -55,12 +55,17 @@ install_requires = [
     "axf == 0.0.19",
     "kajiki >= 0.8.0",  # at least this version for python3.8 support
     "tgext.pluggable",
-    "tgapp-categories == 0.3.1",
+    "tgapp-categories == 0.3.1",  # 0.4.0 introduces nested categories, we should upgrade
 ]
 
 if py_version != (3, 2):
     # Babel not available on 3.2
     install_requires.append("Babel")
+
+if py_version[0] < 3:
+    install_requires.append("pandas == 0.24.2")  # latest version for python2
+else:
+    install_requires.append('pandas >= 1.0')
 
 setup(
     name='etl',

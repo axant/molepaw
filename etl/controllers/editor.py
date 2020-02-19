@@ -105,7 +105,9 @@ class StepsEditorController(RestController):
 
         if options is not None:
             try:
-                step.options = json.dumps(ExtractionStep.formfor(function or step.function).validate(options))
+                step.options = json.dumps(
+                    ExtractionStep.formfor(function or step.function).validate(options)
+                )
             except Exception as e:
                 response.status = 412
                 return dict(errors=str(e))
@@ -116,6 +118,8 @@ class StepsEditorController(RestController):
     @decode_params('json')
     def post(self, function=None, priority=None, options=None, **kwargs):
         try:
+            if options is None:
+                options = {}
             options = ExtractionStep.formfor(function).validate(options)
         except Exception as e:
             response.status = 412
@@ -148,6 +152,7 @@ class StepsEditorController(RestController):
 
 
 class StepFunctionController(RestController):
+
     @expose('json')
     def get_one(self, func):
         try:
@@ -194,18 +199,18 @@ class EditorController(RestController):
         categories = DBSession.query(app_model.Category)
 
         return dict(extraction=extraction,
-                    stepsformfields=dict((fname, f.form_fields) for fname,f in list(FUNCTIONS.items())),
+                    stepsformfields=dict((fname, f.form_fields) for fname, f in list(FUNCTIONS.items())),
                     available_datasets=available_datasets, datasets_columns=datasets_columns,
                     visualization_types=VISUALIZATION_TYPES, docstring=json.dumps(docstring),
                     category_list=categories)
 
     @expose('json')
     @decode_params('json')
-    @validate({'extraction': Convert(lambda v: DBSession.query(Extraction).filter_by(uid=v).one()),
-               'visualization': VisualizationTypeValidator()},
-              error_handler=abort(404, error_handler=True))
+    @validate({
+        'extraction': Convert(lambda v: DBSession.query(Extraction).filter_by(uid=v).one()),
+        'visualization': VisualizationTypeValidator()
+    }, error_handler=abort(404, error_handler=True))
     def post(self, extraction=None, visualization=None, *args, **kw):
-        
         if visualization['axis']:
             validate_axis_against_extraction_visualization(
                 visualization['type'],
@@ -230,11 +235,13 @@ class EditorController(RestController):
         for step in extraction.steps:
             try:
                 data = step.apply(data)
-                result.append(dict(errors=None,
-                                   columns=(str(col) for col in data.columns),
-                                   data=list(((truncate(force_text(d), 50) for d in r) for r in itertools.islice(
-                                       data.itertuples(), 3
-                                   )))))
+                result.append(dict(
+                    errors=None,
+                    columns=(str(col) for col in data.columns),
+                    data=list(
+                        (truncate(force_text(d), 50) for d in r) for r in itertools.islice(data.itertuples(), 3)
+                    )
+                ))
             except Exception as e:
                 log.exception(e)
                 result.append(dict(errors=stringfy_exc(e)[0], columns=[], data=[]))

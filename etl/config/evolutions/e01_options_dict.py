@@ -6,7 +6,7 @@ from etl.model import ExtractionStep, DBSession
 import transaction
 
 
-class EvolveOptionsDict(Evolution):
+class EvolveOptionsDict(Evolution):  # pragma: no cover
     evolution_id = '01_EvolveOptionsDict'
 
     def evolve(self):

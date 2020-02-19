@@ -16,7 +16,7 @@ class HTTPCSVSession(object):
             raise ValueError("The content is presented as '{}' "
                              "while 'text/csv' was expected".format(content_type))
 
-        with tempfile.SpooledTemporaryFile() as csvfile:
+        with tempfile.SpooledTemporaryFile(mode='w') as csvfile:
             csvfile.write(r.content)
             csvfile.seek(0)
             csvdata = csv.reader(csvfile)

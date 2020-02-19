@@ -6,6 +6,7 @@
 
 <head>
     <title>Extraction Editor</title>
+    <!-- we're stuck because since 0.10.0 there is a TypeError: _0 is not a function -->
     <script src="//cdnjs.cloudflare.com/ajax/libs/ractive/0.7.3/ractive.min.js"></script>
     <script src="${tg.url('/javascript/ractive-transitions-slide.min.js')}"></script>
     <script src="${tg.url('/javascript/axw-req.js')}"></script>
@@ -77,6 +78,12 @@
             word-wrap: break-word;
         }
 
+	.step select.function {
+	    position: absolute;
+	    width: 70%;
+	    opacity: 0;
+	}
+
         .step h3 {
             margin-top: 5px;
         }
@@ -101,6 +108,11 @@
         .step-actions span:hover {
             font-size: 16px;
         }
+
+	.step-actions span.delete-text {
+	    color: #f00;
+	    font-size: 14px;
+	}
 
         .save ~ .step-actions .arrow-action,
         .save ~ .step-actions .view-action{
@@ -247,12 +259,18 @@
                 </select>
                 {{/if}}
                 <br/>
-                <a class="btn btn-success" on-click="addDataSet()">
-                    <span class="glyphicon glyphicon-plus"></span>
-                </a>
+                <div class="row" style="margin-left: 0; margin-right: 0;">
+                  <a class="btn btn-danger col-xs-6" on-click="set('addingdataset', false)">
+                    <span class="glyphicon glyphicon-trash"></span>
+                  </a>
+                  <a class="btn btn-success col-xs-6" on-click="addDataSet()">
+                      <span class="glyphicon glyphicon-plus"></span>
+                  </a>
+                </div>
             </div>
             {{else}}
-            <div class="dataset-card btn btn-success" on-click="set('addingdataset', true)">
+            <div class="dataset-card btn btn-success"
+                 on-click="set('addingdataset', true)">
                 <span class="glyphicon glyphicon-plus"></span>
             </div>
             {{/if}}
@@ -283,23 +301,23 @@
 <div class="row" id="steps">
     <script type="text/html" id="StepsEditor_template">
         {{#each steps:stepidx}}
-
         <div class="col-md-12 stepbox" intro-outro='slide'>
             <span class="steparrow glyphicon glyphicon-chevron-down"></span>
             <div class="step row {{.enabled ? '' : 'disabled'}}">
                 <div class="col-xs-6">
-                    {{#if .editing}}
-                    <select value="{{.function}}" class="form-control"
-                            on-blur="set('steps.'+stepidx+'.editing', false)">
-                        <option py:for="steptype in stepsformfields" value="${steptype}">${steptype}</option>
+                    <select value="{{.function}}" class="form-control function">
+                        <option py:for="steptype in stepsformfields"
+                                value="${steptype}">
+                            ${steptype.replace('_', ' ')}
+                        </option>
                     </select>
-                    {{else}}
                     <h3>
-                        {{#if .modified}}
-                        <span on-click="saveStep(.)" class="glyphicon save glyphicon-floppy-save"></span>
-                        {{/if}}
-                        <span on-click="set('steps.'+stepidx+'.editing', true)">{{.function}}</span>
+                        <span>{{.function.replace(/_/g, ' ')}}</span>
 
+                        {{#if .modified}}
+                        <div class="step-actions pull-right">&nbsp;<span on-click="saveStep(.)"
+                              class="glyphicon save glyphicon-floppy-save"></span></div>
+                        {{/if}}
                         <div class="step-actions pull-right">
                             {{#if .enabled}}
                             <span on-click="toggleStep(., false)" class="glyphicon glyphicon-eye-close view-action"></span>
@@ -308,11 +326,9 @@
                             {{/if}}
                             <span on-click="raiseStep(.)" class="glyphicon glyphicon-arrow-up arrow-action"></span>
                             <span on-click="lowerStep(.)" class="glyphicon glyphicon-arrow-down arrow-action"></span>
-                            &nbsp;
-                            <span on-click="deleteStep(.)" class="glyphicon glyphicon-remove"></span>
+                            <span on-click="deleteStep(.)" class="delete-text">${_('Delete')}</span>
                         </div>
                     </h3>
-                    {{/if}}
                     <div class="step-doc">
                         <em class="docstring" value="{{steps[stepidx].function}}">
                           {{#if .function_doc}}
@@ -323,10 +339,11 @@
                         </em>
                     </div>
                     <div class="step-form">
-                        {{${Markup('>')}.function}}
+                        {{${Markup('>')}.function.replace(/\ /g, '_')}}
                     </div>
                 </div>
-                <div class="col-xs-6 table-responsive">
+                <div class="col-xs-6 table-responsive"
+                    on-click="showSave(event, stepidx)">
                     <table class="table">
                         <thead>
                         <tr>
@@ -364,11 +381,17 @@
                     </a>
                 </div>
             </div>
-        </div>
-        <py:for each="fname, ffields in stepsformfields.items()">
+          </div>
 
+	{{#partial select_function}}
+          <div class="form-horizontal" on-click="false">
+            <div class="form-group">
+            </div>
+          </div>
+        {{/partial}}
+        <py:for each="fname, ffields in stepsformfields.items()">
             {{#partial ${fname}}}
-            <div class="form-horizontal">
+            <div class="form-horizontal" on-click="showSave(event, stepidx)">
                 <div class="form-group" py:for="field in ffields">
                     <label for="${field.id}" class="col-sm-3 control-label">${field.label}</label>
                     <div class="col-sm-9">${field.display(css_class='form-control')}</div>
@@ -382,7 +405,7 @@
     //<![CDATA[
     var DataSetsEditor = Ractive.extend({
         template: '#DataSetsEditor_template',
-        data: {
+        data: function() { return {
             datasets_columns: ${h.script_json_encode(datasets_columns)},
             available_datasets: ${h.script_json_encode(available_datasets)},
             getCols: function () {
@@ -400,10 +423,10 @@
             },
             notEditingFirstDataset: function () {
                 var datasets = this.get('datasets');
-                var editingdataset = this.get('editingdataset')
+                var editingdataset = this.get('editingdataset');
                 return datasets[0].uid !== editingdataset.uid
             }
-        },
+        }},
         oninit: function () {
             var self = this;
             self.updateDataSets();
@@ -476,15 +499,20 @@
 
     var StepsEditor = Ractive.extend({
         template: '#StepsEditor_template',
-        data: {docstring: JSON.parse('${docstring}')},
+        data: function () { return {
+	    docstring: JSON.parse('${docstring}'),
+	}},
         oninit: function () {
             var self = this;
+            self.set('testrun', []);
             self.updateSteps();
             self.observe('steps.*.function', function (newValue, oldValue, keypath) {
-                if (self.get('loaded') === true) {
-                    var stepkeypath = keypath.substring(0, keypath.lastIndexOf('.'));
-                    self.set(stepkeypath + '.modified', true);
-                }
+		if (newValue !== 'select_function') {
+                    if (self.get('loaded') === true) {
+			var stepkeypath = keypath.substring(0, keypath.lastIndexOf('.'));
+			self.set(stepkeypath + '.modified', true);
+                    }
+		}
             });
             self.observe('steps.*.options', function (newValue, oldValue, keypath) {
                 if (self.get('loaded') === true) {
@@ -492,6 +520,7 @@
                     self.set(stepkeypath + '.modified', true);
                 }
             });
+
         },
         updateSteps: function () {
             var self = this;
@@ -499,7 +528,7 @@
             $.get("${tg.url(['/editor', str(extraction.uid), 'steps'])}", function (res) {
                 self.set('steps', res.steps);
                 self.set('loaded', true);
-		    self.set('steps_legth_at_last_update', self.get('steps').length);
+		            self.set('steps_legth_at_last_update', self.get('steps').length);
             });
             $.get("${tg.url(['/editor', str(extraction.uid), 'test_pipeline'])}", function (res) {
                 self.set('testrun', res.results);
@@ -515,8 +544,8 @@
             if (self.get('steps').length)
                 priority = self.get('steps')[self.get('steps').length - 1].priority + 1;
             self.push('steps', {
-                'function': 'slice',
-                'editing': true,
+                'function': 'select_function',
+		'function_doc': "${_('select the function for this step by clicking the title of the step')}",
                 'priority': priority,
                 'enabled': true
             });
@@ -528,15 +557,19 @@
                 step.modified = false;
                 self.updateSteps();
             }).fail(function (response) {
-		var step_error = response.responseJSON.errors || response.responseJSON.detail
+		            var step_error = response.responseJSON.errors || response.responseJSON.detail;
                 toastr.error("Failed to " + action + " step: " + JSON.stringify(step_error));
             });
             self.observe('self',function (newValue, oldValue, keypath) {
               extractionvisualization.saveVisualization();
             });
         },
+        showSave: function(event, stepidx) {
+          event.original.preventDefault();
+          var self = this;
+        },
         toggleStep: function (step, status) {
-            var self = this;
+          var self = this;
 	        if (!self.checkSaved()) return;
             self.performAction(
                     step,
@@ -575,6 +608,7 @@
         },
         deleteStep: function (step) {
             var self = this;
+	    if (step.function === 'select_function') self.updateSteps();
 	    if (!self.checkSaved() && step.modified) self.updateSteps();
 	    if (!self.checkSaved()) return;
             if (confirm("Really delete this step?")) {
@@ -614,20 +648,21 @@
     var ExtractionVisualization = Ractive.extend({
         template: '#ExtractionVisualization_template',
         data: function () {
-    return {
-       showAxis: false,
-            disabled: true,
-            hasError: {
-              error: false,
-              message: "",
-              color: ""
-            },
-            visualization: {type: "${extraction.visualization}",
-                            original:  "${extraction.visualization}",
-                            axis: "${extraction.graph_axis}",
-                            original_axis: "${extraction.graph_axis}"}
-    };
-  },
+	    return {
+		showAxis: false,
+		disabled: true,
+		hasError: {
+		    error: false,
+		    message: "",
+		    color: ""
+		},
+		visualization: {
+		    type: "${extraction.visualization}",
+		    original:  "${extraction.visualization}",
+                    axis: "${extraction.graph_axis}",
+                    original_axis: "${extraction.graph_axis}"}
+	    };
+	},
         oninit: function () {
             var self=this;
             self.observe('visualization.type', function (newValue, oldValue) {

@@ -31,10 +31,19 @@ from tgext.pluggable import app_model
 
 try:
     unicode('test Python2')
-except Exception:
-    unicode = str
+except Exception:               # PRAGMA NO COVER
+    unicode = str  # this is bad
 py_version = sys.version_info[:2][0]
 log = logging.getLogger('molepaw')
+
+
+LINECHART_SUPPORTED_INDEXES = [
+    pandas.Index,
+    pandas.DatetimeIndex,
+    pandas.Int64Index,
+    pandas.Float64Index,
+]
+
 
 class CreateExtractionForm(twf.Form):
     class child(axf.bootstrap.BootstrapFormLayout):
@@ -152,8 +161,10 @@ class ExtractionsController(BaseController):
                         return abort(404)
                     result = e_filter.perform(result)
             else:
-                default = DBSession.query(ExtractionFilter).filter(ExtractionFilter.default == True,
-                                                                   ExtractionFilter.extraction_id == extraction.uid).first()
+                default = DBSession.query(ExtractionFilter).filter(
+                    ExtractionFilter.default == True,
+                    ExtractionFilter.extraction_id == extraction.uid
+                ).first()
                 if default:
                     e_filter = default
                     result = default.perform(result)
@@ -173,24 +184,21 @@ class ExtractionsController(BaseController):
             axis = [x.strip() for x in extraction.graph_axis.split(',')]
 
         if 'histogram' in visualizations:
-            x = [j.encode('utf8') if isinstance(j, unicode) else j for j in result[axis[0]].values.tolist()]
-            y = result[axis[1]].values.tolist()
+            x = result[axis[0]].values
+            y = result[axis[1]].values
             legend = 0
-            if 'histogram' in visualizations:
-                try:
-                    visualizations['histogram'] = figure(x_range=x, width=800, height=600)
-                    visualizations['histogram'].vbar(x=x, top=y, width=0.1, color='red', legend=axis[legend])
-                    visualizations['histogram'].y_range.start = 0
-                    visualizations['histogram'].y_range.end = max(y)
-                    visualizations['histogram'].xaxis.major_label_orientation = "vertical"
-                except:
-                    pass
+            try:
+                visualizations['histogram'] = figure(x_range=x, width=800, height=600)
+                visualizations['histogram'].vbar(x=x, top=y, width=0.1, color='red', legend=axis[legend])
+                visualizations['histogram'].y_range.start = 0
+                visualizations['histogram'].y_range.end = max(y)
+                visualizations['histogram'].xaxis.major_label_orientation = "vertical"
+            except Exception as e:
+                log.exception('failed histogram visualization setup with exception: %s' % e)
+                del visualizations['histogram']
 
         if 'linechart' in visualizations:
-            if not isinstance(result.index, (pandas.Index,
-                                             pandas.DatetimeIndex,
-                                             pandas.Int64Index,
-                                             pandas.Float64Index)):
+            if not isinstance(result.index, tuple(LINECHART_SUPPORTED_INDEXES)):
                 flash('LineChart graph is only supported for scalar indexes, currently {}'.format(
                     type(result.index)
                 ), 'warning')
@@ -198,19 +206,17 @@ class ExtractionsController(BaseController):
 
             if 'linechart' in visualizations:
                 # Check it is still available after checks.
-                
-                x = [j.encode('utf8') if isinstance(j, unicode) else j for j in result[axis[0]].values.tolist()]
+
+                x = result[axis[0]].values
                 try:
                     visualizations['linechart'] = figure(x_range=x,width=800, height=600)
                 except:
                     visualizations['linechart'] = figure(width=800, height=600)
                 if result[axis[0]].dtype.type == np.datetime64:
-                    from datetime import datetime
-                    x = [datetime(year=date.year, month=date.month, day=date.day) for date in pandas.to_datetime(result[axis[0]].values)]
                     visualizations['linechart'] = figure(width=800, height=600, x_axis_type='datetime')
 
                 for i, c in zip(range(1,len(axis)), color_gen()):
-                    y = [j.encode('utf8') if isinstance(j, unicode) else j for j in result[axis[i]].values.tolist()]
+                    y = result[axis[i]].values
                     try:
                         visualizations['linechart'] = figure(y_range=y,width=800, height=600)
                     except:
@@ -226,6 +232,11 @@ class ExtractionsController(BaseController):
                 result['color'] = Category20c[len(result)]
             else:
                 result['color'] = [u'#3182bd', u'#6baed6']
+            # if dataframe comes from mongodb collection then _id is not json serializable
+            # and bockeh returns an error due to source=result
+            # this is a bad hack
+            if '_id' in result.columns:
+                del result['_id']
             visualizations['pie'].wedge(x=0, y=1, radius=0.4, start_angle=cumsum('angle', include_zero=True),
                     end_angle=cumsum('angle'), line_color="white",
                     fill_color='color', legend=axis[0], source=result)
