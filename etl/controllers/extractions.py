@@ -184,11 +184,8 @@ class ExtractionsController(BaseController):
             axis = [x.strip() for x in extraction.graph_axis.split(',')]
 
         if 'histogram' in visualizations:
-            if py_version < 3:
-                x = [j.encode('utf8') if isinstance(j, unicode) else j for j in result[axis[0]].values.tolist()]
-            else:
-                x = [j for j in result[axis[0]].values.tolist()]
-            y = result[axis[1]].values.tolist()
+            x = result[axis[0]].values
+            y = result[axis[1]].values
             legend = 0
             try:
                 visualizations['histogram'] = figure(x_range=x, width=800, height=600)
@@ -210,24 +207,16 @@ class ExtractionsController(BaseController):
             if 'linechart' in visualizations:
                 # Check it is still available after checks.
 
-                if py_version < 3:
-                    x = [j.encode('utf8') if isinstance(j, unicode) else j for j in result[axis[0]].values.tolist()]
-                else:
-                    x = [j for j in result[axis[0]].values.tolist()]
+                x = result[axis[0]].values
                 try:
                     visualizations['linechart'] = figure(x_range=x,width=800, height=600)
                 except:
                     visualizations['linechart'] = figure(width=800, height=600)
                 if result[axis[0]].dtype.type == np.datetime64:
-                    from datetime import datetime
-                    x = [datetime(year=date.year, month=date.month, day=date.day) for date in pandas.to_datetime(result[axis[0]].values)]
                     visualizations['linechart'] = figure(width=800, height=600, x_axis_type='datetime')
 
                 for i, c in zip(range(1,len(axis)), color_gen()):
-                    if py_version < 3:
-                        y = [j.encode('utf8') if isinstance(j, unicode) else j for j in result[axis[i]].values.tolist()]
-                    else:
-                        y = [j for j in result[axis[i]].values.tolist()]
+                    y = result[axis[i]].values
                     try:
                         visualizations['linechart'] = figure(y_range=y,width=800, height=600)
                     except:

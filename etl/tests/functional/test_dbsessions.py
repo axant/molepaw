@@ -25,13 +25,12 @@ class AbstractDBSessions(object):
         try:
             result = self.get_session().execute(self._query_wrong_table)
             assert False, 'should raise'
-        except HTTPPreconditionFailed as e:
-            assert "doesn't exist, check it" in str(e)
         except OperationalError as e:
             assert 'no such table: this_does_not_exists' in str(e)
         except ValueError as e:
             assert "The content is presented as 'text/plain' while 'text/csv' was expected" in str(e)\
-                or "The content is presented as 'text/plain' while 'application/json' was expected" in str(e)
+                or "The content is presented as 'text/plain' while 'application/json' was expected" in str(e)\
+                or "collection this_does_not_exists does not exists" in str(e), str(e)
 
     def test_rollback(self):
         self.get_session().rollback()
@@ -75,20 +74,18 @@ class TestMongoDBSession(AbstractDBSessions):
         _session = session_factory('mongodb://127.0.0.1:27017/moletest')
         # both url and query don't contain the collection so the session
         # doesn't know where to execute the query
-        assert_raises(
-            HTTPPreconditionFailed,
-            _session.execute,
-            self._query_no_directive
-        )
+        with assert_raises(ValueError) as ar:
+            _session.execute(self._query_no_directive)
+        assert str(ar.exception) == 'no collection specified'
         # query is not valid json
-        query = '''
+        with assert_raises(ValueError) as ar:
+            _session.execute('''
             #collection=tg_user
-            {'user_name' : "admin"}'''
-        assert_raises(
-            HTTPPreconditionFailed,
-            _session.execute,
-            query
-        )
+            {'user_name' : "admin"}''')
+        assert str(ar.exception) in (
+            'Expecting property name: line 1 column 2 (char 1)',  # py2
+            'Expecting property name enclosed in double quotes: line 1 column 2 (char 1)'  # py3
+        ), str(ar.exception)
 
 
 class TestSQLite3DBSession(AbstractDBSessions):

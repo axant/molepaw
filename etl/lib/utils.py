@@ -28,7 +28,7 @@ def dateframe_to_csv(dataframe):
     writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
     writer.writerow(['INDEX'] + list(dataframe.columns))
     for row in dataframe.itertuples():
-        writer.writerow([v.encode('utf-8') if isinstance(v, unicode) and py_version < 2 else v for v in row])
+        writer.writerow([v.encode('utf-8') if isinstance(v, unicode) and py_version < 3 else v for v in row])
     return csvfile.getvalue()
 
 

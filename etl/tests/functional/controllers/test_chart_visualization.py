@@ -101,7 +101,7 @@ class TestChartVisualization(BaseTestController):
             status=200
         )
         assert 'Fruits Extraction' in response.body.decode('utf-8')
-        assert response.html.find(id='results-count').get_text() == '10006'
+        assert response.html.find(id='results-count').get_text() == '10006', response.html.find(id='results-count').get_text()
         assert response.html.find(id='histogram-visualization') is not None
 
     @patch('etl.controllers.extractions.figure', Mock(side_effect=Exception('figure not figuring')))

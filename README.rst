@@ -1,3 +1,12 @@
+.. image:: https://coveralls.io/repos/github/axant/molepaw/badge.svg
+    :target: https://coveralls.io/github/axant/molepaw
+
+.. image:: https://travis-ci.org/axant/molepaw.svg
+    :target: https://travis-ci.org/axant/molepaw
+    
+.. image:: https://api.codacy.com/project/badge/Grade/30afe481bcc14aebbfdc86c53b1fee41    
+    :target: https://www.codacy.com/gh/axant/molepaw
+
 MOLEPAW
 =======
 
