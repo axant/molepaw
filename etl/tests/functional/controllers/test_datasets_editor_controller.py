@@ -3,7 +3,8 @@ from etl import model
 from etl.model import DBSession
 from etl.tests.functional.controllers import BaseTestController
 import transaction
-from mock import patch, Mock, PropertyMock
+from mock import patch, Mock
+from nose.tools import assert_raises
 
 
 class TestDatasetsEditorController(BaseTestController):
@@ -152,3 +153,67 @@ class TestDatasetsEditorController(BaseTestController):
         assert response.json == dict()
         assert DBSession.query(model.ExtractionDataSet).get(self.extractiondataset) is None
 
+    def test_dataset_cache(self):
+        from etl.model.dataset import DST_CACHE
+        dataset = model.DBSession.query(model.DataSet).get(self.dataset)
+        cache_key = dataset.cache_key
+        assert dataset.sample is DST_CACHE.get_value(cache_key)
+
+        dataset.query = 'SELECT * FROM tg_user LIMIT 10'
+        model.DBSession.add(dataset)
+        model.DBSession.flush()
+        transaction.commit()
+
+        assert_raises(
+            KeyError,
+            DST_CACHE.get_value,
+            cache_key
+        )
+        dataset = model.DBSession.query(model.DataSet).get(self.dataset)
+        assert dataset.sample is DST_CACHE.get_value(cache_key)
+        model.DBSession.delete(dataset)
+        model.DBSession.flush()
+        transaction.commit()
+
+        assert_raises(
+            KeyError,
+            DST_CACHE.get_value,
+            cache_key
+        )
+
+    def test_datasource_cache(self):
+        from etl.model.datasource import DS_CACHE
+        datasource = model.DBSession.query(model.Datasource).get(self.datasource)
+        cache_key = datasource.cache_key
+        original = datasource.url
+        assert datasource.dbsession is DS_CACHE.get_value(cache_key)
+
+        datasource.url = 'wrong_url'
+        DBSession.add(datasource)
+        DBSession.flush()
+        transaction.commit()
+
+        assert_raises(
+            KeyError,
+            DS_CACHE.get_value,
+            cache_key
+        )
+
+        datasource = model.DBSession.query(model.Datasource).get(self.datasource)
+        datasource.url = original
+        DBSession.add(datasource)
+        DBSession.flush()
+        transaction.commit()
+
+        datasource = model.DBSession.query(model.Datasource).get(self.datasource)
+        assert datasource.dbsession is DS_CACHE.get_value(cache_key)
+
+        model.DBSession.delete(datasource)
+        model.DBSession.flush()
+        transaction.commit()
+
+        assert_raises(
+            KeyError,
+            DS_CACHE.get_value,
+            cache_key
+        )

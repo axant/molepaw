@@ -52,6 +52,23 @@ class Extraction(DeclarativeBase):
     datasets = relationship('ExtractionDataSet', cascade='all, delete-orphan', order_by="ExtractionDataSet.priority")
     steps = relationship('ExtractionStep', cascade='all, delete-orphan', order_by="ExtractionStep.priority")
 
+    @property
+    def sample(self):
+        if not self.datasets:
+            return DataFrame()
+
+        extdatasets = iter(self.datasets)
+        df = next(extdatasets).dataset.sample
+
+        for extdataset in extdatasets:
+            df = pandas.merge(df, extdataset.dataset.sample,
+                              how=extdataset.join_type,
+                              left_on=extdataset.join_other_col,
+                              right_on=extdataset.join_self_col,
+                              suffixes=('', '_j_'+extdataset.dataset.name.lower()))
+
+        return df
+
     def fetch(self):
         if not self.datasets:
             return DataFrame()
@@ -121,5 +138,6 @@ class ExtractionDataSet(DeclarativeBase):
         if self.join_self_col and self.join_other_col:
             s += ' on {} = {}'.format(self.join_self_col, self.join_other_col)
         return s
+
 
 __all__ = ['Extraction']

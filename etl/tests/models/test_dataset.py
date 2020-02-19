@@ -45,8 +45,8 @@ class TestDataset(ModelTest):
     def test_fetch_valueerror(self):
         assert_raises(ValueError, self.obj.fetch)
 
-    mocked_cache = Mock(return_value=type('MockedCache', (object,), {'get_value': Mock(side_effect=KeyError)}))
-    error_mock_cache = type('MockCache', (object,), {'get_cache': mocked_cache})
+    error_mocked_cache = Mock(return_value=type('MockedCache', (object,), {'get_value': Mock(side_effect=KeyError)}))
+    error_mock_cache = type('MockCache', (object,), {'get_cache': error_mocked_cache})
     mocked_cache = Mock(return_value=type('MockedCache', (object,), {'get_value': Mock(return_value='data')}))
     mock_cache = type('MockCache', (object,), {'get_cache': mocked_cache})
 
@@ -74,7 +74,7 @@ class TestDataset(ModelTest):
             ["editor", 806, "abcd", False],
             ["guest", 0, "9ecf82c7e7ba11dbfea20cb84773339aff4d5f79", True]
         ],
-        columns=["user_name","age","token","active"]
+        columns=["user_name", "age", "token", "active"]
     )
     csv_mocked_cache = Mock(return_value=type('MockedCache', (object,), {'get_value': Mock(return_value=df)}))
     csv_mock_cache = type('MockCache', (object,), {'get_cache': csv_mocked_cache})
