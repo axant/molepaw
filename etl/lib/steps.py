@@ -14,11 +14,6 @@ try:
 except Exception:  # pragma: no cover
     unicode = str
 
-def select_function(df):
-    """Select a function"""
-    return df
-select_function.form_fields = []
-
 def slice_dataframe(df, fields):
     """Returns a subset of the columns from the DataFrame"""
     return df[list(fields)]
