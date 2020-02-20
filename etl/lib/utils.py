@@ -16,10 +16,10 @@ try:
 except Exception:
     unicode = str
 
-# try:
-#    from sys import exc_traceback
-# except ImportError as i:
-#     from sys import exc_info as exc_traceback
+try:
+    from sys import exc_traceback
+except ImportError as i:
+    pass  # not needed on py3
 
 py_version = sys.version_info[:2][0]
 
@@ -44,8 +44,16 @@ def dateframe_to_json(dataframe):
 
 
 def stringfy_exc(ex):
-    return ''.join(traceback.format_exception(type(ex), ex, ex.__traceback__))
-
+    try:  # py3
+        return (
+            '{}: {}'.format(type(ex).__name__, str(ex)),
+            ''.join(traceback.format_exception(type(ex), ex, ex.__traceback__))
+        )
+    except AttributeError:  # py2
+        return (
+            '{}: {}'.format(type(ex).__name__, str(ex)),
+            ''.join(traceback.format_exception(ex.__class__, ex, sys.exc_traceback))
+        )
 
 def force_text(v):
     try:

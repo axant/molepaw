@@ -62,6 +62,29 @@ class TestEditorController(BaseTestController):
         assert response.json['results'][0]['errors'] is None
         assert len(extraction.steps) == len(response.json['results'])
 
+    def test_pipeline_stringfy_exc_indexerror(self):
+        flt = DBSession.query(model.ExtractionFilter).get(self.filter)
+        step = model.ExtractionStep(
+            priority=1,
+            function='sort',
+            options='{"columns": ["not_there"]}',
+            extraction_filter_id=flt.uid,
+            extraction_id=flt.extraction.uid
+        )
+        DBSession.add(step)
+        DBSession.flush()
+        transaction.commit()
+
+        response = self.app.get(
+            '/editor/' + str(self.extraction) + '/test_pipeline',
+            extra_environ=self.admin_env,
+            status=200
+        )
+        assert response.json['results'][1]['errors'] in [
+            "KeyError: u'not_there'",  # py2
+            "KeyError: 'not_there'",  # py3
+        ], response.json['results'][1]['errors']
+
     def test_save_category(self):
         extraction = DBSession.query(model.Extraction).get(self.extraction)
         assert extraction.category_id == self.category

@@ -244,8 +244,12 @@ class EditorController(RestController):
                     )
                 ))
             except Exception as e:
-                log.exception(e)
-                result.append(dict(errors=stringfy_exc(e)[0], columns=[], data=[]))
+                # the shown error should be enough to understand the issue,
+                # if it isn't then the full exception is logged,
+                # the user should open a ticket or call you to fix it
+                shown, logged = stringfy_exc(e)
+                log.exception(logged)
+                result.append(dict(errors=shown, columns=[], data=[]))
 
         return dict(results=result)
 
