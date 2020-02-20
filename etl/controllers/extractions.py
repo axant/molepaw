@@ -2,9 +2,6 @@
 """Extractions controller module"""
 import json
 import logging
-import numpy as np
-
-import pandas
 import pandas.tseries
 import sys
 import tg
@@ -12,10 +9,6 @@ from tg import expose, redirect, validate, flash, url, abort, request, require, 
 from tg import predicates, lurl, config
 from tg.util import Bunch
 from tg.validation import Convert
-from bokeh.plotting import figure
-from bokeh.palettes import Category20c
-from bokeh.transform import cumsum
-from math import pi
 import tw2.forms as twf
 import tw2.core as twc
 import axf.bootstrap
@@ -23,7 +16,7 @@ import axf.bootstrap
 from etl.lib.utils import dateframe_to_csv, is_api_authenticated, dateframe_to_json
 from etl.lib.base import BaseController
 from etl.model import DBSession, Extraction, ExtractionFilter
-from etl.lib.helpers import color_gen
+from etl.lib.helpers import get_graph
 from etl.model.extractionstep import ExtractionStep
 
 from pandas import DataFrame
@@ -146,7 +139,6 @@ class ExtractionsController(BaseController):
     def view(self, extraction, extraction_filter=None, **kw):
         try:
             result = extraction.perform()
-            print(result)
         except Exception as e:
             log.exception('Failed to Retrieve Data')
             flash('ERROR RETRIEVING DATA: %s' % e, 'error')
@@ -183,68 +175,7 @@ class ExtractionsController(BaseController):
         if extraction.graph_axis:
             axis = [x.strip() for x in extraction.graph_axis.split(',')]
 
-        if 'histogram' in visualizations:
-            x = result[axis[0]].values
-            y = result[axis[1]].values
-            legend = 0
-            try:
-                visualizations['histogram'] = figure(x_range=x, width=800, height=600)
-                visualizations['histogram'].vbar(x=x, top=y, width=0.1, color='red', legend=axis[legend])
-                visualizations['histogram'].y_range.start = 0
-                visualizations['histogram'].y_range.end = max(y)
-                visualizations['histogram'].xaxis.major_label_orientation = "vertical"
-            except Exception as e:
-                log.exception('failed histogram visualization setup with exception: %s' % e)
-                del visualizations['histogram']
-
-        if 'linechart' in visualizations:
-            if not isinstance(result.index, tuple(LINECHART_SUPPORTED_INDEXES)):
-                flash('LineChart graph is only supported for scalar indexes, currently {}'.format(
-                    type(result.index)
-                ), 'warning')
-                visualizations.pop('linechart')
-
-            if 'linechart' in visualizations:
-                # Check it is still available after checks.
-
-                x = result[axis[0]].values
-                try:
-                    visualizations['linechart'] = figure(x_range=x,width=800, height=600)
-                except:
-                    visualizations['linechart'] = figure(width=800, height=600)
-                if result[axis[0]].dtype.type == np.datetime64:
-                    visualizations['linechart'] = figure(width=800, height=600, x_axis_type='datetime')
-
-                for i, c in zip(range(1,len(axis)), color_gen()):
-                    y = result[axis[i]].values
-                    try:
-                        visualizations['linechart'] = figure(y_range=y,width=800, height=600)
-                    except:
-                        pass
-                    visualizations['linechart'].line(x, y,color=c,legend="x={},y={}".format(axis[0], axis[i]))
-                    visualizations['linechart'].circle(x, y, color=c, size=7)
-        
-        if 'pie' in visualizations or 'table+pie' in visualizations:
-            visualizations['pie']  = figure(plot_height=600, width=800, x_range=(-0.5, 1.0),
-                                            toolbar_location=None, tools="hover", tooltips="@%s: @%s" % (axis[0], axis[1]))
-            result['angle'] = result[axis[1]]/result[axis[1]].sum() * 2 * pi
-            if len(result) > 2:
-                result['color'] = Category20c[len(result)]
-            else:
-                result['color'] = [u'#3182bd', u'#6baed6']
-            # if dataframe comes from mongodb collection then _id is not json serializable
-            # and bockeh returns an error due to source=result
-            # this is a bad hack
-            if '_id' in result.columns:
-                del result['_id']
-            visualizations['pie'].wedge(x=0, y=1, radius=0.4, start_angle=cumsum('angle', include_zero=True),
-                    end_angle=cumsum('angle'), line_color="white",
-                    fill_color='color', legend=axis[0], source=result)
-            del result['angle']  # delete because I don't want them in the table
-            del result['color']
-            visualizations['pie'].axis.axis_label = None
-            visualizations['pie'].axis.visible = False
-            visualizations['pie'].grid.grid_line_color = None
+        visualizations = get_graph(result, axis, visualizations)
 
         if config.get("extraction.max_elements") is None:
             log.warn("Cannot find max elements to render in config file. Using default 10000")

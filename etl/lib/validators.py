@@ -11,6 +11,7 @@ from formencode.api import Invalid
 from formencode import validators
 import pandas as pd
 from datetime import datetime
+from etl.lib.helpers import show_graph, get_graph
 
 
 class MergeValidator(validators.FieldsMatch):
@@ -79,9 +80,11 @@ def validate_axis_against_extraction_visualization(
         extraction
 ):
     axis = [x.strip() for x in user_axis.split(',')]
-    data = extraction.perform()
+    data = extraction.perform(sample=True)
+    visualizations = dict((name, None) for name in visualization_type.split('+'))
+
     try:
-        data = extraction.perform()
+        data = extraction.perform(sample=True)
         data[axis]  # => ['users', 'month']
     except Exception as e:
         abort(412, detail=Markup("<strong>{}</strong>".format(str(e))))
@@ -111,3 +114,15 @@ def validate_axis_against_extraction_visualization(
         entries = x_values.tolist()
         if len(entries) != len(set(entries)):
             abort(412, detail=Markup("<strong>Line chart doens't allow duplicated values on X axis</strong>"))
+
+    check = len(visualizations.keys())
+    if any(x in visualizations.keys() for x in ['histogram', 'pie', 'linechart']):
+        try:
+            visualizations = get_graph(data, axis, visualizations)
+            if len(visualizations.keys()) < check:
+                raise Exception('Your axis are not valid')
+            for key in visualizations.keys():
+                if key != 'table':
+                    show_graph(visualizations[key])
+        except Exception as e:
+            abort(412, detail=Markup("<strong>{}</strong>".format(str(e))))

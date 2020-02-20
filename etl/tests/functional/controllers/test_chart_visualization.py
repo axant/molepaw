@@ -104,7 +104,7 @@ class TestChartVisualization(BaseTestController):
         assert response.html.find(id='results-count').get_text() == '10006', response.html.find(id='results-count').get_text()
         assert response.html.find(id='histogram-visualization') is not None
 
-    @patch('etl.controllers.extractions.figure', Mock(side_effect=Exception('figure not figuring')))
+    @patch('etl.lib.helpers.figure', Mock(side_effect=Exception('figure not figuring')))
     def test_view_histogram_visualization_exception(self):
         entities = self.populate_for_chart_visualization('histogram', 'name,value')
         response = self.app.get(

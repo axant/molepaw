@@ -85,8 +85,8 @@ class Extraction(DeclarativeBase):
 
         return df
 
-    def perform(self):
-        df = self.fetch()
+    def perform(self, sample=False):
+        df = self.fetch() if not sample else self.sample
         for step in self.steps:
             df = step.apply(df)
         return df
