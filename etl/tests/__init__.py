@@ -81,7 +81,7 @@ class TestController(object):
         extraction = model.Extraction(
             name=name, 
             category=category,
-            uid=randint(1, 1000)
+            uid=randint(1, 100000)
         )
         model.DBSession.add(extraction)
         return extraction
@@ -94,7 +94,7 @@ class TestController(object):
         ds = model.Datasource(
             name=name,
             url=url,
-            uid=randint(1, 1000)
+            uid=randint(1, 100000)
         )
         model.DBSession.add(ds)
         return ds
@@ -109,7 +109,7 @@ class TestController(object):
             name=name,
             query=query,
             datasource=datasource,
-            uid=randint(1, 1000)
+            uid=randint(1, 100000)
         )
         model.DBSession.add(dataset)
         return dataset

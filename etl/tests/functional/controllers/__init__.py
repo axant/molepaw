@@ -5,7 +5,6 @@ import json
 import transaction
 from tgext.pluggable import app_model
 from etl.model.datasource import reset_cache
-from random import randint
 
 
 class BaseTestController(TestController):
