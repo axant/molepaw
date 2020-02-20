@@ -50,6 +50,8 @@ class MongoDBSession(object):
             raise ValueError('no collection specified')
         if isinstance(query, dict):
             data = collection.find(query)
+            if limit is not None:
+                data = data.limit(limit)
         elif isinstance(query, list):
             query_limit = [d for d in query if '$limit' in d.keys()]
             if len(query_limit) == 1 and limit is not None:

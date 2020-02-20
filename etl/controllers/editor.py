@@ -19,6 +19,7 @@ from etl.model.extraction import VISUALIZATION_TYPES
 from etl.model.extractionstep import FUNCTIONS
 from etl.lib.helpers import escape_string_to_js
 import sys
+import pdb
 py_version = sys.version_info[:2][0]
 log = logging.getLogger('molepaw')
 
