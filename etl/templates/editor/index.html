@@ -331,11 +331,7 @@
                     </h3>
                     <div class="step-doc">
                         <em class="docstring" value="{{steps[stepidx].function}}">
-                          {{#if .function_doc}}
-                            {{.function_doc}}
-                          {{else}}
-                            {{docstring[steps[stepidx].function]}}
-                          {{/if}}
+                          {{.function_doc}}
                         </em>
                     </div>
                     <div class="step-form">
@@ -507,12 +503,14 @@
             self.set('testrun', []);
             self.updateSteps();
             self.observe('steps.*.function', function (newValue, oldValue, keypath) {
+		var stepkeypath = keypath.substring(0, keypath.lastIndexOf('.'));
+		var stepidx = stepkeypath.substring(stepkeypath.lastIndexOf('.') + 1)
 		if (newValue !== 'select_function') {
                     if (self.get('loaded') === true) {
-			var stepkeypath = keypath.substring(0, keypath.lastIndexOf('.'));
 			self.set(stepkeypath + '.modified', true);
                     }
 		}
+		self.set(stepkeypath + '.function_doc', self.get('docstring')[self.get('steps')[stepidx].function]);
             });
             self.observe('steps.*.options', function (newValue, oldValue, keypath) {
                 if (self.get('loaded') === true) {
