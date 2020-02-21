@@ -34,6 +34,7 @@ testing = [
     'tox',
     'pymongo',
     'mock',
+    'selenium'
 ]
 
 install_requires = [

@@ -39,3 +39,4 @@ ansible/.vagrant/
 
 # depot files
 depot/
+geckodriver.log
