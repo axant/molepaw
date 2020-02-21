@@ -352,10 +352,9 @@ class DashboardController(BaseController):
             try:
                 visualization = result[axis[0]].sum() / len(result[axis[0]])
             except Exception as ex:
-                log.exception(type(ex), str(ex))
+                log.exception(str(ex))
                 visualization = 'Error: ' + str(ex)
         else:
-            # return abort(400, detail='%s not supported' % de.visualization)
             return redirect('/error', params={'detail': '%s not supported' % de.visualization})
         return dict(
             extraction=extraction, visualization=visualization,

@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
+import transaction
 from etl.tests.functional.controllers import BaseTestController
 from etl import model
 from etl.model import DBSession
 import json
+
+from nose.tools import assert_raises
 
 
 class TestStepsEditorController(BaseTestController):
@@ -109,3 +112,54 @@ class TestStepsEditorController(BaseTestController):
         )
         assert response.json == dict()
         assert DBSession.query(model.ExtractionStep).get(self.step).enabled is not value
+
+
+class TestExtractionStepRemaingLines(BaseTestController):
+
+    def get_step(self):
+        return model.DBSession.query(
+            model.Extraction
+        ).get(self.extraction).steps[0]
+
+    def test_extraction_step_form_and_descr(self):
+        from tw2.core.widgets import WidgetMeta
+
+        step = self.get_step()
+
+        assert isinstance(step.form, WidgetMeta)
+        assert step.descr == 'query : {"expression": "user_name != \'viewer\'"}'
+
+    def test_extraction_step_apply_corner_cases(self):
+        step = self.get_step()
+
+        step.enabled = False
+        model.DBSession.add(step)
+        model.DBSession.flush()
+        transaction.commit()
+
+        step = self.get_step()
+        assert step.apply(step.extraction.sample).columns.all() ==\
+            step.extraction.sample.columns.all()
+
+        step.options = '["user_name != \'viewer\'"]'
+        step.enabled = True
+        model.DBSession.add(step)
+        model.DBSession.flush()
+        transaction.commit()
+
+        step = self.get_step()
+
+        assert len(step.apply(step.extraction.sample)['user_id']) <\
+            len(step.extraction.sample['user_id'])
+
+        step.options = '"expression"'
+        model.DBSession.add(step)
+        model.DBSession.flush()
+        transaction.commit()
+
+        step = self.get_step()
+        assert_raises(
+            ValueError,
+            step.apply,
+            step.extraction.sample
+        )

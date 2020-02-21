@@ -44,7 +44,6 @@ class DataSet(DeclarativeBase):
         try:
             return DST_CACHE.get_value(self.cache_key(DEFAULT_LIMIT_FOR_PERFORMANCE))
         except KeyError:
-            # df = self.fetch(limit=DEFAULT_LIMIT_FOR_PERFORMANCE)
             df = self.datasource.dbsession.execute(self.query, limit=DEFAULT_LIMIT_FOR_PERFORMANCE)
             cache = self.get_column_typed(df)
             DST_CACHE.set_value(
