@@ -75,7 +75,9 @@ class TestDatasetsEditorController(BaseTestController):
             'group_ds_uid': group_ds_uid
         }
 
-    def test_post(self):
+    @patch('etl.model.dataset.tg.cache', spec=CacheManager)
+    def test_post(self, mockcache):
+        mockcache.get_cache = Mock(return_value=Cache('TEST'))
         entities = self.add_dataset(
             'SELECT g.group_id, g.group_name, g.display_name, g.created, m.user_id FROM tg_group g JOIN tg_user_group m ON g.group_id=m.group_id',
             'Group datasource'
@@ -100,6 +102,21 @@ class TestDatasetsEditorController(BaseTestController):
             model.ExtractionDataSet.join_self_col == 'user_id',
             model.ExtractionDataSet.join_other_col == 'user_id'
         ).first() is not None
+
+        extraction = DBSession.query(model.Extraction).get(self.extraction)
+
+        assert 'group_id' in list(extraction.sample)
+        assert 'group_name' in list(extraction.sample)
+        assert 'display_name_j_group dataset' in list(extraction.sample)
+        assert 'created_j_group dataset' in list(extraction.sample)
+
+        columns = list(extraction.perform())
+        assert 'group_id' in columns
+        assert 'group_name' in columns
+        assert 'display_name_j_group dataset' in columns
+        assert 'created_j_group dataset' in columns
+
+        assert extraction.datasets[1].descr == 'Group dataset left join on user_id = user_id'
 
     def test_put(self):
         entities = self.add_dataset(

@@ -41,6 +41,7 @@ class BaseTestController(TestController):
             name='default_ext',
             category=cat
         )
+        assert list(ext.sample) == []
         DBSession.flush()
         extdt = model.ExtractionDataSet(
             dataset_id=dt.uid,
