@@ -54,7 +54,8 @@ class DataSet(DeclarativeBase):
 
     @staticmethod
     def get_column_typed(dataframe):
-        for i in dataframe.columns:
+        cols = list(dataframe)
+        for i in cols:
             if collections.Counter(
                     [is_boolean(j) for j in dataframe[i]]
             ).most_common(1)[0][0]:
@@ -70,7 +71,7 @@ class DataSet(DeclarativeBase):
             ).most_common(1)[0][0]:
                 log.info('column: %s type: %s' % (i, 'numeric'))
                 dataframe[i] = pd.to_numeric(dataframe[i], errors='coerce')
-            return dataframe
+        return dataframe
 
     def fetch(self, limit=None):
         if not self.datasource:
@@ -109,7 +110,7 @@ def receive_before_update(mapper, connection, target):
                 cache = tg.cache.get_cache('datasets_cache', expire=1800)
                 cache.remove_value(target.cache_key())
                 cache.remove_value(target.cache_key(DEFAULT_LIMIT_FOR_PERFORMANCE))
-            except:
+            except:         # PRAGMA NO COVER
                 pass
 
 
@@ -121,5 +122,5 @@ def receive_before_update(mapper, connection, target):
         cache = tg.cache.get_cache('datasets_cache', expire=1800)
         cache.remove_value(target.cache_key())
         cache.remove_value(target.cache_key(DEFAULT_LIMIT_FOR_PERFORMANCE))
-    except:
+    except:                 # PRAGMA NO COVER
         pass

@@ -7,6 +7,7 @@ import transaction
 from datetime import datetime, timedelta
 from mock import Mock, patch
 from random import randint
+from datetime import datetime
 
 
 class TestChartVisualization(BaseTestController):
@@ -15,6 +16,8 @@ class TestChartVisualization(BaseTestController):
     fruits = ['Apples', 'Pears', 'Nectarines', 'Plums', 'Grapes', 'Strawberries']
     counts = [5, 3, 4, 2, 4, 6]
     deltas = [10, 20, 30, 40, 50, 60]
+    active = [True for x in range(6)]
+    created = [datetime.now() for y in range(6)]
 
     def get_session(self):
         return session_factory(self.url)
@@ -27,11 +30,16 @@ class TestChartVisualization(BaseTestController):
         self._db = self.get_session()._session.get_default_database()
         self._db.create_collection('fruits')
         values = []
-        for f, v, d in zip(self.fruits, self.counts, self.deltas):
+        for f, v, d, a, c in zip(
+            self.fruits, self.counts, self.deltas,
+            self.active, self.created
+        ):
             values.append({
                 'name': f,
                 'value': v,
-                'day': datetime.utcnow() - timedelta(days=d)
+                'day': datetime.utcnow() - timedelta(days=d),
+                'active': a,
+                'created': c
             })
         self._db.fruits.insert_many(values)
 
@@ -60,7 +68,7 @@ class TestChartVisualization(BaseTestController):
         dataset = self.create_dataset(
             datasource,
             name='All fruits',
-            query='[{"$match": {"name": {"$ne": null}}}, {"$project": {"name": 1, "value": 1, "day": 1}}]'
+            query='[{"$match": {"name": {"$ne": null}}}, {"$project": {"name": 1, "value": 1, "day": 1, "active":1, "created": 1}}]'
         )
         DBSession.flush()
         entities['dataset_uid'] = dataset.uid

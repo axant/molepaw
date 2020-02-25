@@ -5,6 +5,7 @@ from etl.tests.functional.controllers import BaseTestController
 import transaction
 from mock import patch, Mock
 from nose.tools import assert_raises
+from beaker.cache import CacheManager, Cache
 
 
 class TestDatasetsEditorController(BaseTestController):
@@ -153,7 +154,12 @@ class TestDatasetsEditorController(BaseTestController):
         assert response.json == dict()
         assert DBSession.query(model.ExtractionDataSet).get(self.extractiondataset) is None
 
-    def test_dataset_cache(self):
+
+class TestDatasetCache(BaseTestController):
+
+    @patch('etl.model.dataset.tg.cache', spec=CacheManager)
+    def test_dataset_cache(self, mockcache):
+        mockcache.get_cache = Mock(return_value=Cache('TEST'))
         from etl.model.dataset import DST_CACHE, DEFAULT_LIMIT_FOR_PERFORMANCE
         dataset = model.DBSession.query(model.DataSet).get(self.dataset)
         cache_key = dataset.cache_key(DEFAULT_LIMIT_FOR_PERFORMANCE)

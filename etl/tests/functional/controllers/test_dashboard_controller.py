@@ -426,6 +426,24 @@ class TestDashboardController(BaseTestController):
             response.html.find_all('div', class_="bk-root")
         ) > 0
 
+    def test_extraction_widget_pie_multicolor(self):
+        entities = self.create_dashboard(
+            visualization='pie', graph_axis='email_address,user_id'
+        )
+        DBSession.query(model.ExtractionStep).delete()
+        DBSession.flush()
+        transaction.commit()
+        response = self.app.get(
+            '/dashboard/extraction_widget/' + str(entities['dashboard']),
+            params=dict(uid=entities['dashboard_extraction_association']),
+            extra_environ=self.admin_env,
+            status=200
+        )
+        assert 'default_ext' in response.text
+        assert len(
+            response.html.find_all('div', class_="bk-root")
+        ) > 0
+
     def test_extraction_widget_line(self):
         entities = self.create_dashboard(
             visualization='line', graph_axis='email_address,user_id'

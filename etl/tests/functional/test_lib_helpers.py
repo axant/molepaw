@@ -1,7 +1,6 @@
 from etl.tests import TestController
 from etl.lib import helpers as h
 from etl.lib.widgets import SmartWidgetTypes, CodeTextArea
-from tw2.forms import TextArea
 from tw2.core import Widget
 
 
