@@ -1,3 +1,4 @@
+import tg
 import transaction
 from etl.tests.functional.controllers import BaseTestController
 from etl.lib import validators
@@ -145,9 +146,23 @@ class TestValidatorsErrors(BaseTestController):
 class TestUtilRemaingLines(BaseTestController):
 
     @patch('etl.lib.utils.config')
-    def tests_is_api_authentication(self, mockconfig):
+    def tests_is_api_authentication_case_1(self, mockconfig):
+        predicate = is_api_authenticated()
+        assert_raises(
+            NotAuthorizedError,
+            predicate.evaluate,
+            'environ',
+            'credentials'
+        )
+
+    @patch.object(
+        tg,
+        'config',
+        {'datasource_api_token': {'not_met': 'the_req'}}
+    )
+    def tests_is_api_authentication_case_2(self):
         environ = {
-            'QUERY_STRING': 'not met'
+            'QUERY_STRING': {'req': 'not met'}
         }
         predicate = is_api_authenticated()
         assert_raises(

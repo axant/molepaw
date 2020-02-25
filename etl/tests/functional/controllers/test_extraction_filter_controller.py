@@ -2,6 +2,8 @@
 from etl.tests.functional.controllers import BaseTestController
 from etl.model import DBSession
 from etl import model
+from beaker.cache import Cache, CacheManager
+from mock import patch, Mock
 
 
 class TestExtractionFilterController(BaseTestController):
@@ -62,7 +64,7 @@ class TestExtractionFilterController(BaseTestController):
             {'filter': self.filter_data, 'extraction': self.extraction},
             extra_environ=self.admin_env
         )
-        flt = DBSession.query(model.ExtractionFilter).get(1)
+        flt = DBSession.query(model.ExtractionFilter).get(self.filter)
         assert flt.name == 'custom_flt'
 
     def test_put_no_default(self):
@@ -76,7 +78,7 @@ class TestExtractionFilterController(BaseTestController):
             {'filter': self.filter_data, 'extraction': self.extraction},
             extra_environ=self.admin_env
         )
-        flt = DBSession.query(model.ExtractionFilter).get(1)
+        flt = DBSession.query(model.ExtractionFilter).get(self.filter)
         assert flt.name == 'custom_flt'    
 
     def test_put_404s(self):
@@ -100,3 +102,16 @@ class TestExtractionFilterController(BaseTestController):
             extra_environ=self.admin_env,
             status=404
         )
+
+    @patch('etl.model.dataset.tg.cache', spec=CacheManager)
+    def test_filter_perform(self, mockcache):
+        mockcache.get_cache = Mock(return_value=Cache('TEST'))
+
+        flt = model.DBSession.query(model.ExtractionFilter).get(self.filter)
+
+        df = flt.perform()
+        extraction_df = flt.extraction.perform()
+
+        for column in df.columns:
+            for i in range(0, len(df[column]) - 1):
+                assert df[column][i] == extraction_df[column][i]

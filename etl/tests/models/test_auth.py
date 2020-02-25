@@ -16,6 +16,9 @@ class TestGroup(ModelTest):
         display_name="Test Group"
     )
 
+    def test_unicode(self):
+        assert self.obj.__unicode__() == self.obj.group_name
+
 
 class TestUser(ModelTest):
     """Unit test case for the ``User`` model."""
@@ -47,6 +50,9 @@ class TestUser(ModelTest):
         him = self.klass.by_user_name('ignucius')
         eq_(him, self.obj)
 
+    def test_unicode(self):
+        assert self.obj.__unicode__() == self.obj.user_name
+
 
 class TestPermission(ModelTest):
     """Unit test case for the ``Permission`` model."""
@@ -56,3 +62,6 @@ class TestPermission(ModelTest):
         permission_name="test_permission",
         description="This is a test Description"
     )
+
+    def test_unicode(self):
+        assert self.obj.__unicode__() == self.obj.permission_name

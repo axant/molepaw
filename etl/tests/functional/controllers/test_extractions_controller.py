@@ -165,3 +165,9 @@ class TestExtractionsController(BaseTestController):
             status=200
         )
         assert 'ERROR RETRIEVING DATA: The resource could not be found.' in response.body.decode('utf-8')
+
+    def tests_extraction_dataset_descr(self):
+        ext_dataset = DBSession.query(model.ExtractionDataSet)\
+            .get(self.extractiondataset)
+
+        assert ext_dataset.descr == 'default_dts left join'
