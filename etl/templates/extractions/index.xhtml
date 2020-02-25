@@ -8,7 +8,7 @@
   <div id="toolbar" class="pull-right">
     <a href="#" onclick="$('#new_extraction_box').toggleClass('hidden')"
        py:if="'managers' in request.identity['groups']"
-       class="btn btn-primary ">Create New Extraction</a>
+       class="btn btn-primary " id="button_new_extraction">Create New Extraction</a>
        <a href="${tg.url('/categories')}" class="btn btn-primary">Manage Categories</a>
   </div>
   <div class="clearfix" style="margin-bottom: 10px;"></div>
