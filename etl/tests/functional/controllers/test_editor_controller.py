@@ -97,6 +97,17 @@ class TestEditorController(BaseTestController):
         extraction = DBSession.query(model.Extraction).get(self.extraction)
         assert extraction.category_id is None
 
+    def test_reload_data(self):
+        response = self.app.get(
+            '/editor/' + str(self.extraction) + '/reload_data',
+            extra_environ=self.admin_env,
+            status=302
+        )
+        redirection = response.follow(
+            extra_environ=self.admin_env
+        )
+        assert 'Data reloaded' in redirection.body.decode('utf-8')
+
 
 class TestEditorControllerMongo(BaseTestController):
     controller = EditorController()

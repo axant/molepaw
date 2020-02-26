@@ -18,7 +18,7 @@ from etl.lib.base import BaseController
 from etl.model import DBSession, Extraction, ExtractionFilter
 from etl.lib.helpers import get_graph
 from etl.model.extractionstep import ExtractionStep
-
+from etl.model.dataset import DEFAULT_LIMIT_FOR_PERFORMANCE, empty_cache
 from pandas import DataFrame
 from tgext.pluggable import app_model
 
@@ -192,3 +192,15 @@ class ExtractionsController(BaseController):
             extraction_filter=e_filter,
             py2=py_version < 3
         )
+
+    @expose()
+    def reload_data(self, extraction):
+        extraction = DBSession.query(Extraction).get(extraction) or abort(404)
+        for dts in extraction.datasets:
+            empty_cache(dts.dataset.cache_key())
+            empty_cache(dts.dataset.cache_key(DEFAULT_LIMIT_FOR_PERFORMANCE))
+        flash('Data reloaded')
+        return redirect(
+            '/extractions/view/' + str(extraction.uid)
+        )
+

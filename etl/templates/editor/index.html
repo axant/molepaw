@@ -126,7 +126,14 @@
 <body>
 <div class="row">
     <div class="col-md-12">
-        <h1 class="page-title">Editing ${extraction.name}</h1>
+        <h1 class="page-title">
+            <a class="btn btn-success"
+               href="${tg.url(['/editor', str(extraction.uid), 'reload_data'])}"
+               data-toggle="tooltip" data-placement="left" title="Reload data">
+                <i class="glyphicon glyphicon-repeat"></i>
+            </a>
+            Editing ${extraction.name}
+        </h1>
     </div>
 </div>
 <div class="row row-with-padding" id="visualization">
@@ -157,7 +164,6 @@
               <button class="btn btn-success" disabled="true">Save Visualization</button>
             {{else}}
               <button class="btn btn-success" on-click="saveVisualization()">Save Visualization</button>
-
             {{/if}}
         </div>
     </script>

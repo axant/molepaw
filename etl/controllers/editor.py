@@ -4,6 +4,7 @@ import itertools
 import json
 import logging
 import tg
+from etl.model.dataset import empty_cache, DEFAULT_LIMIT_FOR_PERFORMANCE
 from formencode import validators
 from tg import expose, redirect, validate, flash, abort, RestController, tmpl_context, decode_params, \
     response, validation_errors_response
@@ -259,3 +260,19 @@ class EditorController(RestController):
         flash(_('Category correctly updated'))
 
         return redirect(tg.url(['/editor', str(tmpl_context.extraction.uid)]))
+
+    @expose()
+    @validate({'extraction': Convert(lambda v: DBSession.query(Extraction).filter_by(uid=v).one())},
+              error_handler=abort(404, error_handler=True))
+    def reload_data(self, extraction, **kw):
+        for dts in extraction.datasets:
+            empty_cache(dts.dataset.cache_key())
+            empty_cache(dts.dataset.cache_key(DEFAULT_LIMIT_FOR_PERFORMANCE))
+        flash('Data reloaded')
+        return redirect(
+            '/extractions/view',
+            params=dict(
+                extraction=extraction.uid,
+                **kw
+            )
+        )

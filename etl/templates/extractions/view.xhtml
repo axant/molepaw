@@ -285,7 +285,14 @@
 <body py:block="body" py:strip="True">
   <div class="row">
     <div class="col-md-8">
-      <h1>${extraction.name}${" - filtered by " + extraction_filter.name if extraction_filter else ""}</h1>
+      <h1>
+          <a class="btn btn-success"
+               href="${tg.url(['/extractions/reload_data', str(extraction.uid)])}"
+               data-toggle="tooltip" data-placement="left" title="Reload data">
+                <i class="glyphicon glyphicon-repeat"></i>
+            </a>
+          ${extraction.name}${" - filtered by " + extraction_filter.name if extraction_filter else ""}
+      </h1>
     </div>
      <div class="col-md-4">
             <h3 class="pull-right"><span id="results-count">${count}</span> Results</h3>

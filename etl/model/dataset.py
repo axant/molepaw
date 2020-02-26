@@ -94,6 +94,14 @@ class DataSet(DeclarativeBase):
         )
 
 
+def empty_cache(cache_key):
+    DST_CACHE.remove_value(cache_key)
+    try:
+        cache = tg.cache.get_cache('datasets_cache', expire=1800)
+        cache.remove_value(cache_key)
+    except:  # PRAGMA NO COVER
+        pass
+
 # well, the cache should be invalidated even for limit specified datasets
 # even for values different from default
 @event.listens_for(DataSet, 'before_update')
@@ -104,23 +112,11 @@ def receive_before_update(mapper, connection, target):
         _attr = state.attrs.get(field)
         history = _attr.load_history()
         if history.has_changes():
-            DST_CACHE.remove_value(target.cache_key())
-            DST_CACHE.remove_value(target.cache_key(DEFAULT_LIMIT_FOR_PERFORMANCE))
-            try:
-                cache = tg.cache.get_cache('datasets_cache', expire=1800)
-                cache.remove_value(target.cache_key())
-                cache.remove_value(target.cache_key(DEFAULT_LIMIT_FOR_PERFORMANCE))
-            except:         # PRAGMA NO COVER
-                pass
+            empty_cache(target.cache_key())
+            empty_cache(target.cache_key(DEFAULT_LIMIT_FOR_PERFORMANCE))
 
 
 @event.listens_for(DataSet, 'before_delete')
 def receive_before_update(mapper, connection, target):
-    DST_CACHE.remove_value(target.cache_key())
-    DST_CACHE.remove_value(target.cache_key(DEFAULT_LIMIT_FOR_PERFORMANCE))
-    try:
-        cache = tg.cache.get_cache('datasets_cache', expire=1800)
-        cache.remove_value(target.cache_key())
-        cache.remove_value(target.cache_key(DEFAULT_LIMIT_FOR_PERFORMANCE))
-    except:                 # PRAGMA NO COVER
-        pass
+    empty_cache(target.cache_key())
+    empty_cache(target.cache_key(DEFAULT_LIMIT_FOR_PERFORMANCE))
