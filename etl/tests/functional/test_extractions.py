@@ -25,4 +25,4 @@ class TestExtractions(TestController):
             extra_environ=self.manager_env,
             status=200,
         )
-        assert '<h1>extraction one</h1>' in r.text, r.text
+        assert 'extraction one' in r.text, r.text
