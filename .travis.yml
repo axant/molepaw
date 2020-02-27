@@ -2,6 +2,7 @@ git:
     submodules: false
 services:
   - mongodb
+  - xvfb
 language: python
 python:
   - "2.7"
@@ -22,8 +23,6 @@ before_script:
   - wget http://chromedriver.storage.googleapis.com/2.24/chromedriver_linux64.zip
   - unzip chromedriver_linux64.zip -d /home/travis/bin/
   - export CHROME_BIN=google-chrome-stable
-  - "export DISPLAY=:99.0"
-  - "sh -e /etc/init.d/xvfb start"
   - sleep 3 # give xvfb some time to start
-  - "gearbox serve"  # start a Web server
+  - "gearbox serve -c test_e2e.ini"  # start a Web server
   - sleep 3 # give Web server some time to bind to sockets, etc

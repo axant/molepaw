@@ -4,30 +4,84 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import ui as ui
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
+from etl.tests import TestController, setup_app, load_app
+from etl.model import DBSession
+from etl.model.datasource import reset_cache
+from tgext.pluggable import app_model
+import transaction
+from random import randint
+from etl import model
+import os
+
+from gearbox.commands.serve import ServeCommand
+from tg.util import Bunch
 
 class TestE2e(object):
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
+        cls.app = load_app('main','test_e2e.ini')
+        setup_app('test_e2e.ini')
+
+        # cmd = ServeCommand(Bunch(options=Bunch(debug=True, log_file=None, relative_plugins=False, verbose_level=1)), Bunch(verbose_level=2))
+        # cmd.run(Bunch(app_name=None, args=[], config_file='test_e2e.ini', daemon=False, monitor_restart=False, pid_file=None, reload=False, reload_interval=1, server=None, server_name=None, set_group=None, set_user=None, show_status=False, stop_daemon=False))
+
+        cat = app_model.Category(
+            name='Default category 1'
+        )
+        DBSession.add(cat)
+
+        ds = model.Datasource(
+            name='default_ds',
+            url=u'sqlite:///etl/tests/e2e/sales.db',
+            uid=randint(1, 100000)
+        )
+        model.DBSession.add(ds)
+
+        dataset = model.DataSet(
+            name='products',
+            query='SELECT * FROM products',
+            datasource=ds,
+            uid=randint(1, 100000)
+        )
+        model.DBSession.add(dataset)
+
+        extraction = model.Extraction(
+            name="Estrazione uno", 
+            category=cat,
+            uid=randint(1, 100000)
+        )
+        model.DBSession.add(extraction)
+
+        DBSession.flush()
+        transaction.commit()
+
         # create a new Chrome session
-        self.driver = webdriver.Chrome()
-        self.driver.implicitly_wait(30)
-        self.driver.maximize_window()
+        cls.driver = webdriver.Chrome()
+        cls.driver.implicitly_wait(30)
+        cls.driver.maximize_window()
+
+    @classmethod
+    def teardown_class(cls):
+        cls.driver.quit()
+
     
 class TestAsAdmin(TestE2e):
-    def setUp(self):
-        super(TestAsAdmin, self).setUp()
+    @classmethod
+    def setup_class(cls):
+        super(TestAsAdmin, cls).setup_class()
 
-        self.driver.get("http://127.0.0.1:8080")
-        driverWait = ui.WebDriverWait(self.driver, 10) # timeout after 10 seconds
+        cls.driver.get("http://127.0.0.1:8081")
+        driverWait = ui.WebDriverWait(cls.driver, 10) # timeout after 10 seconds
  
-        username = self.driver.find_element_by_css_selector('input[name="login"]')
-        password = self.driver.find_element_by_css_selector('input[name="password"]')
+        username = cls.driver.find_element_by_css_selector('input[name="login"]')
+        password = cls.driver.find_element_by_css_selector('input[name="password"]')
         username.clear()
         password.clear()
         
         username.send_keys("admin")
         password.send_keys("adminpass")
         password.submit()
-        warning = self.driver.find_element_by_css_selector(".ok").text
+        warning = cls.driver.find_element_by_css_selector(".ok").text
         assert "Welcome back, admin!" == warning, warning
         
         # results = driverWait.until(lambda driverWait: driverWait.find_element_by_css_selector('.navbar'))

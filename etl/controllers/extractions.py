@@ -41,7 +41,8 @@ LINECHART_SUPPORTED_INDEXES = [
 class CreateExtractionForm(twf.Form):
     class child(axf.bootstrap.BootstrapFormLayout):
         name = twf.TextField(label='Extraction Name',
-                             validator=twc.Validator(required=True))
+                             validator=twc.Validator(required=True),
+                             css_class="new_extraction_input")
 
     action = lurl('/extractions/create')
     submit = twf.SubmitButton(value='Create', css_class='btn btn-default')
