@@ -99,6 +99,51 @@ class ExtractionFilterController(RestController):
         step.options = json.dumps(exp)
         return dict(filter=e_filter)
 
+    @expose('json')
+    @decode_params('json')
+    @require(predicates.not_anonymous())
+    @validate({'extraction': Convert(lambda v: DBSession.query(Extraction).filter_by(uid=v).one())},
+              error_handler=abort(404, error_handler=True))
+    def filters_from_template(self, template=None, field=None, extraction=None):
+        if template == 'alphabetical':
+            for i in range(ord('A'), ord('Z')+1):
+                c = chr(i)
+                next_c = chr(i + 1)
+                e_filter = ExtractionFilter(extraction=extraction, name=c)
+                expr = '({} >= "{}" and {} <= "{}") or ({} >= "{}" and {} <= "{}")'.format(
+                    field, c, field, next_c, field, c.lower(), field, next_c.lower())
+                DBSession.add(ExtractionStep(
+                    extraction_filter=e_filter,
+                    function='query',
+                    priority=0,
+                    options=json.dumps({'expression': expr})
+                ))
+            expr = '({} < "0") or ({} >= ":" and {} <= "A") or ({} >= "[" and {} <= "a") or ({} >= "{")'.replace('{}', field)
+            e_filter = ExtractionFilter(extraction=extraction, name='Symbols')
+            DBSession.add(ExtractionStep(
+                extraction_filter=e_filter,
+                function='query',
+                priority=0,
+                options=json.dumps({'expression': expr})
+            ))
+            expr = '({} >= "0" and {} <= ":")'.replace('{}', field)
+            e_filter = ExtractionFilter(extraction=extraction, name='0-9')
+            DBSession.add(ExtractionStep(
+                extraction_filter=e_filter,
+                function='query',
+                priority=0,
+                options=json.dumps({'expression': expr})
+            ))
+        else:
+            return dict(extraction=extraction, error=dict(
+                template='unknown template: {}'.format(template),
+                field=None,
+            ))
+
+        DBSession.flush()
+        extraction = DBSession.merge(extraction)
+        return dict(extraction=extraction, error=None)
+
 
 class ExtractionsController(BaseController):
 

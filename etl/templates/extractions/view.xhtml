@@ -62,25 +62,39 @@
 
         #filters-and-search{
             margin: 25px -15px;
+	    border-top: 1px solid #ccc;
+	    padding-top: 20px;
         }
 
-        #filters-form {
+        #filters-form, #filters-form-from-template {
             margin-top: 35px;
             margin-bottom: 35px;
             display: none;
         }
 
+	.btn-divider {
+	    display: inline-block;
+	    height: 36px;
+	    width: 1px;
+	    vertical-align: middle;
+	    background-color: #ccc;
+	    margin-left: 3px;
+	    margin-right: 3px;
+	}
+	
         /*]]>*/
     </style>
      <script type="text/html" id="filters_template">
          <![CDATA[
-         <div class="pull-left">
+	 <div>
              <a class="btn btn-success" on-click="toggle_form_new()" id="new-filter">New</a>
              {{#if selected !== -1}}
              <a class="btn btn-warning" on-click="toggle_form_edit()">Edit</a>
              {{else}}
              <button class="btn btn-warning" disabled="true">Edit</button>
              {{/if}}
+             <div class="btn-divider"></div>
+             <a class="btn btn-success" on-click="toggle_new_from_template_form()">New From Template</a>
          </div>
          <div class="filters">
              <ul class="pagination">
@@ -95,6 +109,39 @@
 
 
              <div class="Cateol-md-12">
+                <form class="form-horizontal" id="filters-form-from-template">
+                    <div class="form-group {{errorTemplateClass}}">
+                        <label for="template" class="col-sm-2 control-label">Template</label>
+                        <div class="col-sm-10">
+
+                     <select class="form-control" id="query" value="{{filter.template}}"
+                                   placeholder="Select your template">
+                         <option>select a value</option>
+                         <option value="alphabetical">alphabetical</option>
+                     </select>
+                     {{#if errorTemplate}}
+                          <span class="help-block">{{errorTemplate}}</span>
+                     {{/if}}
+                        </div>
+                    </div>
+                    <div class="form-group {{errorFieldClass}}">
+                        <label for="query" class="col-sm-2 control-label">field</label>
+                        <div class="col-sm-10">
+                            <select value="{{filter.field}}" class="form-control" id="field" required>
+                                <option></option>
+                                {{#each columns}}<option value={{.}}>{{.}}</option>{{/each}}
+                            </select>
+                            {{#if errorField}}
+                            <span class="help-block">{{errorField}}</span>
+                            {{/if}}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-offset-2 col-sm-10">
+                            <a on-click="save_filters_from_template()" class="btn btn-success">Save</a>
+                        </div>
+                    </div>
+                </form>
                 <form class="form-horizontal" id="filters-form">
                     <div class="form-group {{errorName}}">
                         <label for="name" class="col-sm-2 control-label">Name</label>
@@ -148,6 +195,7 @@
             template: '#filters_template',
             data: function () {
                 return {
+		    columns: ${Markup(h.script_json_encode([c for c in columns]))},
                     e_filters: ${Markup(h.script_json_encode(filters))},
                         ${"selected:" + str(extraction_filter.uid) if extraction_filter else "selected: -1"}
                 };
@@ -223,10 +271,50 @@
                 }
 
             },
+	    save_filters_from_template: function () {
+	    	var self = this;
+		var data = {
+		    template: self.get('filter.template'),
+		    field: self.get('filter.field'),
+		    extraction: "${extraction.uid}"
+		};
+		$.ajax({
+		    url: "${tg.url(['/extractions/filter/filters_from_template'])}",
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    type: 'POST',
+                }).done(function (result) {
+		    console.log(result);
+		    if (result.error !== null) {
+		        self.set('errorTemplate', result.error.template);
+			self.set('errorTemplateClass', result.error.template === null ? '' : 'has-error');			
+		        self.set('errorField', result.error.field);
+			self.set('errorFieldClass', result.error.field === null ? '' : 'has-error');
+		    } else {
+		        window.location.reload();
+		    }
+                }).fail(function () {
+		   alert('failed');
+                });
+	    },
+	    toggle_new_from_template_form: function () {
+	        var self = this;
+		this.hide_forms();
+		self.set('filter', {name: '', query: '', uid: '', template: '', field: ''});
+		$("#filters-form-from-template").slideToggle();
+	    },
+	    hide_forms: function () {
+	        var self = this;
+		self.set('errorName', '');
+                self.set('errorQuery', '');
+                self.set('edit_mode', false);
+		$("#filters-form").slideUp();
+	    },
             toggle_form: function () {
                 var self = this;
                 self.set('errorName', '');
                 self.set('errorQuery', '');
+		$("#filters-form-from-template").slideUp();
                 $("#filters-form").slideToggle();
             },
             toggle_form_new: function() {
@@ -239,7 +327,8 @@
                     $("#filters-form").slideUp(function () {
                         self.set('edit_mode', false);
                       self.set('filter', {name: '', query: '', uid: ''});
-                    });
+                    })
+		    $("#filters-form-from-template").slideUp();
                     $("#filters-form").slideDown();
                 }
 
@@ -256,6 +345,7 @@
                         self.set('edit_mode', true);
                         self.set('filter', self.get('e_filters')[self.get_selected_index()]);
                     });
+		    $("#filters-form-from-template").slideUp();
                     $("#filters-form").slideDown();
                 }
             },
@@ -284,18 +374,23 @@
 
 <body py:block="body" py:strip="True">
   <div class="row">
-    <div class="col-md-8">
-      <h1>
+    <div class="col-md-7">
           <a class="btn btn-success"
                href="${tg.url(['/extractions/reload_data', str(extraction.uid)])}"
                data-toggle="tooltip" data-placement="left" title="Reload data">
                 <i class="glyphicon glyphicon-repeat"></i>
             </a>
-          ${extraction.name}${" - filtered by " + extraction_filter.name if extraction_filter else ""}
-      </h1>
+      <h1>${extraction.name}${" - filtered by " + extraction_filter.name if extraction_filter else ""}</h1>
     </div>
-     <div class="col-md-4">
-            <h3 class="pull-right"><span id="results-count">${count}</span> Results</h3>
+     <div class="col-md-5">
+            <h3 class="pull-right">
+	      <span id="results-count">${count}</span> Results
+              <a class="btn btn-default" style="margin-left: 5px;"
+               href="${tg.url('/extractions/view.csv', params=dict(extraction=extraction.uid))}">Export CSV</a>
+              <a class="btn btn-default" style="margin-left: 5px;"
+               href="${tg.url('/extractions/view.json', params=dict(extraction=extraction.uid))}">Export JSON</a>
+
+	    </h3>
         </div>
 </div>
 <div class="row" id="graphs">
@@ -331,8 +426,6 @@
         console.log(filters);
     </script>
         <div class="col-md-4">
-            <a class="btn btn-default pull-right"
-               href="${tg.url('/extractions/view.csv', params=dict(extraction=extraction.uid))}">Export</a>
             <div class="col-md-8 pull-right">
                 <input class="form-control" type="search" id="searchBox" placeholder="Search..."/>
             </div>

@@ -4,6 +4,7 @@ from etl.model import DBSession
 from etl import model
 from beaker.cache import Cache, CacheManager
 from mock import patch, Mock
+import json
 
 
 class TestExtractionFilterController(BaseTestController):
@@ -115,3 +116,38 @@ class TestExtractionFilterController(BaseTestController):
         for column in df.columns:
             for i in range(0, len(df[column]) - 1):
                 assert df[column][i] == extraction_df[column][i]
+
+    def test_filters_from_template(self):
+        r = self.app.get(
+            '/extractions/filter/filters_from_template',
+            {
+                'extraction': self.extraction,
+                'template': 'alphabetical',
+                'field': 'email_address',
+            },
+            extra_environ=self.admin_env,
+            status=200,
+        )
+        assert r.json['error'] is None, r.json
+        assert DBSession.query(model.ExtractionFilter).count() != 1
+        assert DBSession.query(model.ExtractionFilter).all()[1].name == u'A'
+        assert DBSession.query(model.ExtractionFilter).all()[-3].name == u'Z'
+        assert DBSession.query(model.ExtractionFilter).all()[-2].name == u'Symbols'
+        assert DBSession.query(model.ExtractionFilter).all()[-1].name == u'0-9'
+        assert DBSession.query(model.ExtractionFilter).all()[-1].steps[0].function == u'query'
+        assert 'email_address' in json.loads(DBSession.query(model.ExtractionFilter).all()[-1].steps[0].options)['expression']
+
+    def test_filters_from_template_validation_error(self):
+        r = self.app.get(
+            '/extractions/filter/filters_from_template',
+            {
+                'extraction': self.extraction,
+                'template': 'alpha',
+                'field': 'email_address',
+            },
+            extra_environ=self.admin_env,
+            status=200,
+        )
+        assert r.json['error']['template'] == 'unknown template: alpha', r.json
+        assert DBSession.query(model.ExtractionFilter).count() == 1
+
