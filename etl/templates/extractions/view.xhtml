@@ -61,7 +61,7 @@
         }
 
         #filters-and-search{
-            margin: 25px -15px;
+            margin: 15px -15px;
 	    border-top: 1px solid #ccc;
 	    padding-top: 20px;
         }
@@ -375,11 +375,6 @@
 <body py:block="body" py:strip="True">
   <div class="row">
     <div class="col-md-7">
-          <a class="btn btn-success"
-               href="${tg.url(['/extractions/reload_data', str(extraction.uid)])}"
-               data-toggle="tooltip" data-placement="left" title="Reload data">
-                <i class="glyphicon glyphicon-repeat"></i>
-            </a>
       <h1>${extraction.name}${" - filtered by " + extraction_filter.name if extraction_filter else ""}</h1>
     </div>
      <div class="col-md-5">
@@ -418,6 +413,13 @@
         </script>
     </div>
 </div>
+<div class="row"><div class="col-md-12">
+    <a class="pull-right" style="color: #aaa;"
+       href="${tg.url(['/editor', str(extraction.uid), 'reload_data'])}"
+       data-toggle="tooltip" data-placement="left" title="Reload data">
+      <i class="glyphicon glyphicon-repeat" style="margin-right: 5px;"></i><span>Aggiorna cache</span>
+    </a>
+</div></div>      
 <div id="table-visualization" py:if="'table' in visualizations">
         <div class="row" id="filters-and-search">
             <div class="col-md-8" id="filters"></div>
