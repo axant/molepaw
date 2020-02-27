@@ -312,6 +312,7 @@
             <div class="step row {{.enabled ? '' : 'disabled'}}">
                 <div class="col-xs-6">
                     <select value="{{.function}}" class="form-control function">
+                        <option selected="selected" disabled="disabled" value="select_function">select function</option>
                         <option py:for="steptype in stepsformfields"
                                 value="${steptype}">
                             ${steptype.replace('_', ' ')}
