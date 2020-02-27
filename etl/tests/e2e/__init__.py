@@ -63,6 +63,7 @@ class TestE2e(object):
     @classmethod
     def teardown_class(cls):
         cls.driver.quit()
+        os.remove(__file__.replace('__init__.py', 'testse2e.db'))
 
     
 class TestAsAdmin(TestE2e):
