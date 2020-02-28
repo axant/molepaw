@@ -10,6 +10,7 @@ python:
   - "3.7"
   - "3.8"
 install: 
+  - pip install -e .[testing]
   - pip install tox-travis
   - pip install coveralls
 script: 

@@ -37,13 +37,37 @@ class TestE2e(object):
         )
         model.DBSession.add(ds)
 
-        dataset = model.DataSet(
+        dataset1 = model.DataSet(
             name='products',
             query='SELECT * FROM products',
             datasource=ds,
             uid=randint(1, 100000)
         )
-        model.DBSession.add(dataset)
+        model.DBSession.add(dataset1)
+
+        dataset2 = model.DataSet(
+            name='regions',
+            query='SELECT * FROM regions',
+            datasource=ds,
+            uid=randint(1, 100000)
+        )
+        model.DBSession.add(dataset2)
+
+        dataset3 = model.DataSet(
+            name='sales',
+            query='SELECT * FROM sales',
+            datasource=ds,
+            uid=randint(1, 100000)
+        )
+        model.DBSession.add(dataset3)
+
+        dataset4 = model.DataSet(
+            name='time',
+            query='SELECT * FROM time',
+            datasource=ds,
+            uid=randint(1, 100000)
+        )
+        model.DBSession.add(dataset4)
 
         extraction = model.Extraction(
             name="Estrazione uno", 

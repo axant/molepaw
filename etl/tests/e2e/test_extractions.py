@@ -21,8 +21,10 @@ class TestExtractions(TestAsAdmin):
 
     def test_edit_extraction(self):
         self.driver.get("http://127.0.0.1:8081")
-        self.driver.find_element_by_css_selector("#button_new_extraction").click()
-        new_extraction_box = self.driver.find_element_by_css_selector("#new_extraction_box")
-        assert new_extraction_box.is_displayed(), new_extraction_box.is_displayed()
+        self.driver.find_element_by_css_selector("[data-extraction-name='Estrazione uno'] .btn-edit").click()
+        extraction_title = self.driver.find_element_by_css_selector(".extraction-title").text
+        assert extraction_title == 'Editing Estrazione uno' , extraction_title
+
+        self.driver.find_element_by_css_selector(".add_dataset").click()
     
     
