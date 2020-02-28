@@ -9,11 +9,11 @@ python:
   - "3.6"
   - "3.7"
   - "3.8"
-install: 
+install:
   - pip install -e .[testing]
   - pip install tox-travis
   - pip install coveralls
-script: 
+script:
   - tox
   - 'nosetests etl/tests/e2e'
 after_success:
@@ -25,5 +25,5 @@ before_script:
   - unzip chromedriver_linux64.zip -d /home/travis/bin/
   - export CHROME_BIN=google-chrome-stable
   - sleep 3 # give xvfb some time to start
-  - "gearbox serve -c test_e2e.ini"  # start a Web server
+  - "gearbox serve -c test_e2e.ini --daemon"  # start a Web server
   - sleep 3 # give Web server some time to bind to sockets, etc
