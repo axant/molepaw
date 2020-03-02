@@ -14,7 +14,7 @@ install:
 script:
   - tox -- --tests=etl/tests/functional 
   - tox -- --tests=etl/tests/models
-  - nosetests --tests=etl/tests/e2e
+  - nosetests --tests=etl/tests/e2e --cover-min-percentage=1
 after_success:
   - coveralls
 addons:
