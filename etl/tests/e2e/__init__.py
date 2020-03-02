@@ -80,9 +80,14 @@ class TestE2e(object):
         transaction.commit()
 
         # create a new Chrome session
-        cls.driver = webdriver.Chrome()
-        cls.driver.implicitly_wait(30)
-        cls.driver.maximize_window()
+        options = webdriver.ChromeOptions()
+        options.add_argument('headless')
+        try:
+            cls.client = webdriver.Chrome(chrome_options=options)
+            cls.driver.implicitly_wait(30)
+            cls.driver.maximize_window()
+        except:
+            print("Error in webdriver things")
 
     @classmethod
     def teardown_class(cls):
