@@ -1,5 +1,3 @@
-git:
-  submodules: false
 dist: xenial
 services:
   - mongodb
@@ -16,7 +14,7 @@ install:
 script:
   - tox -- --tests=etl/tests/functional 
   - tox -- --tests=etl/tests/models
-  - 'nosetests etl/tests/e2e'
+  - nosetests --tests=etl/tests/e2e
 after_success:
   - coveralls
 addons:
