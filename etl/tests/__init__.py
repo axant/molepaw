@@ -17,15 +17,15 @@ __all__ = ['setup_app', 'setup_db', 'teardown_db', 'TestController']
 
 application_name = 'main_without_authn'
 
-def load_app(name=application_name):
+def load_app(name=application_name, config='test.ini'):
     """Load the test application."""
-    return TestApp(loadapp('config:test.ini#%s' % name, relative_to=getcwd()))
+    return TestApp(loadapp('config:%s#%s' % (config, name), relative_to=getcwd()))
 
 
-def setup_app():
+def setup_app(config='test.ini'):
     """Setup the application."""
     cmd = SetupAppCommand(Bunch(options=Bunch(verbose_level=1)), Bunch())
-    cmd.run(Bunch(config_file='config:test.ini', section_name=None))
+    cmd.run(Bunch(config_file='config:%s' % config, section_name=None))
 
 
 def setup_db():

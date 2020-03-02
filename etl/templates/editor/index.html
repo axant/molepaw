@@ -275,7 +275,7 @@
                 </div>
             </div>
             {{else}}
-            <div class="dataset-card btn btn-success"
+            <div class="dataset-card btn btn-success add-dataset"
                  on-click="set('addingdataset', true)">
                 <span class="glyphicon glyphicon-plus"></span>
             </div>
@@ -447,6 +447,7 @@
                     "${tg.url(['/editor', str(extraction.uid), 'datasets'])}",
                     self.get('newdataset')
             ).done(function (response) {
+                console.log(self, response)
                 toastr.info("Successfully added dataset");
                 self.set('addingdataset', false);
                 self.set('newdataset', {});

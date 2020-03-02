@@ -40,3 +40,6 @@ ansible/.vagrant/
 # depot files
 depot/
 /cover/
+
+geckodriver.log
+etl/tests/e2e/testse2e.db

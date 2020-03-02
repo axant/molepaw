@@ -375,7 +375,7 @@
 <body py:block="body" py:strip="True">
   <div class="row">
     <div class="col-md-7">
-      <h1>${extraction.name}${" - filtered by " + extraction_filter.name if extraction_filter else ""}</h1>
+      <h1 class="extraction-title">${extraction.name}${" - filtered by " + extraction_filter.name if extraction_filter else ""}</h1>
     </div>
      <div class="col-md-5">
             <h3 class="pull-right">
