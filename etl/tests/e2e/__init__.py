@@ -82,12 +82,9 @@ class TestE2e(object):
         # create a new Chrome session
         options = webdriver.ChromeOptions()
         options.add_argument('--headless')
-        try:
-            cls.client = webdriver.Chrome(chrome_options=options)
-            cls.driver.implicitly_wait(30)
-            cls.driver.maximize_window()
-        except:
-            print("Error in webdriver things")
+        cls.client = webdriver.Chrome(chrome_options=options)
+        cls.driver.implicitly_wait(30)
+        cls.driver.maximize_window()
 
     @classmethod
     def teardown_class(cls):
