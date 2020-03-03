@@ -1,5 +1,5 @@
-.. image:: https://coveralls.io/repos/github/axant/molepaw/badge.svg?branch=sprint9
-    :target: https://coveralls.io/github/axant/molepaw?branch=sprint9
+.. image:: https://coveralls.io/repos/github/axant/molepaw/badge.svg
+    :target: https://coveralls.io/github/axant/molepaw
 
 .. image:: https://travis-ci.org/axant/molepaw.svg
     :target: https://travis-ci.org/axant/molepaw
