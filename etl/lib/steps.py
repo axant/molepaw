@@ -14,6 +14,7 @@ try:
 except Exception:  # pragma: no cover
     unicode = str
 
+
 def slice_dataframe(df, fields):
     """Returns a subset of the columns from the DataFrame"""
     return df[list(fields)]

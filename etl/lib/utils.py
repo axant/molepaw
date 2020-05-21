@@ -7,7 +7,7 @@ import csv
 from six import ensure_str
 import sys
 import json
-import tg
+from tg import config
 from tg.predicates import Predicate
 import traceback
 
@@ -16,10 +16,10 @@ try:
 except Exception:
     unicode = str
 
-# try:
-#    from sys import exc_traceback
-# except ImportError as i:
-#     from sys import exc_info as exc_traceback
+try:
+    from sys import exc_traceback
+except ImportError as i:
+    pass  # not needed on py3
 
 py_version = sys.version_info[:2][0]
 
@@ -44,22 +44,22 @@ def dateframe_to_json(dataframe):
 
 
 def stringfy_exc(ex):
-    return ''.join(traceback.format_exception(type(ex), ex, ex.__traceback__))
-
+    try:  # py3
+        return (
+            '{}: {}'.format(type(ex).__name__, str(ex)),
+            ''.join(traceback.format_exception(type(ex), ex, ex.__traceback__))
+        )
+    except AttributeError:  # py2
+        return (
+            '{}: {}'.format(type(ex).__name__, str(ex)),
+            ''.join(traceback.format_exception(ex.__class__, ex, sys.exc_traceback))
+        )
 
 def force_text(v):
     try:
         return ensure_str(v)
     except Exception as ex:
         return str(v)
-
-# def force_text(v):
-#     if isinstance(v, str):
-#         return unicode(v, 'utf-8').encode('ascii', 'replace')
-#     elif isinstance(v, unicode):
-#         return v.encode('ascii', 'replace')
-#     else:
-#         return unicode(v).encode('ascii', 'replace')
 
 
 class is_api_authenticated(Predicate):
@@ -69,9 +69,9 @@ class is_api_authenticated(Predicate):
     message = "Requires a valid API Token"
 
     def evaluate(self, environ, credentials):
-        if 'datasource_api_token' not in tg.config:
+        if 'datasource_api_token' not in config:
             self.unmet()
 
-        if tg.config['datasource_api_token'] not in environ['QUERY_STRING']:
+        if config['datasource_api_token'] not in environ['QUERY_STRING']:
             self.unmet()
 

@@ -50,6 +50,17 @@ class TestExtractionsController(BaseTestController):
         assert DBSession.query(model.Extraction).get(self.extraction) is None
         assert 'Extraction correctly deleted' in redirection.body.decode('utf-8')
 
+    def test_reload_data(self):
+        response = self.app.get(
+            '/extractions/reload_data/' + str(self.extraction),
+            extra_environ=self.admin_env,
+            status=302
+        )
+        redirection = response.follow(
+            extra_environ=self.admin_env
+        )
+        assert 'Data reloaded' in redirection.body.decode('utf-8')
+
     def test_view_table_visualization(self):
         response = self.app.get(
             '/extractions/view',
@@ -165,3 +176,9 @@ class TestExtractionsController(BaseTestController):
             status=200
         )
         assert 'ERROR RETRIEVING DATA: The resource could not be found.' in response.body.decode('utf-8')
+
+    def tests_extraction_dataset_descr(self):
+        ext_dataset = DBSession.query(model.ExtractionDataSet)\
+            .get(self.extractiondataset)
+
+        assert ext_dataset.descr == 'default_dts left join'

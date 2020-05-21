@@ -29,11 +29,13 @@ except ImportError:
 testing = [
     'WebTest >= 1.2.3',
     'nose',
+    'nose-exclude',
     'coverage',
     'tg.devtools',
     'tox',
     'pymongo',
     'mock',
+    'selenium'
 ]
 
 install_requires = [

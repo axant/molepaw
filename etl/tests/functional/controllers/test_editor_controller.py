@@ -3,6 +3,8 @@ from etl.tests.functional.controllers import BaseTestController
 from etl.model import DBSession
 from etl import model
 from etl.controllers.editor import EditorController
+from datetime import datetime, timedelta
+import transaction
 
 
 class TestEditorController(BaseTestController):
@@ -60,6 +62,29 @@ class TestEditorController(BaseTestController):
         assert response.json['results'][0]['errors'] is None
         assert len(extraction.steps) == len(response.json['results'])
 
+    def test_pipeline_stringfy_exc_indexerror(self):
+        flt = DBSession.query(model.ExtractionFilter).get(self.filter)
+        step = model.ExtractionStep(
+            priority=1,
+            function='sort',
+            options='{"columns": ["not_there"]}',
+            extraction_filter_id=flt.uid,
+            extraction_id=flt.extraction.uid
+        )
+        DBSession.add(step)
+        DBSession.flush()
+        transaction.commit()
+
+        response = self.app.get(
+            '/editor/' + str(self.extraction) + '/test_pipeline',
+            extra_environ=self.admin_env,
+            status=200
+        )
+        assert response.json['results'][1]['errors'] in [
+            "KeyError: u'not_there'",  # py2
+            "KeyError: 'not_there'",  # py3
+        ], response.json['results'][1]['errors']
+
     def test_save_category(self):
         extraction = DBSession.query(model.Extraction).get(self.extraction)
         assert extraction.category_id == self.category
@@ -72,4 +97,60 @@ class TestEditorController(BaseTestController):
         extraction = DBSession.query(model.Extraction).get(self.extraction)
         assert extraction.category_id is None
 
+    def test_reload_data(self):
+        response = self.app.get(
+            '/editor/' + str(self.extraction) + '/reload_data',
+            extra_environ=self.admin_env,
+            status=302
+        )
+        redirection = response.follow(
+            extra_environ=self.admin_env
+        )
+        assert 'Data reloaded' in redirection.body.decode('utf-8')
 
+
+class TestEditorControllerMongo(BaseTestController):
+    controller = EditorController()
+        
+    def setUp(self):
+        super(BaseTestController, self).setUp()
+        self.m_datasource = self.create_datasource(name=u'datasource mongo', url=u'mongodb://localhost:27017/moletest')
+        self.m_dataset_find = self.create_dataset(self.m_datasource, name=u'dataset mongo find',
+                                                  query=u'''#collection=main_collection
+{"data": {"$gt": 5}}''')
+        self.m_dataset_aggregate = self.create_dataset(self.m_datasource, name=u'dataset mongo aggregate',
+                                                query=u'''#collection=main_collection
+[{"$match": {"data": {"$gt": 5}}}]''')
+        self._db = self.m_datasource.dbsession._session.get_default_database()
+        self._db.create_collection('main_collection')
+        self._db.main_collection.insert_many([
+            {"data": i, "data2": i + 100, "day": datetime.utcnow() + timedelta(days=i)} for i in range(105)
+        ])
+        self.ext1 = self.create_extraction(
+            name='mongo_ext1',
+        )
+        self.extds1 = model.ExtractionDataSet(
+            dataset_id=self.m_dataset_find.uid,
+            extraction_id=self.ext1.uid
+        )
+        DBSession.add(self.m_datasource)
+        DBSession.add(self.m_dataset_find)
+        DBSession.add(self.m_dataset_aggregate)
+        DBSession.add(self.ext1)
+        DBSession.add(self.extds1)
+        DBSession.flush()
+        transaction.commit()
+
+    def tearDown(self):
+        super(BaseTestController, self).tearDown()
+        self._db.drop_collection('main_collection')        
+
+    def test_mongo_get_one(self):
+        self.ext1 = DBSession.merge(self.ext1)
+        response = self.app.get(
+            '/editor',
+            params=dict(extraction=self.ext1.uid),
+            extra_environ=self.admin_env,
+            status=200
+        )
+        assert 'Editing mongo_ext1' in response.body.decode('utf-8')

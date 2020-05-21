@@ -5,8 +5,10 @@ from os import getcwd
 from paste.deploy import loadapp
 from webtest import TestApp
 from gearbox.commands.setup_app import SetupAppCommand
-from tg import config
+from tg import config, cache
 from tg.util import Bunch
+from etl.model.datasource import reset_cache
+from random import randint
 
 from etl import model
 import transaction
@@ -15,15 +17,15 @@ __all__ = ['setup_app', 'setup_db', 'teardown_db', 'TestController']
 
 application_name = 'main_without_authn'
 
-def load_app(name=application_name):
+def load_app(name=application_name, config='test.ini'):
     """Load the test application."""
-    return TestApp(loadapp('config:test.ini#%s' % name, relative_to=getcwd()))
+    return TestApp(loadapp('config:%s#%s' % (config, name), relative_to=getcwd()))
 
 
-def setup_app():
+def setup_app(config='test.ini'):
     """Setup the application."""
     cmd = SetupAppCommand(Bunch(options=Bunch(verbose_level=1)), Bunch())
-    cmd.run(Bunch(config_file='config:test.ini', section_name=None))
+    cmd.run(Bunch(config_file='config:%s' % config, section_name=None))
 
 
 def setup_db():
@@ -66,6 +68,7 @@ class TestController(object):
 
     def tearDown(self):
         """Tear down test fixture for each functional test method."""
+        reset_cache()
         model.DBSession.remove()
         teardown_db()
 
@@ -75,16 +78,24 @@ class TestController(object):
         transaction.commit()
 
     def create_extraction(self, name=u'extraction one', category=None):
-        extraction = model.Extraction(name=name, category=category)
+        extraction = model.Extraction(
+            name=name, 
+            category=category,
+            uid=randint(1, 100000)
+        )
         model.DBSession.add(extraction)
         return extraction
 
     def create_datasource(
         self,
         name=u'datasource one',
-        url=u'sqlite:///etl/tests/testdatasource.db'
+        url=u'sqlite:///etl/tests/testdatasource.db',
     ):
-        ds = model.Datasource(name=name, url=url)
+        ds = model.Datasource(
+            name=name,
+            url=url,
+            uid=randint(1, 100000)
+        )
         model.DBSession.add(ds)
         return ds
 
@@ -94,6 +105,11 @@ class TestController(object):
         name=u'dataset one',
         query=u'SELECT * FROM tg_user'
     ):
-        dataset = model.DataSet(name=name, query=query, datasource=datasource)
+        dataset = model.DataSet(
+            name=name,
+            query=query,
+            datasource=datasource,
+            uid=randint(1, 100000)
+        )
         model.DBSession.add(dataset)
         return dataset

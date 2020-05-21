@@ -51,7 +51,7 @@ body{
 }
 
 .filters {
-    margin: 0 0 0 120px;
+    margin-top: 10px;
 }
 
 .filters .pagination {

@@ -10,9 +10,12 @@ class SQLAlchemyDBSession(object):
         self._session = scoped_session(sessionmaker(autoflush=False, autocommit=False))
         self._session.configure(bind=create_engine(url, pool_recycle=300))
 
-    def execute(self, q):
+    def execute(self, q, limit=None):
         result = self._session.execute(q)
-        df = DataFrame(result.fetchall())
+        if limit is None:
+            df = DataFrame(result.fetchall())
+        else:
+            df = DataFrame(result.fetchmany(limit))
         df.columns = list(result.keys())
         self._session.remove()
         return df

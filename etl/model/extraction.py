@@ -2,16 +2,12 @@
 """Extraction model module."""
 import pandas
 from pandas import DataFrame
-from sqlalchemy import *
-from sqlalchemy import Table, ForeignKey, Column
+from sqlalchemy import ForeignKey, Column
 from sqlalchemy.ext.declarative import synonym_for
-from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.types import Integer, Unicode, DateTime, LargeBinary, Enum
-from sqlalchemy.orm import relationship, backref, class_mapper
+from sqlalchemy.types import Integer, Unicode
+from sqlalchemy.orm import relationship, backref
 from tgext.pluggable import LazyForeignKey, app_model
-from tw2.core import Deferred
 from tw2.forms import SingleSelectField
-
 from etl.lib.widgets import SmartWidgetTypes
 from etl.model import DeclarativeBase, metadata, DBSession
 
@@ -23,9 +19,9 @@ VISUALIZATION_TYPES = [('table', 'Table'),
                        ('pie', 'Pie'),
                        ('table+pie', 'Pie & Table')]
 
+
 class Extraction(DeclarativeBase):
     __tablename__ = 'extractions'
-
 
     class __sprox__(object):
         possible_field_names = {
@@ -56,6 +52,23 @@ class Extraction(DeclarativeBase):
     datasets = relationship('ExtractionDataSet', cascade='all, delete-orphan', order_by="ExtractionDataSet.priority")
     steps = relationship('ExtractionStep', cascade='all, delete-orphan', order_by="ExtractionStep.priority")
 
+    @property
+    def sample(self):
+        if not self.datasets:
+            return DataFrame()
+
+        extdatasets = iter(self.datasets)
+        df = next(extdatasets).dataset.sample
+
+        for extdataset in extdatasets:
+            df = pandas.merge(df, extdataset.dataset.sample,
+                              how=extdataset.join_type,
+                              left_on=extdataset.join_other_col,
+                              right_on=extdataset.join_self_col,
+                              suffixes=('', '_j_'+extdataset.dataset.name.lower()))
+
+        return df
+
     def fetch(self):
         if not self.datasets:
             return DataFrame()
@@ -72,14 +85,10 @@ class Extraction(DeclarativeBase):
 
         return df
 
-    def perform(self):
-        print(self)
-        df = self.fetch()
-        print(df)
-
+    def perform(self, sample=False):
+        df = self.fetch() if not sample else self.sample
         for step in self.steps:
             df = step.apply(df)
-
         return df
 
 
@@ -129,5 +138,6 @@ class ExtractionDataSet(DeclarativeBase):
         if self.join_self_col and self.join_other_col:
             s += ' on {} = {}'.format(self.join_self_col, self.join_other_col)
         return s
+
 
 __all__ = ['Extraction']

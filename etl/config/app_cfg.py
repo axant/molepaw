@@ -131,12 +131,17 @@ base_config.sa_auth.post_login_url = '/post_login'
 # You may optionally define a page where you want users to be redirected to
 # on logout:
 base_config.sa_auth.post_logout_url = '/post_logout'
-try:
-    # Enable DebugBar if available, install tgext.debugbar to turn it on
-    from tgext.debugbar import enable_debugbar
-    enable_debugbar(base_config)
-except ImportError:  # pragma: no cover
-    pass
+
+def enable_debugbar():
+    try:
+        # Enable DebugBar if available, install tgext.debugbar to turn it on
+        if not tg.config.get("disabled_debugbar", False):
+            from tgext.debugbar import enable_debugbar
+            enable_debugbar(base_config)
+    except ImportError:  # pragma: no cover
+        pass
+
+milestones.config_ready.register(enable_debugbar)
 
 
 import tgext.evolve

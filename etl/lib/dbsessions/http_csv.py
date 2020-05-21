@@ -9,7 +9,7 @@ class HTTPCSVSession(object):
     def __init__(self, url):
         self._url = url.replace('csv://', 'http://')
 
-    def execute(self, q):
+    def execute(self, q, limit=None):
         r = requests.get(self._url)
         content_type = r.headers['content-type']
         if 'csv' not in r.headers['content-type']:

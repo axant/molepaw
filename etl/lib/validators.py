@@ -11,25 +11,30 @@ from formencode.api import Invalid
 from formencode import validators
 import pandas as pd
 from datetime import datetime
+from etl.lib.helpers import show_graph, get_graph
 
 
 class MergeValidator(validators.FieldsMatch):
     validate_partial_form = True
 
     def _validate_python(self, value_dict, state=None):
-        if {'join_type', 'join_other_col', 'join_self_col'} & set(value_dict.keys()):
+        if 'join_type' not in value_dict.keys() and 'join_other_col' not in value_dict.keys() \
+                and 'join_self_col' not in value_dict.keys():
+            return None
+        else:
             extraction = tmpl_context.extraction
-            df = extraction.fetch()
+            df = extraction.sample
             try:
                 dataset = DBSession.query(DataSet).get(int(value_dict['datasetid']))
                 pd.merge(
                     df,
-                    dataset.fetch(),
+                    dataset.sample,
                     how=value_dict['join_type'],
                     left_on=value_dict['join_other_col'],
                     right_on=value_dict['join_self_col'],
                     suffixes=('', '_j_' + dataset.name.lower())
                 )
+                return None
             except ValueError as ex:
                 raise Invalid(
                     ex.__repr__(),
@@ -75,8 +80,11 @@ def validate_axis_against_extraction_visualization(
         extraction
 ):
     axis = [x.strip() for x in user_axis.split(',')]
+    data = extraction.perform(sample=True)
+    visualizations = dict((name, None) for name in visualization_type.split('+'))
+
     try:
-        data = extraction.perform()
+        data = extraction.perform(sample=True)
         data[axis]  # => ['users', 'month']
     except Exception as e:
         abort(412, detail=Markup("<strong>{}</strong>".format(str(e))))
@@ -106,3 +114,15 @@ def validate_axis_against_extraction_visualization(
         entries = x_values.tolist()
         if len(entries) != len(set(entries)):
             abort(412, detail=Markup("<strong>Line chart doens't allow duplicated values on X axis</strong>"))
+
+    check = len(visualizations.keys())
+    if any(x in visualizations.keys() for x in ['histogram', 'pie', 'linechart']):
+        try:
+            visualizations = get_graph(data, axis, visualizations)
+            if len(visualizations.keys()) < check:
+                raise Exception('Your axis are not valid')
+            for key in visualizations.keys():
+                if key != 'table':
+                    show_graph(visualizations[key])
+        except Exception as e:
+            abort(412, detail=Markup("<strong>{}</strong>".format(str(e))))

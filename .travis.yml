@@ -1,5 +1,6 @@
-git:
-    submodules: false
+os:
+  - linux
+dist: xenial
 services:
   - mongodb
 language: python
@@ -8,10 +9,22 @@ python:
   - "3.6"
   - "3.7"
   - "3.8"
-install: 
+install:
+  - pip install -e .[testing]  # still needed because currently e2e tests cannot be run with tox
   - pip install tox-travis
   - pip install coveralls
-script: 
+script:
+  - nosetests --tests=etl/tests/e2e -s --cover-min-percentage=30
   - tox
 after_success:
   - coveralls
+addons:
+  chrome: stable
+before_script:
+  - CHROME_MAIN_VERSION=`google-chrome-stable --version | sed -E 's/(^Google Chrome |\.[0-9]+ )//g'`
+  - CHROMEDRIVER_VERSION=`curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_MAIN_VERSION"`
+  - wget "https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip" -O chromedriver_linux64.zip
+  - unzip -o chromedriver_linux64.zip -d ~/bin
+  - gearbox serve -c test_e2e.ini --daemon
+  - google-chrome-stable --headless --disable-gpu --no-sandbox --disable-dev-shm-usage --remote-debugging-port=8080 http://127.0.0.1 &
+  - sleep 3 # give Web server some time to bind to sockets, etc

@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
+import transaction
 from etl.tests.functional.controllers import BaseTestController
 from etl import model
 from etl.model import DBSession
 import json
+
+from nose.tools import assert_raises
 
 
 class TestStepsEditorController(BaseTestController):
@@ -13,7 +16,7 @@ class TestStepsEditorController(BaseTestController):
             extra_environ=self.admin_env,
             status=200
         )
-        assert response.json == {u'steps': [{u'function': u'query', u'extraction_id': 1, u'uid': 1, u'enabled': True, u'priority': 0, u'function_doc': u"""Filters the rows for those matching the given expression.
+        assert response.json == {u'steps': [{u'function': u'query', u'extraction_id': self.extraction, u'uid': 1, u'enabled': True, u'priority': 0, u'function_doc': u"""Filters the rows for those matching the given expression.
 
     - Use "value != value" to get only rows where value is NaN
     - Use "value == value" to get only rows where value is not NaN
@@ -92,6 +95,12 @@ class TestStepsEditorController(BaseTestController):
 
         assert response.json == dict()
         assert DBSession.query(model.ExtractionStep).get(self.step) is None
+        self.app.get(
+            '/editor/' + str(self.extraction) + '/datasets/delete',
+            params=dict(uid=self.extractiondataset),
+            extra_environ=self.admin_env,
+            status=200
+        )
 
     def test_toggle(self):
         value = 1 if not DBSession.query(model.ExtractionStep).get(self.step).enabled else 0
@@ -103,3 +112,54 @@ class TestStepsEditorController(BaseTestController):
         )
         assert response.json == dict()
         assert DBSession.query(model.ExtractionStep).get(self.step).enabled is not value
+
+
+class TestExtractionStepRemaingLines(BaseTestController):
+
+    def get_step(self):
+        return model.DBSession.query(
+            model.Extraction
+        ).get(self.extraction).steps[0]
+
+    def test_extraction_step_form_and_descr(self):
+        from tw2.core.widgets import WidgetMeta
+
+        step = self.get_step()
+
+        assert isinstance(step.form, WidgetMeta)
+        assert step.descr == 'query : {"expression": "user_name != \'viewer\'"}'
+
+    def test_extraction_step_apply_corner_cases(self):
+        step = self.get_step()
+
+        step.enabled = False
+        model.DBSession.add(step)
+        model.DBSession.flush()
+        transaction.commit()
+
+        step = self.get_step()
+        assert step.apply(step.extraction.sample).columns.all() ==\
+            step.extraction.sample.columns.all()
+
+        step.options = '["user_name != \'viewer\'"]'
+        step.enabled = True
+        model.DBSession.add(step)
+        model.DBSession.flush()
+        transaction.commit()
+
+        step = self.get_step()
+
+        assert len(step.apply(step.extraction.sample)['user_id']) <\
+            len(step.extraction.sample['user_id'])
+
+        step.options = '"expression"'
+        model.DBSession.add(step)
+        model.DBSession.flush()
+        transaction.commit()
+
+        step = self.get_step()
+        assert_raises(
+            ValueError,
+            step.apply,
+            step.extraction.sample
+        )

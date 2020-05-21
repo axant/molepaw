@@ -45,7 +45,9 @@ class TestDataset(ModelTest):
     def test_fetch_valueerror(self):
         assert_raises(ValueError, self.obj.fetch)
 
-    mocked_cache = Mock(return_value=type('MockedCache', (object,), {'get': Mock(side_effect=KeyError)}))
+    error_mocked_cache = Mock(return_value=type('MockedCache', (object,), {'get_value': Mock(side_effect=KeyError)}))
+    error_mock_cache = type('MockCache', (object,), {'get_cache': error_mocked_cache})
+    mocked_cache = Mock(return_value=type('MockedCache', (object,), {'get_value': Mock(return_value='data')}))
     mock_cache = type('MockCache', (object,), {'get_cache': mocked_cache})
 
     @patch.object(tg, 'cache', mock_cache)
@@ -53,7 +55,7 @@ class TestDataset(ModelTest):
         self.obj.datasource = model.Datasource(url='sqlite:///etl/tests/testdatasource.db')
         self.obj.fetch()
 
-    @patch.object(tg, 'cache', mock_cache)
+    @patch.object(tg, 'cache', error_mock_cache)
     @patch.object(collections, 'Counter', Mock(side_effect=Exception))
     def test_fetch_exception(self):
         self.obj.datasource = model.Datasource(url='sqlite:///etl/tests/testdatasource.db')
@@ -67,15 +69,26 @@ class TestDataset(ModelTest):
 "editor",806,,0
 "guest",0,"9ecf82c7e7ba11dbfea20cb84773339aff4d5f79",1''',
     })
+    df = pd.DataFrame([
+            ["admin", 675, "abcd", True],
+            ["editor", 806, "abcd", False],
+            ["guest", 0, "9ecf82c7e7ba11dbfea20cb84773339aff4d5f79", True]
+        ],
+        columns=["user_name", "age", "token", "active"]
+    )
+    csv_mocked_cache = Mock(return_value=type('MockedCache', (object,), {'get_value': Mock(return_value=df)}))
+    csv_mock_cache = type('MockCache', (object,), {'get_cache': csv_mocked_cache})
 
-    @patch.object(tg, 'cache', mock_cache)
+    @patch.object(tg, 'cache', csv_mock_cache)
     @patch('requests.get', Mock(return_value=csv_mocking_data))
     def test_fetch_csv(self):
         self.obj.datasource = model.Datasource(url='csv://127.0.0.1:8080/extractions/view/1.csv')
-        from etl.model.datasource import SESSIONS_CACHE
+        from etl.model.datasource import DS_CACHE
         from etl.lib.dbsessions.http_csv import HTTPCSVSession
-        SESSIONS_CACHE[1] = HTTPCSVSession(url=self.obj.datasource.url)
-        SESSIONS_CACHE[None] = HTTPCSVSession(url=self.obj.datasource.url)
+        DS_CACHE.set_value(
+            self.obj.datasource.cache_key,
+            HTTPCSVSession(url=self.obj.datasource.url)
+        )
         df = self.obj.fetch()
         assert isinstance(self.obj.datasource.dbsession, HTTPCSVSession)
         assert df['age'].dtype.name == 'int64'
@@ -83,6 +96,6 @@ class TestDataset(ModelTest):
         assert df['user_name'].dtype.name == 'object'
         assert df['user_name'][0] == 'admin'
         assert df['token'].dtype.name == 'object'
-        assert df['token'][0] == ''
+        assert df['token'][0] == 'abcd'
         assert df['active'].dtype.name == 'bool'
         assert df['active'][0]

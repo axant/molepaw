@@ -126,7 +126,14 @@
 <body>
 <div class="row">
     <div class="col-md-12">
-        <h1 class="page-title">Editing ${extraction.name}</h1>
+        <h1 class="page-title">
+          Editing ${extraction.name}
+	  <a class="btn btn-default pull-right"
+             href="${tg.url(['/editor', str(extraction.uid), 'reload_data'])}"
+             data-toggle="tooltip" data-placement="left" title="Reload data">
+            <i class="glyphicon glyphicon-repeat"></i>
+          </a>
+	</h1>
     </div>
 </div>
 <div class="row row-with-padding" id="visualization">
@@ -157,7 +164,6 @@
               <button class="btn btn-success" disabled="true">Save Visualization</button>
             {{else}}
               <button class="btn btn-success" on-click="saveVisualization()">Save Visualization</button>
-
             {{/if}}
         </div>
     </script>
@@ -269,7 +275,7 @@
                 </div>
             </div>
             {{else}}
-            <div class="dataset-card btn btn-success"
+            <div class="dataset-card btn btn-success add-dataset"
                  on-click="set('addingdataset', true)">
                 <span class="glyphicon glyphicon-plus"></span>
             </div>
@@ -306,6 +312,7 @@
             <div class="step row {{.enabled ? '' : 'disabled'}}">
                 <div class="col-xs-6">
                     <select value="{{.function}}" class="form-control function">
+                        <option selected="selected" disabled="disabled" value="select_function">select function</option>
                         <option py:for="steptype in stepsformfields"
                                 value="${steptype}">
                             ${steptype.replace('_', ' ')}
@@ -440,6 +447,7 @@
                     "${tg.url(['/editor', str(extraction.uid), 'datasets'])}",
                     self.get('newdataset')
             ).done(function (response) {
+                console.log(self, response)
                 toastr.info("Successfully added dataset");
                 self.set('addingdataset', false);
                 self.set('newdataset', {});

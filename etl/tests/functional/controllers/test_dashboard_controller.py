@@ -2,6 +2,7 @@ from etl.tests.functional.controllers import BaseTestController
 from etl.model import DBSession
 from etl import model
 import transaction
+from mock import patch, Mock
 
 
 class TestDashboardController(BaseTestController):
@@ -198,7 +199,7 @@ class TestDashboardController(BaseTestController):
         assert response.json == {
             'de': {
                 'dashboard_id': 1,
-                'extraction_id': 1,
+                'extraction_id': self.extraction,
                 'visualization': 'histogram',
                 'graph_axis': 'email_address,user_id',
                 'index': 1
@@ -225,7 +226,7 @@ class TestDashboardController(BaseTestController):
                 'dashboard_id': 1,
                 'index': 0,
                 'visualization': 'histogram',
-                'extraction_id': 1,
+                'extraction_id': self.extraction,
                 'uid': 1,
                 'graph_axis': 'display_name,user_id',
                 'dashboard': {
@@ -233,7 +234,7 @@ class TestDashboardController(BaseTestController):
                     'uid': 1
                 },
                 'extraction': {
-                    'uid': 1,
+                    'uid': self.extraction,
                     'visualization': 'table',
                     'graph_axis': None,
                     'name': 'default_ext',
@@ -245,7 +246,7 @@ class TestDashboardController(BaseTestController):
                 'uid': 1
             },
             'extraction': {
-                'uid': 1,
+                'uid': self.extraction,
                 'visualization': 'table',
                 'graph_axis': None,
                 'name': 'default_ext',
@@ -301,7 +302,15 @@ class TestDashboardController(BaseTestController):
             status=400
         )
 
-        # Case 3 - the last become the first and vice versa
+        # Case 3 - wrong association_id - NoResultFound
+        self.app.put_json(
+            '/dashboard/set_extraction_index/' + str(entities['dashboard']),
+            {'uid': 123, 'index': 1},
+            extra_environ=self.admin_env,
+            status=404
+        )
+
+        # Case 4 - the last become the first and vice versa
         response = self.app.put_json(
             '/dashboard/set_extraction_index/' + str(entities['dashboard']),
             {'uid': entities['dashboard_extraction_association_2'], 'index': 0},
@@ -385,10 +394,45 @@ class TestDashboardController(BaseTestController):
             response.html.find_all('div', class_="bk-root")
         ) > 0
 
+    @patch(
+        'etl.controllers.dashboard.figure',
+        Mock(side_effect=Exception('Fake Error'))
+    )
+    def test_extraction_widget_histogram_error(self):
+        entities = self.create_dashboard()
+        response = self.app.get(
+            '/dashboard/extraction_widget/' + str(entities['dashboard']),
+            params=dict(uid=entities['dashboard_extraction_association']),
+            extra_environ=self.admin_env,
+            status=302
+        )
+        response.follow(
+            extra_environ=self.admin_env,
+            status=404
+        )
+
     def test_extraction_widget_pie(self):
         entities = self.create_dashboard(
             visualization='pie', graph_axis='email_address,user_id'
         )
+        response = self.app.get(
+            '/dashboard/extraction_widget/' + str(entities['dashboard']),
+            params=dict(uid=entities['dashboard_extraction_association']),
+            extra_environ=self.admin_env,
+            status=200
+        )
+        assert 'default_ext' in response.text
+        assert len(
+            response.html.find_all('div', class_="bk-root")
+        ) > 0
+
+    def test_extraction_widget_pie_multicolor(self):
+        entities = self.create_dashboard(
+            visualization='pie', graph_axis='email_address,user_id'
+        )
+        DBSession.query(model.ExtractionStep).delete()
+        DBSession.flush()
+        transaction.commit()
         response = self.app.get(
             '/dashboard/extraction_widget/' + str(entities['dashboard']),
             params=dict(uid=entities['dashboard_extraction_association']),
@@ -449,7 +493,7 @@ class TestDashboardController(BaseTestController):
 
     def test_extraction_widget_sum_wrong_type(self):
         entities = self.create_dashboard(
-            visualization='sum', graph_axis='created'
+            visualization='sum', graph_axis='email_address'
         )
         response = self.app.get(
             '/dashboard/extraction_widget/' + str(entities['dashboard']),
@@ -462,7 +506,8 @@ class TestDashboardController(BaseTestController):
         assert len(
             response.html.find_all('div', class_="visualization-number")
         ) > 0
-        assert 'Error:' in response.html.find_all('div', class_="visualization-number")[0].get_text()
+        assert 'admin@somedomain.commanager@somedomain.com'\
+               in response.html.find_all('div', class_="visualization-number")[0].get_text()
 
     def test_extraction_widget_average(self):
         entities = self.create_dashboard(
@@ -481,5 +526,57 @@ class TestDashboardController(BaseTestController):
         ) > 0
         assert '1.50' in response.html.find_all('div', class_="visualization-number")[0].get_text()
         assert 'average of user_id' in response.html.find_all('div', class_="visualization-number")[0].get_text()
+
+    def test_extraction_widget_average_errors(self):
+        entities = self.create_dashboard(
+            visualization='average', graph_axis='display_name'
+        )
+        response = self.app.get(
+            '/dashboard/extraction_widget/' + str(entities['dashboard']),
+            params=dict(uid=entities['dashboard_extraction_association']),
+            extra_environ=self.admin_env,
+            status=200
+        )
+
+        assert 'Error' in response.html.find_all('div', class_="visualization-number")[0].get_text()
+        assert 'average of display_name' in response.html.find_all(
+            'div', class_="visualization-number"
+        )[0].get_text()
+
+    def test_wrong_visualization_error(self):
+        entities = self.create_dashboard(
+            visualization='wrongone', graph_axis='display_name'
+        )
+        response = self.app.get(
+            '/dashboard/extraction_widget/' + str(entities['dashboard']),
+            params=dict(uid=entities['dashboard_extraction_association']),
+            extra_environ=self.admin_env,
+            status=302
+        )
+        response = response.follow(
+            extra_environ=self.admin_env,
+            status=404
+        )
+
+    @patch(
+        'etl.model.extraction.Extraction.perform',
+        Mock(side_effect=Exception('Fake error'))
+    )
+    def test_extraction_widget_first_error(self):
+        entities = self.create_dashboard()
+        response = self.app.get(
+            '/dashboard/extraction_widget/' + str(entities['dashboard']),
+            params=dict(uid=entities['dashboard_extraction_association']),
+            extra_environ=self.admin_env,
+            status=302
+        )
+        redirection = response.follow(
+            extra_environ=self.admin_env,
+            status=404
+        )
+        assert 'ERROR RETRIEVING DATA:' in redirection.text
+        assert 'Fake error' in redirection.text
+
+
 
 

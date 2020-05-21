@@ -8,7 +8,7 @@
   <div id="toolbar" class="pull-right">
     <a href="#" onclick="$('#new_extraction_box').toggleClass('hidden')"
        py:if="'managers' in request.identity['groups']"
-       class="btn btn-primary ">Create New Extraction</a>
+       class="btn btn-primary " id="button_new_extraction">Create New Extraction</a>
        <a href="${tg.url('/categories')}" class="btn btn-primary">Manage Categories</a>
   </div>
   <div class="clearfix" style="margin-bottom: 10px;"></div>
@@ -32,14 +32,14 @@
         </thead>
         <tbody>
 
-        <tr py:for="extraction in category.extractions">
+        <tr py:for="extraction in category.extractions" data-extraction-uid="${extraction.uid}" data-extraction-name="${extraction.name}">
           <td>${extraction.name}</td>
           <td>
-            <a class="btn btn-success"
+            <a class="btn btn-success btn-view"
                href="${tg.url(['/extractions/view', str(extraction.uid)])}">VIEW</a>
-            <a class="btn btn-warning" py:if="'managers' in request.identity['groups']"
+            <a class="btn btn-warning btn-edit" py:if="'managers' in request.identity['groups']"
                href="${tg.url(['/editor', str(extraction.uid)])}">EDIT</a>
-            <a class="btn btn-danger" py:if="'managers' in request.identity['groups']"
+            <a class="btn btn-danger btn-delete" py:if="'managers' in request.identity['groups']"
                href="${tg.url(['/extractions/delete', str(extraction.uid)])}"
                onclick="return confirm('Are you sure you want to delete this extractions?');">
               DELETE</a>

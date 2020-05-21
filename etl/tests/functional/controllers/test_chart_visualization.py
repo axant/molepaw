@@ -6,7 +6,9 @@ from tgext.pluggable import app_model
 import transaction
 from datetime import datetime, timedelta
 from mock import Mock, patch
-from bokeh.plotting import figure
+from random import randint
+from datetime import datetime
+
 
 class TestChartVisualization(BaseTestController):
     _db = None
@@ -14,6 +16,8 @@ class TestChartVisualization(BaseTestController):
     fruits = ['Apples', 'Pears', 'Nectarines', 'Plums', 'Grapes', 'Strawberries']
     counts = [5, 3, 4, 2, 4, 6]
     deltas = [10, 20, 30, 40, 50, 60]
+    active = [True for x in range(6)]
+    created = [datetime.now() for y in range(6)]
 
     def get_session(self):
         return session_factory(self.url)
@@ -26,11 +30,16 @@ class TestChartVisualization(BaseTestController):
         self._db = self.get_session()._session.get_default_database()
         self._db.create_collection('fruits')
         values = []
-        for f, v, d in zip(self.fruits, self.counts, self.deltas):
+        for f, v, d, a, c in zip(
+            self.fruits, self.counts, self.deltas,
+            self.active, self.created
+        ):
             values.append({
                 'name': f,
                 'value': v,
-                'day': datetime.utcnow() - timedelta(days=d)
+                'day': datetime.utcnow() - timedelta(days=d),
+                'active': a,
+                'created': c
             })
         self._db.fruits.insert_many(values)
 
@@ -59,13 +68,14 @@ class TestChartVisualization(BaseTestController):
         dataset = self.create_dataset(
             datasource,
             name='All fruits',
-            query='[{"$match": {"name": {"$ne": null}}}, {"$project": {"name": 1, "value": 1, "day": 1}}]'
+            query='[{"$match": {"name": {"$ne": null}}}, {"$project": {"name": 1, "value": 1, "day": 1, "active":1, "created": 1}}]'
         )
         DBSession.flush()
         entities['dataset_uid'] = dataset.uid
         extractiondataset = model.ExtractionDataSet(
             dataset=dataset,
-            extraction=extraction
+            extraction=extraction,
+            uid=randint(1, 1000)
         )
         DBSession.add(extractiondataset)
         DBSession.flush()
@@ -78,7 +88,7 @@ class TestChartVisualization(BaseTestController):
         response = self.app.get(
             '/extractions/view',
             params=dict(
-                extraction=entities['extractiondataset_uid']
+                extraction=entities['extraction_uid']
             ),
             extra_environ=self.admin_env,
             status=200
@@ -93,23 +103,22 @@ class TestChartVisualization(BaseTestController):
         response = self.app.get(
             '/extractions/view',
             params=dict(
-                extraction=entities['extractiondataset_uid']
+                extraction=entities['extraction_uid']
             ),
             extra_environ=self.admin_env,
             status=200
         )
         assert 'Fruits Extraction' in response.body.decode('utf-8')
-        assert response.html.find(id='results-count').get_text() == '10006'
+        assert response.html.find(id='results-count').get_text() == '10006', response.html.find(id='results-count').get_text()
         assert response.html.find(id='histogram-visualization') is not None
 
-
-    @patch('etl.controllers.extractions.figure', Mock(side_effect=Exception('figure not figuring')))
+    @patch('etl.lib.helpers.figure', Mock(side_effect=Exception('figure not figuring')))
     def test_view_histogram_visualization_exception(self):
         entities = self.populate_for_chart_visualization('histogram', 'name,value')
         response = self.app.get(
             '/extractions/view',
             params=dict(
-                extraction=entities['extractiondataset_uid']
+                extraction=entities['extraction_uid']
             ),
             extra_environ=self.admin_env,
             status=200
@@ -118,7 +127,6 @@ class TestChartVisualization(BaseTestController):
         assert response.html.find(id='results-count').get_text() == '6'
         # is None because of exception
         assert response.html.find(id='histogram-visualization') is None, response.html
-
 
     def test_view_linechart_visualization(self):
         entities = self.populate_for_chart_visualization('linechart', 'name,value')

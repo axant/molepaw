@@ -114,4 +114,15 @@ Refer to https://github.com/axant/tgext.evolve
 Test Suite
 ----------
 
-Molepaw's test suite works with nosetests, refer to https://nose.readthedocs.io/en/latest/
+Molepaw's test suite is written in nosetests and tox is configured as a wrapper.
+so to run tests with tox just type `tox` in a terminal assuming you've installed with `pip install -e .[testing]`
+Molepaw has another test suite for e2e tests with chrome, if you need to debug it or write new tests and want to see what's going on the browser comment out `headless` from chromeoptions in `etl/tests/e2e/__init__.py`.
+You can run e2e tests with `nosetests --tests=etl/tests/e2e -s --cover-min-percentage=30`
+
+molepaw test suite databases are to be removed if something fails.
+molepaw test suite requires an active mongodb instance. it connects with `mongodb://127.0.0.1:27017/moletest`. so if you get stuck (for example for a C-c (control+c) during interested tests, skipping the teardown, drop it from a mongo shell (using `use moletest`, then `db.dropDatabase()`)
+
+if you are getting lots of errors about integrityerror, no such table and so on, it means a `setUp` failed, and the teardown did not happen.if you get those in e2e tests, you have to delete the database file manually: `rm etl/tests/e2e/testse2e.db` before trying to fix the issue.
+
+Refer to https://nose.readthedocs.io/en/latest/
+

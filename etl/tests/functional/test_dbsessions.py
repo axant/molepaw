@@ -70,6 +70,28 @@ class TestMongoDBSession(AbstractDBSessions):
         assert isinstance(result, DataFrame)
         assert result['age'][0] == 675
 
+    def test_execute_aggregation_with_limit(self):
+        result = self.get_session().execute('''#collection=tg_user
+[{"$match": {"age" : {"$gt": 0}}}, {"$project": {"age": 1}}, {"$limit": 1}]''', limit=100)
+        assert isinstance(result, DataFrame)
+        assert result['age'][0] == 675
+        # limit=100 will override the limit 1
+        assert len(result) == 2, len(result)
+
+    def test_execute_aggregation_with_execute_limit(self):
+        result = self.get_session().execute('''#collection=tg_user
+[{"$match": {"age" : {"$gt": 0}}}, {"$project": {"age": 1}}]''', limit=1)
+        assert isinstance(result, DataFrame)
+        assert result['age'][0] == 675
+        assert len(result) == 1, len(result)
+
+    def test_execute_find_with_limit(self):
+        result = self.get_session().execute('''#collection=tg_user
+{"age": {"$gt": 0}}''', limit=1)
+        assert isinstance(result, DataFrame)
+        assert result['age'][0] == 675
+        assert len(result) == 1, len(result)
+
     def test_errors(self):
         _session = session_factory('mongodb://127.0.0.1:27017/moletest')
         # both url and query don't contain the collection so the session
@@ -92,6 +114,12 @@ class TestSQLite3DBSession(AbstractDBSessions):
     _url = 'sqlite:///etl/tests/testdatasource.db'
     _query_users = 'SELECT * FROM tg_user WHERE user_name = \'admin\''
     _query_wrong_table = 'SELECT * FROM this_does_not_exists'
+
+    def test_execute_with_limit(self):
+        result = self.get_session().execute('select * from tg_user', limit=1)
+        assert isinstance(result, DataFrame)
+        assert result['user_name'][0] == 'admin'
+        assert len(result) == 1, len(result)        
 
 
 class TestCsvDBSession(AbstractDBSessions, TestController):
@@ -151,3 +179,10 @@ class TestJsonDBSession(AbstractDBSessions, TestController):
     @patch('requests.get', Mock(return_value=json_mocking_data_wrong))
     def test_execute_wrong_table(self):
         super(TestJsonDBSession, self).test_execute_wrong_table()
+
+class TestUnavailableDBSession(TestController):
+    _url = 'unavailable://this_raises_keyerror'
+    def test_unavailable(self):
+        with assert_raises(KeyError) as ar:
+            session_factory(self._url)
+        assert str(ar.exception) == "'Unable to find a supported engine for {}'".format(self._url), str(ar.exception)

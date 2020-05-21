@@ -5,7 +5,7 @@ from datetime import datetime
 
 
 class TestSteps(object):
-   
+
     def test_slice(self):
         df = pd.DataFrame({
             'value': pd.Series([1, 2, 3]),

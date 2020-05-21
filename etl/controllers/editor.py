@@ -4,7 +4,7 @@ import itertools
 import json
 import logging
 import tg
-from markupsafe import Markup
+from etl.model.dataset import empty_cache, DEFAULT_LIMIT_FOR_PERFORMANCE
 from formencode import validators
 from tg import expose, redirect, validate, flash, abort, RestController, tmpl_context, decode_params, \
     response, validation_errors_response
@@ -20,6 +20,7 @@ from etl.model.extraction import VISUALIZATION_TYPES
 from etl.model.extractionstep import FUNCTIONS
 from etl.lib.helpers import escape_string_to_js
 import sys
+import pdb
 py_version = sys.version_info[:2][0]
 log = logging.getLogger('molepaw')
 
@@ -185,8 +186,9 @@ class EditorController(RestController):
 
         for d in DBSession.query(DataSet):
             try:
-                cols = [str(c) for c in d.fetch().columns]
-            except:
+                cols = [str(c) for c in d.sample.columns]
+            except Exception as ex:
+                log.exception(str(ex))
                 cols = []
             available_datasets.append((d.uid, d.name))
             datasets_columns[d.uid] = cols
@@ -243,8 +245,12 @@ class EditorController(RestController):
                     )
                 ))
             except Exception as e:
-                log.exception(e)
-                result.append(dict(errors=stringfy_exc(e)[0], columns=[], data=[]))
+                # the shown error should be enough to understand the issue,
+                # if it isn't then the full exception is logged,
+                # the user should open a ticket or call you to fix it
+                shown, logged = stringfy_exc(e)
+                log.exception(logged)
+                result.append(dict(errors=shown, columns=[], data=[]))
 
         return dict(results=result)
 
@@ -254,3 +260,19 @@ class EditorController(RestController):
         flash(_('Category correctly updated'))
 
         return redirect(tg.url(['/editor', str(tmpl_context.extraction.uid)]))
+
+    @expose()
+    @validate({'extraction': Convert(lambda v: DBSession.query(Extraction).filter_by(uid=v).one())},
+              error_handler=abort(404, error_handler=True))
+    def reload_data(self, extraction, **kw):
+        for dts in extraction.datasets:
+            empty_cache(dts.dataset.cache_key())
+            empty_cache(dts.dataset.cache_key(DEFAULT_LIMIT_FOR_PERFORMANCE))
+        flash('Data reloaded')
+        return redirect(
+            '/extractions/view',
+            params=dict(
+                extraction=extraction.uid,
+                **kw
+            )
+        )
