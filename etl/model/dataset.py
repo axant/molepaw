@@ -56,9 +56,7 @@ class DataSet(DeclarativeBase):
     def get_column_typed(dataframe):
         cols = list(dataframe)
         for i in cols:
-            if collections.Counter(
-                    [is_boolean(j) for j in dataframe[i]]
-            ).most_common(1)[0][0]:
+            if all([is_boolean(j) for j in dataframe[i]]):
                 log.info('column: %s type: %s' % (i, 'bool'))
                 dataframe[i] = dataframe[i].astype('bool', errors='ignore')
             elif collections.Counter(
