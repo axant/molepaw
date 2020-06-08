@@ -18,26 +18,12 @@ class TestDataset(ModelTest):
         query="select * from tg_user"
     )
 
-    # this test seems useless to me
     def test_csv(self):
         df = pd.read_csv('etl/tests/film.csv')
-        for i in df.columns:
-            # test_is_boolean
-            if collections.Counter([is_boolean(j) for j in df[i].head(100).tolist()]).most_common(1)[0][0]:
-                df[i] = df[i].astype('bool', errors='ignore')
-                assert i == 'hire_price'
-            # test_is_datetime
-            elif collections.Counter([is_datetime(j) for j in df[i].head(100).tolist()]).most_common(1)[0][0]:
-                df[i] = pd.to_datetime(df[i], errors='coerce')
-                assert i in ('agreement_expiration', 'release_date', 'hire_price')
-            # test_is_number
-            elif collections.Counter([is_number(j) for j in df[i].head(100).tolist()]).most_common(1)[0][0]:
-                df[i] = pd.to_numeric(df[i], errors='coerce')
-                assert i in (
-			'id', 'duration', 'phone_number', 'INDEX', 'campaing_end_date',
-			'created_from_manager_id', 'campaing_start_date', 'birth_date'
-                )
-
+        assert df['hire_price'].dtypes.name == 'bool'
+        assert df['agreement_expiration'].dtypes.name == df['release_date'].dtypes.name == 'object', (df['agreement_expiration'].dtypes.name, df['release_date'].dtypes.name)
+        assert df['id'].dtypes.name == 'int64'
+        df = self.klass.get_column_typed(df)
         assert df['hire_price'].dtypes.name == 'bool'
         assert df['agreement_expiration'].dtypes.name == df['release_date'].dtypes.name == 'datetime64[ns]', (df['agreement_expiration'].dtypes.name, df['release_date'].dtypes.name)
         assert df['id'].dtypes.name == 'int64'

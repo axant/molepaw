@@ -21,7 +21,12 @@ class TestRoot(TestController):
         r = r.follow(extra_environ=self.manager_env, status=200)
 
     def test_error_xhr(self):
-        r = self.app.get('/error/test?detail=sfiga', status=500, extra_environ=self.manager_env, xhr=True)
+        r = self.app.get(
+            '/error/test?detail=sfiga',
+            expect_errors=True,
+            extra_environ=self.manager_env,
+            xhr=True
+        )
         assert b'''<!DOCTYPE html>
 <div style="width: 100%;">
     
@@ -31,9 +36,10 @@ class TestRoot(TestController):
   <div style="max-width: 100%;">sfiga</div>
     
 </div>''' == r.body
+        assert r.status_int == 500
 
     def test_error_xhr_no_detail(self):
-        r = self.app.get('/error/test', status=500, extra_environ=self.manager_env, xhr=True)
+        r = self.app.get('/error/test', expect_errors=True, extra_environ=self.manager_env, xhr=True)
         assert b'''<!DOCTYPE html>
 <div style="width: 100%;">
     
@@ -43,3 +49,4 @@ class TestRoot(TestController):
   <div style="max-width: 100%;"><p>We're sorry but we weren't able to process  this request.</p></div>
     
 </div>''' == r.body, r.body
+        assert r.status_int == 500
