@@ -3,7 +3,7 @@ import pandas
 import datetime
 import numpy as np
 from markupsafe import Markup
-from tw2.core import Validator
+from tw2.core import Validator, OneOfValidator
 from tw2.forms import TextField, SingleSelectField
 from tg.i18n import lazy_ugettext as l_
 from etl.lib.utils import force_text
@@ -207,6 +207,36 @@ sort.form_fields = [
               value='{{.options.columns}}', placeholder='comma separated fields (name, surname, age)')
 ]
 
+
+def duplicated(df, subset, keep):
+    """Adds a column that says if the row is duplicated or not based on subset.
+    ``subset`` column label or sequence of labels, optional
+        Only consider certain columns for identifying duplicates, by default use all of the columns.
+    ``keep`` {‘first’, ‘last’, False}, default ‘first’
+        Determines which duplicates (if any) to mark.
+            first : Mark duplicates as True except for the first occurrence.
+            last : Mark duplicates as True except for the last occurrence.
+            False : Mark all duplicates as True.
+
+    Refer to https://pandas.pydata.org/docs/dev/reference/api/pandas.DataFrame.duplicated.html"""
+    _subset = subset
+    if _subset is None:
+        subset = ['all_fields']  # pretty name
+        _subset = [None]  # used one line below
+    if len(_subset) == 1:
+        _subset = _subset[0] if _subset[0] != '' else None
+    if keep == 'False':
+        keep = False
+    if keep is None:
+        keep = 'first'
+    df['duplicated_%s' % '_'.join(subset)] = df.duplicated(_subset, keep)
+    return df
+duplicated.form_fields = [
+    TextField('subset', label=l_('Subset'), validator=CommaSeparatedListValidator(required=False),
+              value='{{.options.subset}}', placeholder='comma separated fields (name, surname, age)'),
+    TextField('keep', label=l_('Keep'), validator=OneOfValidator(required=False, values=['first', 'last', 'False']),
+              value='{{.options.keep}}', placeholder='first, last or False')
+]
 
 def linkize(df, field, url, name=None):
     """Convert the values to links to an URL.

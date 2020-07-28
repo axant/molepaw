@@ -29,6 +29,7 @@ FUNCTIONS = {
     'sort': steps.sort,
     'timeago': steps.timeago,
     'linkize': steps.linkize,
+    'duplicated': steps.duplicated,
     'cast_to_int': steps.cast_to_int,
 }
 
