@@ -56,19 +56,21 @@ class DataSet(DeclarativeBase):
     def get_column_typed(dataframe):
         cols = list(dataframe)
         for i in cols:
-            if all([is_boolean(j) for j in dataframe[i]]):
-                log.info('column: %s type: %s' % (i, 'bool'))
-                dataframe[i] = dataframe[i].astype('bool', errors='ignore')
-            elif collections.Counter(
-                    [is_datetime(j) for j in dataframe[i]]
-            ).most_common(1)[0][0]:
-                log.info('column: %s type: %s' % (i, 'datetime'))
-                dataframe[i] = pd.to_datetime(dataframe[i], errors='coerce')
-            elif collections.Counter(
-                    [is_number(j) for j in dataframe[i]]
-            ).most_common(1)[0][0]:
-                log.info('column: %s type: %s' % (i, 'numeric'))
-                dataframe[i] = pd.to_numeric(dataframe[i], errors='coerce')
+            # if it's not an object it means we should already have the right type
+            if dataframe[i].dtype.name == 'object':
+                if all([is_boolean(j) for j in dataframe[i]]):
+                    log.debug('column: %s type: %s', i, 'bool')
+                    dataframe[i] = dataframe[i].astype('bool', errors='ignore')
+                elif collections.Counter(
+                        [is_datetime(j) for j in dataframe[i]]
+                ).most_common(1)[0][0]:
+                    log.debug('column: %s type: %s', i, 'datetime')
+                    dataframe[i] = pd.to_datetime(dataframe[i], errors='coerce')
+                elif collections.Counter(
+                        [is_number(j) for j in dataframe[i]]
+                ).most_common(1)[0][0]:
+                    log.debug('column: %s type: %s', i, 'numeric')
+                    dataframe[i] = pd.to_numeric(dataframe[i], errors='coerce')
         return dataframe
 
     def fetch(self, limit=None):
@@ -115,6 +117,6 @@ def receive_before_update(mapper, connection, target):
 
 
 @event.listens_for(DataSet, 'before_delete')
-def receive_before_update(mapper, connection, target):
+def receive_before_delete(mapper, connection, target):
     empty_cache(target.cache_key())
     empty_cache(target.cache_key(DEFAULT_LIMIT_FOR_PERFORMANCE))
