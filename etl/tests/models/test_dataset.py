@@ -20,11 +20,13 @@ class TestDataset(ModelTest):
     def test_csv(self):
         df = pd.read_csv('etl/tests/film.csv')
         assert df['hire_price'].dtypes.name == 'bool'
-        assert df['agreement_expiration'].dtypes.name == df['release_date'].dtypes.name == 'object', (df['agreement_expiration'].dtypes.name, df['release_date'].dtypes.name)
+        assert df['agreement_expiration'].dtypes.name == df['release_date'].dtypes.name == 'object',\
+            (df['agreement_expiration'].dtypes.name, df['release_date'].dtypes.name)
         assert df['id'].dtypes.name == 'int64'
         df = self.klass.get_column_typed(df)
-        assert df['hire_price'].dtypes.name == 'bool'
-        assert df['agreement_expiration'].dtypes.name == df['release_date'].dtypes.name == 'datetime64[ns]', (df['agreement_expiration'].dtypes.name, df['release_date'].dtypes.name)
+        assert df['hire_price'].dtypes.name in 'bool', df['hire_price'].dtypes.name
+        assert df['agreement_expiration'].dtypes.name == df['release_date'].dtypes.name == 'datetime64[ns]',\
+            (df['agreement_expiration'].dtypes.name, df['release_date'].dtypes.name)
         assert df['id'].dtypes.name == 'int64'
 
     def test_fetch_valueerror(self):

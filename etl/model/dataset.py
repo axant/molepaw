@@ -9,6 +9,7 @@ from beaker.cache import Cache
 from etl.model import DeclarativeBase
 from etl.lib.widgets import CodeTextArea, SmartWidgetTypes
 from etl.lib.helpers import is_number, is_boolean, is_datetime
+from functools import partial
 import logging
 
 
@@ -18,6 +19,32 @@ log = logging.getLogger(__name__)
 DST_CACHE = Cache('DST')
 
 DEFAULT_LIMIT_FOR_PERFORMANCE = 100
+
+
+def convert_dtypes(dataframe):
+    cols = list(dataframe)
+    for col in cols:
+        if dataframe[col].dtype.name == 'object':
+            counter = collections.Counter(boolean=0, datetime=0, numeric=0, object=0)
+            for element in dataframe[col]:
+                if is_boolean(element):
+                    counter['boolean'] += 1
+                elif is_datetime(element):
+                    counter['datetime'] += 1
+                elif is_number(element):
+                    counter['numeric'] += 1
+                else:
+                    counter['object'] += 1
+            if counter.most_common(1)[0][0] == 'boolean' and counter.most_common(2)[1][1] == 0:
+                dataframe[col] = dataframe[col].astype('bool', errors='ignore')
+                log.debug('column: %s type: %s (%s)', col, 'bool', dataframe[col].dtype.name)
+            elif counter.most_common(1)[0][0] == 'datetime':
+                dataframe[col] = pd.to_datetime(dataframe[col], errors='coerce')
+                log.debug('column: %s type: %s (%s)', col, 'datetime', dataframe[col].dtype.name)
+            elif counter.most_common(1)[0][0] == 'numeric':
+                dataframe[col] = pd.to_numeric(dataframe[col], errors='coerce')
+                log.debug('column: %s type: %s (%s)', col, 'numeric', dataframe[col].dtype.name)
+    return dataframe
 
 
 class DataSet(DeclarativeBase):
@@ -54,24 +81,12 @@ class DataSet(DeclarativeBase):
 
     @staticmethod
     def get_column_typed(dataframe):
-        cols = list(dataframe)
-        for i in cols:
-            # if it's not an object it means we should already have the right type
-            if dataframe[i].dtype.name == 'object':
-                if all([is_boolean(j) for j in dataframe[i]]):
-                    log.debug('column: %s type: %s', i, 'bool')
-                    dataframe[i] = dataframe[i].astype('bool', errors='ignore')
-                elif collections.Counter(
-                        [is_datetime(j) for j in dataframe[i]]
-                ).most_common(1)[0][0]:
-                    log.debug('column: %s type: %s', i, 'datetime')
-                    dataframe[i] = pd.to_datetime(dataframe[i], errors='coerce')
-                elif collections.Counter(
-                        [is_number(j) for j in dataframe[i]]
-                ).most_common(1)[0][0]:
-                    log.debug('column: %s type: %s', i, 'numeric')
-                    dataframe[i] = pd.to_numeric(dataframe[i], errors='coerce')
-        return dataframe
+        # dataframe.convert_dtypes is new in pandas version 1.0.0, not available on py2.7
+        # We override it anyway because pandas.array.IntegerArray and similar are still experimental
+        # even if pandas uses them anyway. also we get consistence between python2 and 3
+        # we could say instead of using the best dtype, this uses appropriate one
+        dataframe.convert_dtypes = partial(convert_dtypes, dataframe)
+        return dataframe.convert_dtypes()
 
     def fetch(self, limit=None):
         if not self.datasource:

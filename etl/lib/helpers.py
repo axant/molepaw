@@ -83,10 +83,7 @@ close_row = '</div>'
 # Import commonly used helpers from WebHelpers2 and TG
 from tg.util.html import script_json_encode
 from tg.jsonify import encode
-try:                                                        # PRAGMA NOT COVER
-    from webhelpers2 import date, html, number, misc, text
-except SyntaxError:                                         # PRAGMA NOT COVER
-    log.error("WebHelpers2 helpers not available with this Python Version")  # PRAGMA NOT COVER
+from webhelpers2 import date, html, number, misc, text
 
 
 def get_graph(result, axis, visualizations):
