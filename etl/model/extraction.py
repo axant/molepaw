@@ -77,12 +77,15 @@ class Extraction(DeclarativeBase):
         df = next(extdatasets).dataset.fetch()
 
         for extdataset in extdatasets:
-            df = pandas.merge(df, extdataset.dataset.fetch(),
+            right = extdataset.dataset.fetch()
+            df = pandas.merge(df, right,
                               how=extdataset.join_type,
                               left_on=extdataset.join_other_col,
                               right_on=extdataset.join_self_col,
-                              suffixes=('', '_j_'+extdataset.dataset.name.lower()))
-
+                              suffixes=('', '_j_' + extdataset.dataset.name.lower()))
+            df = df.fillna(
+                {col: 0 for col, dt in right.dtypes.items() if dt.name == 'int64'}
+            ).astype(right.dtypes)
         return df
 
     def perform(self, sample=False):
