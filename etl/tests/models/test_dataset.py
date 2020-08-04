@@ -1,6 +1,5 @@
 import pandas as pd
 import collections
-
 from etl import model
 from etl.tests.models import ModelTest
 from nose.tools import assert_raises
@@ -9,7 +8,7 @@ from beaker.cache import Cache
 import tg
 
 
-class TestDataset(ModelTest):        
+class TestDataset(ModelTest):
     klass = model.DataSet
     attrs = dict(
         uid=1,
@@ -109,3 +108,4 @@ class TestDataset(ModelTest):
         assert df['only_1_text'].dtype.name == 'bool'
         assert df['only_0_text'].dtype.name == 'bool'
         assert df['only_0_and_1_text'].dtype.name == 'bool'
+        assert df['int_with_null'].dtype.name == 'int64'

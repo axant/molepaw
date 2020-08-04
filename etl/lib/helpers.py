@@ -10,6 +10,7 @@ from bokeh.resources import INLINE
 from bokeh.palettes import Category10
 import itertools
 import numpy as np
+import pandas as pd
 from tg import flash
 from bokeh.plotting import figure
 from bokeh.palettes import Category20c

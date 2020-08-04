@@ -34,3 +34,5 @@ class TestDatasource(ModelTest):
         assert df['only_1_text'].dtype.name == 'object'
         assert df['only_0_text'].dtype.name == 'object'
         assert df['only_0_and_1_text'].dtype.name == 'object'
+        assert df['int_with_null'].dtype.name != 'int64'
+        assert df['int_with_null'].dtype.name == 'float64'

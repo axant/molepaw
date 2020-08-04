@@ -44,6 +44,10 @@ def convert_dtypes(dataframe):
             elif counter.most_common(1)[0][0] == 'numeric':
                 dataframe[col] = pd.to_numeric(dataframe[col], errors='coerce')
                 log.debug('column: %s type: %s (%s)', col, 'numeric', dataframe[col].dtype.name)
+        elif dataframe[col].dtype.name.startswith('float'):
+            if all((element % 1 == 0 for element in dataframe[col].fillna(0))):
+                dataframe[col] = dataframe[col].fillna(0).astype('int64')
+                log.debug('column: %s from float to int filled with 0', col)
     return dataframe
 
 
