@@ -330,7 +330,7 @@ class DashboardController(BaseController):
             else:
                 result['color'] = [u'#3182bd', u'#6baed6']
             visualization.wedge(x=0, y=1, radius=0.4, start_angle=cumsum('angle', include_zero=True),
-                                end_angle=cumsum('angle'), line_color="white",
+                                end_angle=cumsum('angle'), line_alpha=0,
                                 fill_color='color', legend=axis[0], source=result)
             visualization.axis.axis_label = None
             visualization.axis.visible = False

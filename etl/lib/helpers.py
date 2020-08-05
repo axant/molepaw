@@ -142,7 +142,7 @@ def get_graph(result, axis, visualizations):
         if '_id' in result.columns:
             result['_id'] = result['_id'].astype(str)
         visualizations['pie'].wedge(x=0, y=1, radius=0.4, start_angle=cumsum('angle', include_zero=True),
-                                    end_angle=cumsum('angle'), line_color="white",
+                                    end_angle=cumsum('angle'), line_alpha=0,
                                     fill_color='color', legend=axis[0], source=result)
         del result['angle']  # delete because I don't want them in the table
         del result['color']
