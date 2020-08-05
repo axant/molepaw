@@ -106,6 +106,7 @@ select.visualization {
     padding: 40px 0;
 }
 .panel-widget{
+    cursor: pointer;
     border: none;
     box-shadow: 0px 0px 4px rgba(0,0,0,0.1);
 }
