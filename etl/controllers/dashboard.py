@@ -18,9 +18,10 @@ import pandas.tseries
 from bokeh.plotting import figure
 from bokeh.palettes import Category20
 from bokeh.transform import cumsum
-from etl.lib.helpers import color_gen
+from etl.lib.helpers import color_gen, pie_result
 import sys
 import logging
+
 
 log = logging.getLogger(__name__)
 
@@ -324,11 +325,7 @@ class DashboardController(BaseController):
         elif 'pie' == de.visualization:
             visualization = figure(plot_height=400, sizing_mode='scale_width', x_range=(-0.5, 1.0),
                                    toolbar_location=None, tools="hover", tooltips="@%s: @%s" % (axis[0], axis[1]))
-            result['angle'] = result[axis[1]] / result[axis[1]].sum() * 2 * pi
-            if len(result) > 2:
-                result['color'] = Category20[len(result)]
-            else:
-                result['color'] = [u'#3182bd', u'#6baed6']
+            result = pie_result(result, axis)
             visualization.wedge(x=0, y=1, radius=0.4, start_angle=cumsum('angle', include_zero=True),
                                 end_angle=cumsum('angle'), line_alpha=0,
                                 fill_color='color', legend=axis[0], source=result)

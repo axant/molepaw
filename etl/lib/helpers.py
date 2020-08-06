@@ -7,13 +7,12 @@ from markupsafe import Markup
 from datetime import datetime
 from bokeh.embed import components
 from bokeh.resources import INLINE
-from bokeh.palettes import Category10
 import itertools
 import numpy as np
 import pandas as pd
 from tg import flash
 from bokeh.plotting import figure
-from bokeh.palettes import Category20c
+from bokeh.palettes import viridis, linear_palette, Category10
 from bokeh.transform import cumsum
 from math import pi
 
@@ -32,6 +31,26 @@ def icon(icon_name):
 def color_gen():
     for c in itertools.cycle(Category10[10]):
         yield c
+
+
+def pie_color(length):
+    # raindow = ['#52D726', '#FFEC00', '#FF7300', '#FF0000', '#007ED6', '#7CDDDD']
+    small_normal = ['#346699', '#6799cb', '#76cddd', '#d2edf3', '#d1e7c5', '#70c066', '#369946', '#026666']
+    if length <= 8:
+        return linear_palette(small_normal, length)
+    return viridis(length)
+
+
+def pie_result(result, axis):
+    if len(result) > 256:
+        result_other = result[axis[1]][255:]
+        result = result[:255]
+        result = result.append({axis[0]: 'Others', axis[1]: result_other.sum()}, ignore_index=True)
+    result['angle'] = result[axis[1]] / result[axis[1]].sum() * 2 * pi
+    result['color'] = pie_color(len(result))
+    if '_id' in result.columns:
+        result['_id'] = result['_id'].astype(str)
+    return result
 
 
 def show_graph(graph):
@@ -133,14 +152,7 @@ def get_graph(result, axis, visualizations):
     if 'pie' in visualizations or 'table+pie' in visualizations:
         visualizations['pie'] = figure(plot_height=600, width=800, x_range=(-0.5, 1.0),
                                        toolbar_location=None, tools="hover", tooltips="@%s: @%s" % (axis[0], axis[1]))
-        result['angle'] = result[axis[1]] / result[axis[1]].sum() * 2 * pi
-        if len(result) > 2:
-            result['color'] = Category20c[len(result)]
-        else:
-            result['color'] = [u'#3182bd', u'#6baed6']
-
-        if '_id' in result.columns:
-            result['_id'] = result['_id'].astype(str)
+        result = pie_result(result, axis)
         visualizations['pie'].wedge(x=0, y=1, radius=0.4, start_angle=cumsum('angle', include_zero=True),
                                     end_angle=cumsum('angle'), line_alpha=0,
                                     fill_color='color', legend=axis[0], source=result)

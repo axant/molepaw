@@ -202,3 +202,18 @@ class TestChartVisualization(BaseTestController):
         assert 'Fruits Extraction' in response.body.decode('utf-8')
         assert response.html.find(id='results-count').get_text() == '2'
         assert response.html.find(id='pie-visualization') is not None
+
+    def test_view_piechart_visualization_thousand_rows(self):
+        entities = self.populate_for_chart_visualization('pie', 'name,value')
+        self._db.fruits.insert_many({'name': n, 'value': v} for (n, v) in ((chr(j % 30 + 60), j) for j in range(1000)))
+        response = self.app.get(
+            '/extractions/view',
+            params=dict(
+                extraction=entities['extraction_uid']
+            ),
+            extra_environ=self.admin_env,
+            status=200
+        )
+        assert 'Fruits Extraction' in response.body.decode('utf-8')
+        assert int(response.html.find(id='results-count').get_text()) > 256
+        assert response.html.find(id='pie-visualization') is not None
