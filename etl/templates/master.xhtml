@@ -8,19 +8,20 @@
   <title py:if="False">Your generic title goes here</title>
 
 
-
   <link rel="stylesheet" type="text/css" media="screen" href="${tg.url('/css/bootstrap.min.css')}" />
   <link rel="stylesheet" type="text/css" media="screen" href="${tg.url('/css/style.css')}" />
-  <link rel="stylesheet" type="text/css" media="screen" href="//cdnjs.cloudflare.com/ajax/libs/codemirror/5.9.0/codemirror.min.css"/>
-  <link rel="stylesheet" type="text/css" media="screen" href="  https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.2/toastr.min.css"/>
-  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous" />  <script src="//code.jquery.com/jquery.min.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/5.9.0/codemirror.min.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/5.9.0/mode/sql/sql.min.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/5.9.0/addon/hint/sql-hint.min.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/5.9.0/mode/javascript/javascript.min.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/5.9.0/addon/hint/javascript-hint.min.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.2/toastr.min.js"></script>
-    <py:block name="head"/>
+  <link rel="stylesheet" type="text/css" media="screen" href="${tg.url('/css/codemirror.min.css')}"/>
+  <link rel="stylesheet" type="text/css" media="screen" href="${tg.url('/css/toastr.min.css')}"/>
+  <link rel="stylesheet" href="${tg.url('/css/fontawesome.all.min.css')}"/>
+  <script src="${tg.url('/javascript/jquery.1.11.1.min.js')}"></script>
+  <script src="${tg.url('/javascript/codemirror/codemirror.min.js')}"></script>
+  <script src="${tg.url('/javascript/codemirror/sql.min.js')}"></script>
+  <script src="${tg.url('/javascript/codemirror/sql-hint.min.js')}"></script>
+  <script src="${tg.url('/javascript/codemirror/javascript.min.js')}"></script>
+  <script src="${tg.url('/javascript/codemirror/javascript-hint.min.js')}"></script>
+  <script src="${tg.url('/javascript/toastr.min.js')}"></script>
+
+  <py:block name="head"/>
 </head>
 
 <body>
