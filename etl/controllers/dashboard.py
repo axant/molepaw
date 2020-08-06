@@ -278,9 +278,9 @@ class DashboardController(BaseController):
             legend = 0
             try:
                 visualization = figure(x_range=x, sizing_mode='scale_width', height=400)
-                visualization.vbar(x=x, top=y, width=0.1, color='red')
+                visualization.vbar(x=x, top=y, width=0.75, color='#77d6d5')
                 visualization.y_range.start = 0
-                visualization.y_range.end = max(y)
+                visualization.y_range.end = max(y if y.size > 0 else [0])
                 visualization.xaxis.major_label_orientation = "vertical"
                 visualization.toolbar_location = None
             except Exception as e:

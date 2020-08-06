@@ -114,9 +114,10 @@ def get_graph(result, axis, visualizations):
         legend = 0
         try:
             visualizations['histogram'] = figure(x_range=x, width=800, height=600)
-            visualizations['histogram'].vbar(x=x, top=y, width=0.1, color='red', legend=axis[legend])
+            visualizations['histogram'].vbar(x=x, top=y, width=0.75,
+                                             color='#77d6d5', legend=axis[legend])
             visualizations['histogram'].y_range.start = 0
-            visualizations['histogram'].y_range.end = max(y)
+            visualizations['histogram'].y_range.end = max(y if y.size > 0 else [0])
             visualizations['histogram'].xaxis.major_label_orientation = "vertical"
         except Exception as e:
             log.exception('failed histogram visualization setup with exception: %s' % e)
