@@ -160,3 +160,45 @@ select.visualization {
     background-color: #df382c;
     border-color: #df382c;
 }
+
+.navbar{
+    background-color: #eb6537;
+    background: linear-gradient(to right, #ff9b44 0%, #f96868 100%);
+    min-height: 65px;
+    overflow: hidden;
+}
+.navbar-brand {
+    padding: 25px 15px;
+    font-size: 28px;
+    height: 70px;
+}
+@media (min-width: 768px){
+    .navbar-nav > li > a {
+        padding-top: 25px;
+        padding-bottom: 25px;
+    }
+
+    nav.navbar.navbar-default:after {
+        content: "";
+        display: block;
+        width: 870px;
+        position: absolute;
+        top: -20px;
+        right: -300px;
+        height: 280px;
+        z-index: 1;
+        background-color: hsla(0,0%,100%,.06);
+        border-radius: 50% 0 0 50%;
+        z-index: -;
+    }
+}
+
+.btn-primary {
+    color: #ffffff;
+    background-color: #ff9b44;
+    border-color: #ff9b44;
+    border-radius: 35px;
+}
+.btn-rounded{
+    border-radius: 30px;
+}
