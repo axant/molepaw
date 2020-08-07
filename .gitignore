@@ -43,3 +43,6 @@ depot/
 
 geckodriver.log
 etl/tests/e2e/testse2e.db
+
+.webassets-cache/
+etl/public/assets/

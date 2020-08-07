@@ -57,6 +57,9 @@ install_requires = [
     "axf == 0.0.19",
     "kajiki >= 0.8.0",  # at least this version for python3.8 support
     "tgext.pluggable",
+    "tgext.webassets",
+    "rjsmin",
+    "rcssmin",
     "tgapp-categories == 0.3.1",  # 0.4.0 introduces nested categories, we should upgrade
 ]
 

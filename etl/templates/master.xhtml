@@ -8,19 +8,9 @@
   <title py:if="False">Your generic title goes here</title>
 
 
-  <link rel="stylesheet" type="text/css" media="screen" href="${tg.url('/css/bootstrap.min.css')}" />
-  <link rel="stylesheet" type="text/css" media="screen" href="${tg.url('/css/style.css')}" />
-  <link rel="stylesheet" type="text/css" media="screen" href="${tg.url('/css/codemirror.min.css')}"/>
-  <link rel="stylesheet" type="text/css" media="screen" href="${tg.url('/css/toastr.min.css')}"/>
-  <link rel="stylesheet" href="${tg.url('/css/fontawesome.all.min.css')}"/>
-  <script src="${tg.url('/javascript/jquery.1.11.1.min.js')}"></script>
-  <script src="${tg.url('/javascript/codemirror/codemirror.min.js')}"></script>
-  <script src="${tg.url('/javascript/codemirror/sql.min.js')}"></script>
-  <script src="${tg.url('/javascript/codemirror/sql-hint.min.js')}"></script>
-  <script src="${tg.url('/javascript/codemirror/javascript.min.js')}"></script>
-  <script src="${tg.url('/javascript/codemirror/javascript-hint.min.js')}"></script>
-  <script src="${tg.url('/javascript/toastr.min.js')}"></script>
-
+  <link py:for="asset_url in g.webassets['css_all'].urls()" href="${asset_url}"
+	rel="stylesheet" type="text/css" media="screen" />
+  <script py:for="asset_url in g.webassets['js_all'].urls()" src="${asset_url}"></script>
   <py:block name="head"/>
 </head>
 
@@ -42,7 +32,6 @@
         
             <div class="collapse navbar-collapse" id="navbar-content">
                 <ul class="nav navbar-nav">
-                  <!--
                     <li py:if="request.identity" class="dropdown">
                         <a href="${tg.url('/dashboard')}" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Dashboard</a>
                         <ul class="dropdown-menu">
@@ -52,7 +41,7 @@
                             <li role="separator" class="divider"></li>
                             <li><a href="${tg.url('/dashboard/new')}" onclick="return confirm('create a new dashboard?');">Create dashboard</a></li>
                         </ul>
-                    </li>-->
+                    </li>
                     <li py:if="request.identity">
                         <a href="${tg.url('/extractions')}">Extractions</a>
                     </li>

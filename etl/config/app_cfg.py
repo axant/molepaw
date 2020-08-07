@@ -160,6 +160,42 @@ tgext.evolve.plugme(base_config, options={
 from tgext.pluggable import plug
 plug(base_config, 'tgappcategories', 'categories', global_models=True, plug_bootstrap=True)
 
+from tgext.webassets import Bundle
+plug(
+    base_config,
+    'tgext.webassets',
+    bundles={
+        'js_all': Bundle(
+            'javascript/jquery.1.11.1.min.js',
+            'javascript/jquery.tablesorter.min.js',
+            'javascript/bootstrap.min.js',
+            'javascript/toastr.min.js',
+            'javascript/bokeh-2.1.1.js',
+            'javascript/jets.min.js',
+            # with ractive we're stuck because since 0.10.0 there is a TypeError: _0 is not a function
+            'javascript/ractive.min.js',
+            'javascript/ractive-transitions-slide.min.js',
+            'javascript/codemirror/codemirror.min.js',
+            'javascript/codemirror/sql.min.js',
+            'javascript/codemirror/sql-hint.min.js',
+            'javascript/codemirror/javascript.min.js',
+            'javascript/codemirror/javascript-hint.min.js',
+            'javascript/axw-req.js',
+            filters='rjsmin',
+            output='assets/js_all.js'
+        ),
+        'css_all': Bundle(
+            'css/bootstrap.min.css',
+            'css/fontawesome.all.min.css',
+            'css/toastr.min.css',
+            'css/codemirror.min.css',
+            'css/style.css',
+            filters='rcssmin',
+            output='assets/css_all.css',
+        ),
+    },
+)
+
 def enable_depot():
     import logging
     log = logging.getLogger('molepaw.depot')
