@@ -1,0 +1,111 @@
+.table-responsive {
+    max-height: 400px;
+}
+
+#datasets {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 5px 10px;
+}
+
+.dataset-card {
+    border: 1px solid #ccc;
+    padding: 5px;
+    margin: 5px;
+    text-align: center;
+    min-height: 100px;
+    width: 100%;
+}
+
+.dataset-card-new {
+    opacity: 0.7;
+}
+
+.dataset-card-new > .btn {
+    display: block;
+}
+
+.dataset-card.btn > .glyphicon {
+    font-size: 22px;
+    line-height: 88px;
+}
+
+.stepbox {
+    margin-top: 25px;
+}
+
+.steparrow {
+    top: -10px;
+    width: 26px;
+    font-size: 26px;
+    margin: auto;
+    display: block;
+    color: #bf3e11;
+}
+
+.step {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 5px 10px;
+    min-height: 90px;
+}
+
+.step.disabled {
+    opacity: 0.4;
+}
+
+.error {
+    font-size: 12px;
+}
+
+.glyphicon-remove {
+    color: #880000;
+}
+
+.docstring {
+    white-space: pre;
+    word-break: break-all;
+    word-wrap: break-word;
+}
+
+.step select.function {
+    position: absolute;
+    width: 70%;
+    opacity: 0;
+}
+
+.step h3 {
+    margin-top: 5px;
+}
+
+.step h3 .glyphicon {
+    font-size: 14px;
+}
+
+.step-doc {
+    color: #888;
+}
+
+.addstep a {
+    font-size: 22px;
+    display: block;
+}
+
+.step-actions span {
+    cursor: pointer;
+}
+
+.step-actions span:hover {
+    font-size: 16px;
+}
+
+.step-actions span.delete-text {
+    color: #f00;
+    font-size: 14px;
+}
+
+.save ~ .step-actions .arrow-action,
+.save ~ .step-actions .view-action{
+    display: none;
+}
+

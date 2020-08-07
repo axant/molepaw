@@ -177,7 +177,7 @@ class EditorController(RestController):
         except:
             abort(404)
 
-    @expose('genshi:etl.templates.editor.index')
+    @expose('etl.templates.editor.index')
     @validate({'extraction': Convert(lambda v: DBSession.query(Extraction).filter_by(uid=v).one())},
               error_handler=abort(404, error_handler=True))
     def get_one(self, extraction=None, *args, **kw):

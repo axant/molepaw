@@ -1,0 +1,99 @@
+<div py:strip="True">
+{{#each steps:stepidx}}
+  <div class="col-md-12 stepbox" intro-outro='slide'>
+    <span class="steparrow glyphicon glyphicon-chevron-down"></span>
+    <div class="step row {{.enabled ? '' : 'disabled'}}">
+      <div class="col-xs-6">
+        <select value="{{.function}}" class="form-control function">
+          <option selected="selected" disabled="disabled" value="select_function">select function</option>
+          <option py:for="steptype in stepsformfields"
+                  value="${steptype}">
+            ${steptype.replace('_', ' ')}
+          </option>
+        </select>
+        <h3>
+          <span>{{.function.replace(/_/g, ' ')}}</span>
+          {{#if .modified}}
+            <div class="step-actions pull-right">&nbsp;
+	      <span on-click="saveStep(.)"
+		    class="glyphicon save glyphicon-floppy-save"></span>
+	    </div>
+          {{/if}}
+            <div class="step-actions pull-right">
+              {{#if .enabled}}
+                <span on-click="toggleStep(., false)" class="glyphicon glyphicon-eye-close view-action"></span>
+              {{else}}
+                <span on-click="toggleStep(., true)" class="glyphicon glyphicon-eye-open"></span>
+              {{/if}}
+              <span on-click="raiseStep(.)" class="glyphicon glyphicon-arrow-up arrow-action"></span>
+              <span on-click="lowerStep(.)" class="glyphicon glyphicon-arrow-down arrow-action"></span>
+              <span on-click="deleteStep(.)" class="delete-text">${_('Delete')}</span>
+            </div>
+        </h3>
+        <div class="step-doc">
+          <em class="docstring" value="{{steps[stepidx].function}}">
+            {{.function_doc}}
+          </em>
+        </div>
+        <div class="step-form">
+          {{>.function.replace(/\ /g, '_')}}
+        </div>
+      </div>
+      <div class="col-xs-6 table-responsive"
+           on-click="showSave(event, stepidx)">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>IDX</th>
+              {{#each testrun[stepidx].columns}}
+                <th>{{.}}</th>
+              {{/each}}
+            </tr>
+          </thead>
+          <tbody>
+            {{#each testrun[stepidx].data}}
+              <tr>
+                {{#each .}}
+                  <td>{{.}}</td>
+                {{/each}}
+              </tr>
+            {{/each}}
+          </tbody>
+        </table>
+        {{#if testrun[stepidx].errors}}
+          <div class="error">
+            <pre class="alert alert-danger">{{testrun[stepidx].errors}}</pre>
+          </div>
+        {{/if}}
+      </div>
+    </div>
+  </div>
+{{/each}}
+<div class="col-md-12 stepbox">
+  <span class="steparrow glyphicon glyphicon-chevron-down"></span>
+  <div class="row addstep">
+    <div class="col-xs-offset-5 col-xs-2">
+      <a class="btn btn-success" on-click="addStep()">
+        <span class="glyphicon glyphicon-plus"></span>
+      </a>
+    </div>
+  </div>
+</div>
+
+{{#partial select_function}}
+  <div class="form-horizontal" on-click="false">
+    <div class="form-group">
+    </div>
+  </div>
+{{/partial}}
+<py:for each="fname, ffields in stepsformfields.items()">
+  {{#partial ${fname}}}
+    <div class="form-horizontal" on-click="showSave(event, stepidx)">
+      <div class="form-group" py:for="field in ffields">
+        <label for="${field.id}" class="col-sm-3 control-label">${field.label}</label>
+        <div class="col-sm-9">${field.display(css_class='form-control')}</div>
+      </div>
+    </div>
+  {{/partial}}
+</py:for>
+</div>

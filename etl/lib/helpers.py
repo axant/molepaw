@@ -10,11 +10,14 @@ from bokeh.resources import INLINE
 import itertools
 import numpy as np
 import pandas as pd
-from tg import flash
+import tg
+from tg import flash, render_template
+from kajiki import FileLoader
 from bokeh.plotting import figure
 from bokeh.palettes import viridis, linear_palette, Category10
 from bokeh.transform import cumsum
 from math import pi
+import os, sys
 
 log = logging.getLogger(__name__)
 
@@ -164,3 +167,44 @@ def get_graph(result, axis, visualizations):
         visualizations['pie'].grid.grid_line_color = None
 
     return visualizations
+
+
+class EditorPartials:
+    @staticmethod
+    def _render(template_name, template_engine=None, **template_vars):
+        return render_template(template_vars, template_engine=template_engine, template_name=template_name)
+
+    def _render_js(self, template_path, **template_vars):
+        loader = FileLoader(
+            path=os.path.join(os.path.dirname(__file__), '../templates/editor'),
+            force_mode='text',
+        )
+        template = loader.import_(template_path)
+        data = template_vars
+        data.update(dict(
+            h=sys.modules[__name__],
+            tg=tg,
+        ))
+        return template(data).render()
+
+    def extraction_visualization(self, *args, **kwargs):
+        return self._render('etl.templates.editor.extraction_visualization', *args, **kwargs)
+
+    def datasets_editor(self, *args, **kwargs):
+        return self._render('etl.templates.editor.datasets_editor', *args, **kwargs)
+
+    def steps_editor(self, *args, **kwargs):
+        # explicitly call unescape because of ractive {{> partial call
+        return self._render('etl.templates.editor.steps_editor', *args, **kwargs).unescape()
+
+    def datasets_script(self, *args, **kwargs):
+        return self._render_js('datasets_editor.kajiki.js', *args, **kwargs)
+
+    def steps_script(self, *args, **kwargs):
+        return self._render_js('steps_editor.kajiki.js', *args, **kwargs)
+
+    def extraction_visualization_script(self, *args, **kwargs):
+        return self._render_js('extraction_visualization_script.kajiki.js', *args, **kwargs)
+
+
+editor = EditorPartials()

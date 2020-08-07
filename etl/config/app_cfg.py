@@ -164,6 +164,7 @@ from tgext.webassets import Bundle
 plug(
     base_config,
     'tgext.webassets',
+    # debug=True,
     bundles={
         'js_all': Bundle(
             'javascript/jquery.1.11.1.min.js',
@@ -190,6 +191,7 @@ plug(
             'css/toastr.min.css',
             'css/codemirror.min.css',
             'css/style.css',
+            'css/editor.css',
             filters='rcssmin',
             output='assets/css_all.css',
         ),
