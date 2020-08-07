@@ -1,0 +1,68 @@
+#extractions {
+    padding: 5px 10px;
+}
+
+.extractionbox {
+    margin-top: 25px;
+}
+
+.extractionarrow {
+    top: -10px;
+    width: 26px;
+    font-size: 26px;
+    margin: auto;
+    display: block;
+    color: #bf3e11;
+}
+
+.extraction {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 5px 10px;
+    min-height: 90px;
+    padding-top: 30px;
+    padding-bottom: 15px;
+}
+
+.extraction.disabled {
+    opacity: 0.4;
+}
+
+.error {
+    font-size: 12px;
+}
+
+.glyphicon-remove {
+    color: #880000;
+}
+
+.extraction h3 {
+    margin-top: 5px;
+}
+
+.extraction h3 .glyphicon {
+    font-size: 14px;
+}
+
+.addextraction a {
+    font-size: 22px;
+    display: block;
+}
+
+.extractions-actions {
+    position: absolute;
+    top: -30px;
+    right: 0px;
+}
+
+.extractions-actions span {
+    cursor: pointer;
+}
+
+.extractions-actions span:hover {
+    font-size: 16px;
+}
+
+#visualization {
+    padding: 30px 0 30px 0;
+}

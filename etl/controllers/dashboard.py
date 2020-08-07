@@ -114,7 +114,7 @@ class DashboardController(BaseController):
         sorted_extractions.sort(key=lambda e: e.index)
         return dict(dashboard=dashboard, sorted_extractions=sorted_extractions)
 
-    @expose('genshi:etl.templates.dashboard.edit')
+    @expose('etl.templates.dashboard.edit')
     @require(predicates.in_group('admin'))
     def new(self):
         dashboard = Dashboard()
@@ -129,7 +129,7 @@ class DashboardController(BaseController):
             all_extractions=all_extractions,
         )
     
-    @expose('genshi:etl.templates.dashboard.edit')
+    @expose('etl.templates.dashboard.edit')
     @require(predicates.in_group('admin'))
     def edit(self, id=None):
         try:

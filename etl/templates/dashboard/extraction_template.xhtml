@@ -1,0 +1,51 @@
+<div py:strip="True">
+  {{#each extractions: extractionidx}}
+    <div class="col-md-12 extractionbox" intro-outro='slide'>
+      <div class="extraction row">
+        <div class="col-md-4">
+          <select value="{{.extraction_id}}" class="form-control" on-change="selectExtraction(extractionidx, .)">
+            <option py:for="e in all_extractions" value="${e.uid}">${e.uid} - ${e.name}</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <select value="{{.visualization}}" class="form-control">
+            <option py:for="visualization in visualizationtypes" value="${visualization}">
+              ${visualization}
+	    </option>
+          </select>
+          {{#if .usual_visualization}}
+            {{#if .usual_visualization != 'table'}}
+              <span>usually used visualization: {{.usual_visualization}}</span>
+            {{/if}}
+          {{/if}}
+	</div>
+	<div class="col-md-4">												   
+          <input value="{{.graph_axis}}" class="form-control"/>
+          <h3>
+            <div class="extractions-actions pull-right">
+              <span on-click="raiseExtraction(.)"
+                    class="glyphicon glyphicon-arrow-up"></span>
+              <span on-click="lowerExtraction(.)"
+                    class="glyphicon glyphicon-arrow-down"></span>
+              &nbsp;
+              <span on-click="deleteExtraction(.)"
+                    class="glyphicon glyphicon-remove"></span>
+	      <span on-click="saveExtraction(.)"
+                    class="glyphicon glyphicon-floppy-save"></span>
+            </div>
+          </h3>
+        </div>
+      </div>
+    </div>
+  {{/each}}
+  <div class="col-md-12 extractionbox">
+    <span class="extractionarrow glyphicon glyphicon-chevron-down"></span>
+    <div class="row addextraction">
+      <div class="col-xs-offset-5 col-xs-2">
+        <a class="btn btn-success" on-click="addExtraction()">
+          <span class="glyphicon glyphicon-plus"></span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

@@ -169,17 +169,17 @@ def get_graph(result, axis, visualizations):
     return visualizations
 
 
-class EditorPartials:
+class RactivePartials:
     @staticmethod
     def _render(template_name, template_engine=None, **template_vars):
         return render_template(template_vars, template_engine=template_engine, template_name=template_name)
 
-    def _render_js(self, template_path, **template_vars):
+    def _render_js(self, template_name, template_dir='editor', **template_vars):
         loader = FileLoader(
-            path=os.path.join(os.path.dirname(__file__), '../templates/editor'),
+            path=os.path.join(os.path.dirname(__file__), '../templates', template_dir),
             force_mode='text',
         )
-        template = loader.import_(template_path)
+        template = loader.import_(template_name)
         data = template_vars
         data.update(dict(
             h=sys.modules[__name__],
@@ -206,5 +206,11 @@ class EditorPartials:
     def extraction_visualization_script(self, *args, **kwargs):
         return self._render_js('extraction_visualization_script.kajiki.js', *args, **kwargs)
 
+    def dashboard_edit_extractions_template(self, *args, **kwargs):
+        return self._render('etl.templates.dashboard.extraction_template', *args, **kwargs)
 
-editor = EditorPartials()
+    def dashboard_edit_extractions_script(self, **kwargs):
+        return self._render_js('extraction.kajiki.js', template_dir='dashboard', **kwargs)
+
+
+ractive = RactivePartials()

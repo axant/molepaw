@@ -192,6 +192,7 @@ plug(
             'css/codemirror.min.css',
             'css/style.css',
             'css/editor.css',
+            'css/dashboard_edit.css',
             filters='rcssmin',
             output='assets/css_all.css',
         ),

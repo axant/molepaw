@@ -1,0 +1,32 @@
+<html py:extends="master.xhtml" py:strip="True">
+
+<head py:block="head" py:strip="True">
+  <title>Dahboard Edit</title>
+</head>
+
+<body py:block="body" py:strip="True">
+  <div class="row">
+    <div class="col-md-12">
+      <h1>Editing <span id="dashboard_name">${dashboard.name}</span></h1>
+    </div>
+  </div>
+  <div class="row">
+    ${form_dashboard_name.display(form_dashboard_name_values)}
+  </div>
+  <h3>Widgets:</h3>
+  <div class="row" id="extractions">
+    <script type="text/html" id="Extractions_template">
+      ${literal(h.ractive.dashboard_edit_extractions_template(
+	all_extractions=all_extractions,
+	visualizationtypes=visualizationtypes,
+      ))}
+      </script>  
+  </div>
+  <script>
+    ${literal(h.ractive.dashboard_edit_extractions_script(
+      dashboard=dashboard,
+    ))}
+    var extractionseditor = new ExtractionsEditor({el: "#extractions"});
+  </script>
+</body>
+</html>

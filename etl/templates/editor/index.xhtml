@@ -20,7 +20,7 @@
 <div class="row row-with-padding" id="visualization">
 
   <script type="text/html" id="ExtractionVisualization_template">
-    ${literal(h.editor.extraction_visualization(visualization_types=visualization_types))}
+    ${literal(h.ractive.extraction_visualization(visualization_types=visualization_types))}
   </script>
 </div>
 <div class="row row-with-padding">
@@ -44,25 +44,25 @@
 </div>
 <div class="row" id="datasets">
   <script type="text/html" id="DataSetsEditor_template">
-    ${literal(h.editor.datasets_editor(available_datasets=available_datasets))}
+    ${literal(h.ractive.datasets_editor(available_datasets=available_datasets))}
   </script>
 </div>
 <div class="row" id="steps">
   <script type="text/html" id="StepsEditor_template">
-    ${literal(h.editor.steps_editor(stepsformfields=stepsformfields))}
+    ${literal(h.ractive.steps_editor(stepsformfields=stepsformfields))}
   </script>
 </div>
 <script>
-  ${literal(h.editor.datasets_script(
+  ${literal(h.ractive.datasets_script(
     extraction=extraction,
     datasets_columns=datasets_columns,
     available_datasets=available_datasets,
   ))}
-  ${literal(h.editor.steps_script(
+  ${literal(h.ractive.steps_script(
     extraction=extraction,
     docstring=docstring,
   ))}
-  ${literal(h.editor.extraction_visualization_script(
+  ${literal(h.ractive.extraction_visualization_script(
     extraction=extraction,
   ))}
 
