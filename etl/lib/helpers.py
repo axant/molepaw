@@ -100,6 +100,32 @@ def dashboards():
     return DBSession.query(Dashboard).all()
 
 
+def gridify(_list, out=None, acc=0, limit=12, getter=lambda x: x):
+    """This helper is useful to create bootstrap grid of elements of different size.
+    simplest example:
+    In [1]: from etl.lib.helpers import gridify
+    In [2]: gridify([6, 4, 3, 6, 6])
+    Out[2]: [[6, 4], [3, 6], [6]]
+    example:
+    In [9]: [[e.columns for e in g] for g in groupify(extractions.all(), getter=lambda e: e.columns)]
+    Out[9]: [[6, 6], [4, 3], [6]]"""
+    if out is None:
+        out = [[]]
+    if len(_list) == 0:
+        return out
+    first = _list[0]
+    rest = _list[1:]
+    acc += getter(first)
+    out[-1].append(first)
+    if acc == limit:
+        acc = 0
+        out.append([])
+    elif acc > limit:
+        acc = getter(first)
+        out.append([out[-1].pop(-1)])
+    return gridify(rest, out, acc, limit, getter)
+
+
 row = '<div class="row">'
 close_row = '</div>'
 

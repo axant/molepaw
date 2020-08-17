@@ -18,7 +18,7 @@ import pandas.tseries
 from bokeh.plotting import figure
 from bokeh.palettes import Category20
 from bokeh.transform import cumsum
-from etl.lib.helpers import color_gen, pie_result
+from etl.lib.helpers import color_gen, pie_result, gridify
 import sys
 import logging
 
@@ -112,7 +112,11 @@ class DashboardController(BaseController):
             return abort(404, detail='dashboard not found')
         sorted_extractions = dashboard.extractions
         sorted_extractions.sort(key=lambda e: e.index)
-        return dict(dashboard=dashboard, sorted_extractions=sorted_extractions)
+        from random import randint
+        for e in sorted_extractions:
+            e.columns = randint(3, 6)
+        columned_extractions = gridify(sorted_extractions, getter=lambda e: e.columns)
+        return dict(dashboard=dashboard, columned_extractions=columned_extractions)
 
     @expose('etl.templates.dashboard.edit')
     @require(predicates.in_group('admin'))
