@@ -10,14 +10,16 @@ class TestDashboardController(BaseTestController):
     def create_extraction_association(
             self, dashboard_uid, index,
             visualization='histogram',
-            graph_axis='email_address,user_id'
+            graph_axis='email_address,user_id',
+            columns=4,
     ):
         dashboard_extraction_association = model.DashboardExtractionAssociation(
             dashboard_id=dashboard_uid,
             extraction_id=self.extraction,
             index=index,
             visualization=visualization,
-            graph_axis=graph_axis
+            graph_axis=graph_axis,
+            columns=columns,
         )
         DBSession.add(dashboard_extraction_association)
         DBSession.flush()
@@ -39,7 +41,8 @@ class TestDashboardController(BaseTestController):
         dashboard_extraction_association = self.create_extraction_association(
             dashboard.uid, index,
             visualization=visualization,
-            graph_axis=graph_axis
+            graph_axis=graph_axis,
+            columns=4,
         )
         entities.update(dict(
             dashboard_extraction_association=dashboard_extraction_association.uid
@@ -190,7 +193,8 @@ class TestDashboardController(BaseTestController):
                 'graph_axis': 'email_address,user_id',
                 'visualization': 'histogram',
                 'extraction_id': self.extraction,
-                'index': 1
+                'index': 1,
+                'columns': 8,
             },
             extra_environ=self.admin_env,
             status=200
@@ -202,7 +206,8 @@ class TestDashboardController(BaseTestController):
                 'extraction_id': self.extraction,
                 'visualization': 'histogram',
                 'graph_axis': 'email_address,user_id',
-                'index': 1
+                'index': 1,
+                'columns': 8,
             },
             'dashboard': None,
             'extraction': None
@@ -215,6 +220,7 @@ class TestDashboardController(BaseTestController):
                 'visualization': 'histogram',
                 'extraction_id': self.extraction,
                 'index': 0,
+                'columns': 4,
                 'uid': entities['dashboard_extraction_association']
             },
             extra_environ=self.admin_env,
@@ -229,6 +235,7 @@ class TestDashboardController(BaseTestController):
                 'extraction_id': self.extraction,
                 'uid': 1,
                 'graph_axis': 'display_name,user_id',
+                'columns': 4,
                 'dashboard': {
                     'name': 'Test purpose dashboard',
                     'uid': 1
@@ -253,6 +260,35 @@ class TestDashboardController(BaseTestController):
                 'category_id': 1
             }
         }
+
+    def test_save_extraction_validate_columns(self):
+        entities = self.create_dashboard()
+        response = self.app.post_json(
+            '/dashboard/save_extraction/' + str(entities['dashboard']),
+            {
+                'graph_axis': 'email_address,user_id',
+                'visualization': 'histogram',
+                'extraction_id': self.extraction,
+                'index': 1,
+                'columns': '8a',
+            },
+            extra_environ=self.admin_env,
+            status=412,
+        )
+        assert 'integer' in response.json['detail']
+        response = self.app.post_json(
+            '/dashboard/save_extraction/' + str(entities['dashboard']),
+            {
+                'graph_axis': 'email_address,user_id',
+                'visualization': 'histogram',
+                'extraction_id': self.extraction,
+                'index': 1,
+                'columns': '80',
+            },
+            extra_environ=self.admin_env,
+            status=412,
+        )
+        assert 'integer' not in response.json['detail']
 
     def test_delete_extraction(self):
         entities = self.create_dashboard()
