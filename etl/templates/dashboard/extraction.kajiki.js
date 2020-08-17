@@ -17,6 +17,7 @@ var ExtractionsEditor = Ractive.extend({
 	extraction.extraction_id = e.extraction_id;
 	extraction.visualization = e.visualization;
 	extraction.graph_axis = e.graph_axis;
+	extraction.columns = e.columns;
 	extraction.name = e.extraction.name;
 	extractions.push(extraction);
       })
@@ -114,6 +115,7 @@ var ExtractionsEditor = Ractive.extend({
       self.set('extractions.' + extractionidx + '.name', res.extraction.name);
       self.set('extractions.' + extractionidx + '.usual_visualization', res.extraction.visualization);
       self.set('extractions.' + extractionidx + '.graph_axis', res.extraction.graph_axis);
+      self.set('extractions.' + extractionidx + '.columns', res.extraction.columns);
     })
   }
 });

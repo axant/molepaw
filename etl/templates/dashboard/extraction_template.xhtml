@@ -7,7 +7,7 @@
             <option py:for="e in all_extractions" value="${e.uid}">${e.uid} - ${e.name}</option>
           </select>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
           <select value="{{.visualization}}" class="form-control">
             <option py:for="visualization in visualizationtypes" value="${visualization}">
               ${visualization}
@@ -19,8 +19,11 @@
             {{/if}}
           {{/if}}
 	</div>
-	<div class="col-md-4">												   
+	<div class="col-md-3">												   
           <input value="{{.graph_axis}}" class="form-control"/>
+	</div>
+	<div class="col-md-2">
+	  <input value="{{.columns}}" placeholder="4-8" class="form-control"/>
           <h3>
             <div class="extractions-actions pull-right">
               <span on-click="raiseExtraction(.)"

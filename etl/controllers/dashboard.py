@@ -112,9 +112,6 @@ class DashboardController(BaseController):
             return abort(404, detail='dashboard not found')
         sorted_extractions = dashboard.extractions
         sorted_extractions.sort(key=lambda e: e.index)
-        from random import randint
-        for e in sorted_extractions:
-            e.columns = randint(3, 6)
         columned_extractions = gridify(sorted_extractions, getter=lambda e: e.columns)
         return dict(dashboard=dashboard, columned_extractions=columned_extractions)
 
@@ -132,7 +129,7 @@ class DashboardController(BaseController):
             visualizationtypes=visualizationtypes,
             all_extractions=all_extractions,
         )
-    
+
     @expose('etl.templates.dashboard.edit')
     @require(predicates.in_group('admin'))
     def edit(self, id=None):
@@ -157,7 +154,7 @@ class DashboardController(BaseController):
         dashboard = DBSession.query(Dashboard).filter_by(uid=dashboard_id).one()
         DBSession.delete(dashboard)
         return redirect('/dashboard')
-        
+
     @expose()
     @require(predicates.in_group('admin'))
     @validate(DashboardChangeName, error_handler=edit)
@@ -192,6 +189,13 @@ class DashboardController(BaseController):
         de.visualization = visualization_type
         de.graph_axis = axis
         de.index = request.json['index']
+        try:
+            columns = int(request.json['columns'])
+        except ValueError:
+            abort(412, detail='columns must be an integer beetween 4 and 8')
+        if 8 < columns or 4 > columns:
+            abort(412, detail='columns must be between 4 and 8')
+        de.columns = columns
         return dict(
             de=de,
             dashboard=de.dashboard,
