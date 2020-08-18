@@ -184,7 +184,6 @@ class DashboardController(BaseController):
             de = DashboardExtractionAssociation()
             de.dashboard_id = int(dashboard_id)
             de.extraction_id = request.json['extraction_id']
-            DBSession.add(de)
         de.extraction_id = request.json['extraction_id']
         de.visualization = visualization_type
         de.graph_axis = axis
@@ -196,6 +195,7 @@ class DashboardController(BaseController):
         if 8 < columns or 4 > columns:
             abort(412, detail='columns must be between 4 and 8')
         de.columns = columns
+        DBSession.add(de)
         return dict(
             de=de,
             dashboard=de.dashboard,

@@ -275,7 +275,7 @@ class TestDashboardController(BaseTestController):
             extra_environ=self.admin_env,
             status=412,
         )
-        assert 'integer' in response.json['detail']
+        assert 'integer' in response.text
         response = self.app.post_json(
             '/dashboard/save_extraction/' + str(entities['dashboard']),
             {
@@ -288,7 +288,7 @@ class TestDashboardController(BaseTestController):
             extra_environ=self.admin_env,
             status=412,
         )
-        assert 'integer' not in response.json['detail']
+        assert 'integer' not in response.text
 
     def test_delete_extraction(self):
         entities = self.create_dashboard()

@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from mock import Mock, patch
 from random import randint
 from datetime import datetime
+import pymongo.errors
 
 
 class TestChartVisualization(BaseTestController):
@@ -28,7 +29,12 @@ class TestChartVisualization(BaseTestController):
         # for example a connection ploblem with mongo
         super(TestChartVisualization, self).setUp()
         self._db = self.get_session()._session.get_default_database()
-        self._db.create_collection('fruits')
+        try:
+            self._db.create_collection('fruits')
+        except pymongo.errors.CollectionInvalid:
+            print('ERROR: fruits collection already existed during test setUp')
+            self.tearDown()
+            self._db.create_collection('fruits')
         values = []
         for f, v, d, a, c in zip(
             self.fruits, self.counts, self.deltas,
