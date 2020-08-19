@@ -115,7 +115,7 @@ Test Suite
 ----------
 
 Molepaw's test suite is written in nosetests and tox is configured as a wrapper.
-so to run tests with tox just type `tox -- -s --logging-level=DEBUG` in a terminal assuming you've installed with `pip install -e .[testing]`
+so to run tests with tox just type `tox -- -s --logging-level=DEBUG` in a terminal assuming you've installed with `pip install -e .[testing]`. keep in mind you need to start mongodb, otherwise all tests might raise IntegrityError during bootstrap.
 Molepaw has another test suite for e2e tests with chrome, if you need to debug it or write new tests and want to see what's going on the browser comment out `headless` from chromeoptions in `etl/tests/e2e/__init__.py`.
 You can run e2e tests with `nosetests --tests=etl/tests/e2e -s --cover-min-percentage=30`
 

@@ -52,32 +52,22 @@ class Extraction(DeclarativeBase):
     datasets = relationship('ExtractionDataSet', cascade='all, delete-orphan', order_by="ExtractionDataSet.priority")
     steps = relationship('ExtractionStep', cascade='all, delete-orphan', order_by="ExtractionStep.priority")
 
-    @property
-    def sample(self):
+
+    def _fetch(self, _type='fetch'):
         if not self.datasets:
             return DataFrame()
 
         extdatasets = iter(self.datasets)
-        df = next(extdatasets).dataset.sample
+        if _type == 'fetch':
+            df = next(extdatasets).dataset.fetch()
+        else:
+            df = next(extdatasets).dataset.sample
 
         for extdataset in extdatasets:
-            df = pandas.merge(df, extdataset.dataset.sample,
-                              how=extdataset.join_type,
-                              left_on=extdataset.join_other_col,
-                              right_on=extdataset.join_self_col,
-                              suffixes=('', '_j_'+extdataset.dataset.name.lower()))
-
-        return df
-
-    def fetch(self):
-        if not self.datasets:
-            return DataFrame()
-
-        extdatasets = iter(self.datasets)
-        df = next(extdatasets).dataset.fetch()
-
-        for extdataset in extdatasets:
-            right = extdataset.dataset.fetch()
+            if _type == 'fetch':
+                right = extdataset.dataset.fetch()
+            else:
+                right = extdataset.dataset.sample
             df = pandas.merge(df, right,
                               how=extdataset.join_type,
                               left_on=extdataset.join_other_col,
@@ -87,6 +77,14 @@ class Extraction(DeclarativeBase):
                 {col: 0 for col, dt in right.dtypes.items() if dt.name == 'int64'}
             ).astype(right.dtypes)
         return df
+        
+    
+    @property
+    def sample(self):
+        return self._fetch('sample')
+
+    def fetch(self):
+        return self._fetch()
 
     def perform(self, sample=False):
         df = self.fetch() if not sample else self.sample
