@@ -193,6 +193,24 @@ class TestSteps(object):
         df = steps.linkize(df, 'city', 33)
         assert df['city'][0] is None, df['city'][0]
 
+    def test_duplicated(self):
+        df = pd.DataFrame({
+            'value': pd.Series([1.3, 2.999999999, 3.1415, 0, 0, 0, 0]),
+            'city': pd.Series(['TO', 'AL', 'MI', 'AL', 'NA', 'AL', 'AL']),
+        })
+        df = steps.duplicated(df, None, None)
+        assert df['duplicated_all_fields'].tolist() == [False, False, False, False, False, True, True]
+        del df['duplicated_all_fields']
+        df = steps.duplicated(df, None, 'last')
+        assert df['duplicated_all_fields'].tolist() == [False, False, False, True, False, True, False]
+        del df['duplicated_all_fields']
+        df = steps.duplicated(df, None, 'False')
+        assert df['duplicated_all_fields'].tolist() == [False, False, False, True, False, True, True]
+        del df['duplicated_all_fields']
+        df = steps.duplicated(df, ['city'], 'False')
+        assert df['duplicated_city'].tolist() == [False, True, False, True, False, True, True]
+        del df['duplicated_city']
+
     def test_cast_to_int(self):
         df = pd.DataFrame({
             'value': pd.Series([1.3, 2.999999999, 3.1415]),

@@ -1,0 +1,74 @@
+<html py:extends="master.xhtml" py:strip="True">
+
+<head py:block="head" py:strip="True">
+    <title>Extraction Editor</title>
+</head>
+
+<body py:block="body" py:strip="True">
+<div class="row">
+    <div class="col-md-12">
+        <h1 class="page-title">
+          Editing ${extraction.name}
+	  <a class="btn btn-default pull-right"
+             href="${tg.url(['/editor', str(extraction.uid), 'reload_data'])}"
+             data-toggle="tooltip" data-placement="left" title="Reload data">
+            <i class="glyphicon glyphicon-repeat"></i>
+          </a>
+	</h1>
+    </div>
+</div>
+<div class="row row-with-padding" id="visualization">
+
+  <script type="text/html" id="ExtractionVisualization_template">
+    ${literal(h.ractive.extraction_visualization(visualization_types=visualization_types))}
+  </script>
+</div>
+<div class="row row-with-padding">
+    <form action="${tg.url(['/editor', str(extraction.uid), 'save_category'])}">
+        <div class="col-lg-3">
+            <div class="pull-left" style="line-height: 39px">Category: &nbsp;  &nbsp;</div>
+            <select id="category" name="category" class="form-control visualization">
+                <option value="-1">No Category</option>
+
+                <py:for each="cat in category_list">
+                    <option py:if="cat._id==extraction.category_id" value="${cat._id}" selected="true">${cat.name}</option>
+                    <option py:if="not cat._id==extraction.category_id" value="${cat._id}">${cat.name}</option>
+                </py:for>
+
+            </select>
+        </div>
+        <div class="col-lg-4">
+            <button type="submit" class="btn btn-success">Save Category</button>
+        </div>
+    </form>
+</div>
+<div class="row" id="datasets">
+  <script type="text/html" id="DataSetsEditor_template">
+    ${literal(h.ractive.datasets_editor(available_datasets=available_datasets))}
+  </script>
+</div>
+<div class="row" id="steps">
+  <script type="text/html" id="StepsEditor_template">
+    ${literal(h.ractive.steps_editor(stepsformfields=stepsformfields))}
+  </script>
+</div>
+<script>
+  ${literal(h.ractive.datasets_script(
+    extraction=extraction,
+    datasets_columns=datasets_columns,
+    available_datasets=available_datasets,
+  ))}
+  ${literal(h.ractive.steps_script(
+    extraction=extraction,
+    docstring=docstring,
+  ))}
+  ${literal(h.ractive.extraction_visualization_script(
+    extraction=extraction,
+  ))}
+
+  var datasetseditor = new DataSetsEditor({el: '#datasets'});
+  var stepseditor = new StepsEditor({el: "#steps"});
+  var extractionvisualization = new ExtractionVisualization({el: '#visualization'});
+</script>
+</body>
+</html>

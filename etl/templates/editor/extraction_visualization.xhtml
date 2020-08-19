@@ -1,0 +1,29 @@
+<div py:strip="True">
+  <div class="col-lg-3">
+    <div class="pull-left" style="line-height: 39px">Visualization: &nbsp;  &nbsp;</div>
+    <select value="{{visualization.type}}"  class="form-control visualization">
+      <option py:for="v_type in visualization_types" value="${v_type[0]}">
+        ${v_type[1]}
+      </option>
+    </select>
+
+  </div>
+  <div class="col-lg-2">
+    {{#if showAxis}}
+    <div class="form-group {{hasError}}">
+      <input class="form-control" type="text" placeholder="x,y,y,y" name="axis" value="{{visualization.axis}}" style="border-color: {{hasError.color}}"/>
+      {{#if hasError.error}}
+      <span class="help-block" style="color: {{hasError.color}};">{{hasError.message}}</span>
+      {{/if}}
+    </div>
+    {{/if}}
+  </div>
+
+  <div class="col-lg-4">
+    {{#if disabled}}
+    <button class="btn btn-success" disabled="true">Save Visualization</button>
+    {{else}}
+    <button class="btn btn-success" on-click="saveVisualization()">Save Visualization</button>
+    {{/if}}
+  </div>
+</div>

@@ -1,0 +1,116 @@
+<div py:strip="True">
+  {{#each datasets}}
+    <div class="col-md-{{getCols()}}">
+      <div class="dataset-card" on-click="editDataset(.)">
+        {{#if .uid !== editingdataset.uid}}
+          <h2>{{.name}}</h2>
+          {{#if .join_self_col}}
+            <div>
+	      <strong>{{.join_type}}</strong> join on <em>{{.join_self_col}}</em> = {{.join_other_col}}
+	    </div>
+          {{/if}}{{else}}
+            <select value="{{.datasetid}}" class="form-control">
+              {{#each available_datasets}}
+                <option value="{{.[0]}}" id="{{#if .[1] === editingdataset.name}}editingdatset-dataset-selected{{/if}}">
+                  {{.[1]}}
+		</option>
+              {{/each}}
+            </select>
+            {{#if notEditingFirstDataset()}}
+              <select value="{{editingdataset.join_self_col}}" class="form-control">
+                {{#each datasets_columns[editingdataset.datasetid]}}
+		  <option value="{{.}}" id="{{#if . === editingdataset.join_self_col}}editingdataset-join_self_col-selected{{/if}}">{{.}}</option>
+		{{/each}}
+              </select>
+              <select value="{{editingdataset.join_type}}" class="form-control">
+		<option value="left" id="{{#if 'left' === editingdataset.join_type}}editingdataset-join_type-selected{{/if}}">Left Join</option>
+		<option value="inner" id="{{#if 'inner' === editingdataset.join_type}}editingdataset-join_type-selected{{/if}}">Inner Join</option>
+		<option value="right" id="{{#if 'right' === editingdataset.join_type}}editingdataset-join_type-selected{{/if}}">Right Join</option>
+		<option value="outer" id="{{#if 'outer' === editingdataset.join_type}}editingdataset-join_type-selected{{/if}}">Outer Join</option>
+              </select>
+              <select value="{{editingdataset.join_other_col}}" class="form-control">
+		{{#each sampledata.columns}}
+		  <option value="{{.}}" id="{{#if editingdataset.join_other_col === .}}editingdataset-join_other_col-selected{{/if}}">{{.}}</option>
+		{{/each}}
+              </select>
+            {{/if}}
+            <br/>
+            <a class="btn btn-success" on-click="modifyDataset()" title="save">
+              <span class="glyphicon glyphicon-floppy-disk"></span>
+            </a>
+            <!-- ractive seems broken, maybe we should update it, disabling dismiss, just save
+                 <a class="btn btn-danger" on-click="dismissEdit()" title="dismiss">
+                   <span class="glyphicon glyphicon-remove"></span>
+                 </a> -->
+            <a class="btn btn-danger" on-click="deleteDataset(.)" title="delete">
+              <span class="glyphicon glyphicon-trash"></span>
+            </a>
+	 {{/if}}
+      </div>
+    </div>
+  {{/each}}
+  <div class="col-md-{{getCols()}}">
+    {{#if addingdataset}}
+      <div class="dataset-card dataset-card-new">
+        <h2>Add a DataSet</h2>
+        <select value="{{newdataset.datasetid}}" class="form-control">
+          <option py:for="datasetid, datasetname in available_datasets"
+                  value="${datasetid}">${datasetname}</option>
+        </select>
+        {{#if hasAtLeastOneDataset()}}
+          <select value="{{newdataset.join_self_col}}" class="form-control">
+            {{#each datasets_columns[newdataset.datasetid]}}
+              <option value="{{.}}">{{.}}</option>
+            {{/each}}
+          </select>
+          <select value="{{newdataset.join_type}}" class="form-control">
+            <option value="left">Left Join</option>
+            <option value="inner">Inner Join</option>
+            <option value="right">Right Join</option>
+            <option value="outer">Outer Join</option>
+          </select>
+          <select value="{{newdataset.join_other_col}}" class="form-control">
+            {{#each sampledata.columns}}
+              <option value="{{.}}">{{.}}</option>
+            {{/each}}
+          </select>
+        {{/if}}
+        <br/>
+        <div class="row" style="margin-left: 0; margin-right: 0;">
+          <a class="btn btn-danger col-xs-6" on-click="set('addingdataset', false)">
+            <span class="glyphicon glyphicon-trash"></span>
+          </a>
+          <a class="btn btn-success col-xs-6" on-click="addDataSet()">
+            <span class="glyphicon glyphicon-plus"></span>
+          </a>
+        </div>
+      </div>
+    {{else}}
+      <div class="dataset-card btn btn-success add-dataset"
+           on-click="set('addingdataset', true)">
+        <span class="glyphicon glyphicon-plus"></span>
+      </div>
+    {{/if}}
+  </div>
+  <div class="col-md-12 table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>IDX</th>
+          {{#each sampledata.columns}}
+            <th>{{.}}</th>
+          {{/each}}
+        </tr>
+      </thead>
+      <tbody>
+        {{#each sampledata.data}}
+          <tr>
+            {{#each .}}
+              <td>{{.}}</td>
+            {{/each}}
+          </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+</div>

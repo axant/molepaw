@@ -33,6 +33,8 @@ class ModelTest(object):
             new_attrs.update(self.attrs)
             new_attrs.update(self.do_get_dependencies())
             self.obj = self.klass(**new_attrs)
+            for k, v in self.after_creation().items():  # usually klass does not have update method
+                setattr(self.obj, k, v)
             DBSession.add(self.obj)
             DBSession.flush()
             return self.obj
@@ -53,6 +55,10 @@ class ModelTest(object):
         """
         return {}
 
+    def after_creation(self):
+        """use this when you would need self.obj in do_get_dependecies"""
+        return {}
+        
     def test_create_obj(self):
         """Model objects can be created"""
         pass

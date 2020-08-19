@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from mock import Mock, patch
 from random import randint
 from datetime import datetime
+import pymongo.errors
 
 
 class TestChartVisualization(BaseTestController):
@@ -28,7 +29,12 @@ class TestChartVisualization(BaseTestController):
         # for example a connection ploblem with mongo
         super(TestChartVisualization, self).setUp()
         self._db = self.get_session()._session.get_default_database()
-        self._db.create_collection('fruits')
+        try:
+            self._db.create_collection('fruits')
+        except pymongo.errors.CollectionInvalid:
+            print('ERROR: fruits collection already existed during test setUp')
+            self.tearDown()
+            self._db.create_collection('fruits')
         values = []
         for f, v, d, a, c in zip(
             self.fruits, self.counts, self.deltas,
@@ -201,4 +207,19 @@ class TestChartVisualization(BaseTestController):
         )
         assert 'Fruits Extraction' in response.body.decode('utf-8')
         assert response.html.find(id='results-count').get_text() == '2'
+        assert response.html.find(id='pie-visualization') is not None
+
+    def test_view_piechart_visualization_thousand_rows(self):
+        entities = self.populate_for_chart_visualization('pie', 'name,value')
+        self._db.fruits.insert_many({'name': n, 'value': v} for (n, v) in ((chr(j % 30 + 60), j) for j in range(1000)))
+        response = self.app.get(
+            '/extractions/view',
+            params=dict(
+                extraction=entities['extraction_uid']
+            ),
+            extra_environ=self.admin_env,
+            status=200
+        )
+        assert 'Fruits Extraction' in response.body.decode('utf-8')
+        assert int(response.html.find(id='results-count').get_text()) > 256
         assert response.html.find(id='pie-visualization') is not None

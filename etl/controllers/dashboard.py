@@ -18,9 +18,10 @@ import pandas.tseries
 from bokeh.plotting import figure
 from bokeh.palettes import Category20
 from bokeh.transform import cumsum
-from etl.lib.helpers import color_gen
+from etl.lib.helpers import color_gen, pie_result, gridify
 import sys
 import logging
+
 
 log = logging.getLogger(__name__)
 
@@ -111,9 +112,10 @@ class DashboardController(BaseController):
             return abort(404, detail='dashboard not found')
         sorted_extractions = dashboard.extractions
         sorted_extractions.sort(key=lambda e: e.index)
-        return dict(dashboard=dashboard, sorted_extractions=sorted_extractions)
+        columned_extractions = gridify(sorted_extractions, getter=lambda e: e.columns)
+        return dict(dashboard=dashboard, columned_extractions=columned_extractions)
 
-    @expose('genshi:etl.templates.dashboard.edit')
+    @expose('etl.templates.dashboard.edit')
     @require(predicates.in_group('admin'))
     def new(self):
         dashboard = Dashboard()
@@ -127,8 +129,8 @@ class DashboardController(BaseController):
             visualizationtypes=visualizationtypes,
             all_extractions=all_extractions,
         )
-    
-    @expose('genshi:etl.templates.dashboard.edit')
+
+    @expose('etl.templates.dashboard.edit')
     @require(predicates.in_group('admin'))
     def edit(self, id=None):
         try:
@@ -152,7 +154,7 @@ class DashboardController(BaseController):
         dashboard = DBSession.query(Dashboard).filter_by(uid=dashboard_id).one()
         DBSession.delete(dashboard)
         return redirect('/dashboard')
-        
+
     @expose()
     @require(predicates.in_group('admin'))
     @validate(DashboardChangeName, error_handler=edit)
@@ -182,11 +184,18 @@ class DashboardController(BaseController):
             de = DashboardExtractionAssociation()
             de.dashboard_id = int(dashboard_id)
             de.extraction_id = request.json['extraction_id']
-            DBSession.add(de)
         de.extraction_id = request.json['extraction_id']
         de.visualization = visualization_type
         de.graph_axis = axis
         de.index = request.json['index']
+        try:
+            columns = int(request.json['columns'])
+        except ValueError:
+            abort(412, detail='columns must be an integer beetween 4 and 8')
+        if 8 < columns or 4 > columns:
+            abort(412, detail='columns must be between 4 and 8')
+        de.columns = columns
+        DBSession.add(de)
         return dict(
             de=de,
             dashboard=de.dashboard,
@@ -277,9 +286,9 @@ class DashboardController(BaseController):
             legend = 0
             try:
                 visualization = figure(x_range=x, sizing_mode='scale_width', height=400)
-                visualization.vbar(x=x, top=y, width=0.1, color='red')
+                visualization.vbar(x=x, top=y, width=0.75, color='#77d6d5')
                 visualization.y_range.start = 0
-                visualization.y_range.end = max(y)
+                visualization.y_range.end = max(y if y.size > 0 else [0])
                 visualization.xaxis.major_label_orientation = "vertical"
                 visualization.toolbar_location = None
             except Exception as e:
@@ -324,13 +333,9 @@ class DashboardController(BaseController):
         elif 'pie' == de.visualization:
             visualization = figure(plot_height=400, sizing_mode='scale_width', x_range=(-0.5, 1.0),
                                    toolbar_location=None, tools="hover", tooltips="@%s: @%s" % (axis[0], axis[1]))
-            result['angle'] = result[axis[1]] / result[axis[1]].sum() * 2 * pi
-            if len(result) > 2:
-                result['color'] = Category20[len(result)]
-            else:
-                result['color'] = [u'#3182bd', u'#6baed6']
+            result = pie_result(result, axis)
             visualization.wedge(x=0, y=1, radius=0.4, start_angle=cumsum('angle', include_zero=True),
-                                end_angle=cumsum('angle'), line_color="white",
+                                end_angle=cumsum('angle'), line_alpha=0,
                                 fill_color='color', legend=axis[0], source=result)
             visualization.axis.axis_label = None
             visualization.axis.visible = False

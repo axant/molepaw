@@ -5,59 +5,55 @@
 <head  py:block="head" py:strip="True">
   <meta content="text/html; charset=UTF-8" http-equiv="content-type" py:replace="''"/>
   <title>Dahboard: ${dashboard.name}</title>
-  <link rel="stylesheet" href="http://cdn.pydata.org/bokeh/release/bokeh-1.0.4.min.css"/>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/jets/0.5.0/jets.min.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.24.6/js/jquery.tablesorter.combined.min.js"></script>
-  <script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-1.0.4.min.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/ractive/0.7.3/ractive.min.js"></script>
-  <script src="${tg.url('/javascript/ractive-transitions-slide.min.js')}"></script>
 </head>
 
 <body py:block="body" py:strip="True">
-    <div class="row dashboard-title-section">
-        <div class="col-md-12">
-            <h3 class="dashboard-title">Dahboard: ${dashboard.name}</h3>
-            <a py:if="dashboard.uid != 1" class="btn btn-danger btn-danger-to-activate pull-right" href="/dashboard/delete/${dashboard.uid}" onclick="return confirm('Are you sure?')">
-                <i class="fas fa-trash-alt"></i>
-                <span>Delete Dashboard</span>
-            </a>
-            <a class="btn btn-primary btn-primary-to-activate pull-right" href="/dashboard/edit/${dashboard.uid}" style="margin-right: 5px;">
-                <i class="fas fa-edit"></i>
-                Edit Dashboard
-            </a>
-        </div>
+  <div class="row dashboard-title-section">
+    <div class="col-md-12">
+      <h3 class="dashboard-title">Dahboard: ${dashboard.name}</h3>
+      <a py:if="dashboard.uid != 1" class="btn btn-danger btn-danger-to-activate pull-right" href="/dashboard/delete/${dashboard.uid}" onclick="return confirm('Are you sure?')">
+        <i class="fas fa-trash-alt"></i>
+        <span>Delete Dashboard</span>
+      </a>
+      <a class="btn btn-primary btn-primary-to-activate pull-right" href="/dashboard/edit/${dashboard.uid}" style="margin-right: 5px;">
+        <i class="fas fa-edit"></i>
+        Edit Dashboard
+      </a>
     </div>
+  </div>
   <div class="row dashboard-content-section">
-    <py:for each="i,de in enumerate(sorted_extractions)">
-      <py:if test="i % 3 == 0">${Markup(h.row)}</py:if>
-      <div class="col-md-4">
+    <py:for each="row_of_extractions in columned_extractions">
+      <div class="row">
+	<py:for each="de in row_of_extractions">
+	  <div class="col-md-${de.columns}">
             <div class="panel panel-default panel-widget">
-                <div class="panel-body">
-                    <span style="color: red;"><div id="extraction-${de.uid}-error"></div></span>
-                    <div id="extraction-${de.uid}">
-                        <div class="spinner">
-                            <svg width="10%" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid" class="lds-rolling" style="background: none;"><circle cx="50" cy="50" fill="none" ng-attr-stroke="{{config.color}}" ng-attr-stroke-width="{{config.width}}" ng-attr-r="{{config.radius}}" ng-attr-stroke-dasharray="{{config.dasharray}}" stroke="#d1d1d1" stroke-width="10" r="35" stroke-dasharray="164.93361431346415 56.97787143782138" transform="rotate(275.874 50 50)"><animateTransform attributeName="transform" type="rotate" calcMode="linear" values="0 50 50;360 50 50" keyTimes="0;1" dur="1s" begin="0s" repeatCount="indefinite"></animateTransform></circle></svg>
-                        </div>
-                    </div>
+              <div class="panel-body">
+                <span style="color: red;"><div id="extraction-${de.uid}-error"></div></span>
+                <div id="extraction-${de.uid}">
+                  <div class="spinner">
+                    <svg width="10%" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid" class="lds-rolling" style="background: none;"><circle cx="50" cy="50" fill="none" ng-attr-stroke="{{config.color}}" ng-attr-stroke-width="{{config.width}}" ng-attr-r="{{config.radius}}" ng-attr-stroke-dasharray="{{config.dasharray}}" stroke="#d1d1d1" stroke-width="10" r="35" stroke-dasharray="164.93361431346415 56.97787143782138" transform="rotate(275.874 50 50)"><animateTransform attributeName="transform" type="rotate" calcMode="linear" values="0 50 50;360 50 50" keyTimes="0;1" dur="1s" begin="0s" repeatCount="indefinite"></animateTransform></circle></svg>
+                  </div>
                 </div>
+              </div>
             </div>
-        </div>
-      <script>
-	$.post('/dashboard/extraction_widget/${dashboard.uid}', {
-	    "uid": ${de.uid},
-	    "visualization": "${de.visualization}",
-	    "graph_axis": "${de.graph_axis}",
-	}, function (response) {
-	    $('#extraction-${de.uid}-error').replaceWith('');
-	    $('#extraction-${de.uid}').replaceWith(response);
-	}).fail(function (error) {
-	    console.log(error);
-	    $('#extraction-${de.uid}-error').replaceWith('${de.uid} - ${de.extraction.name} - '
-							 + (error.status === 500 ? error.statusText : error.responseText));
-	    $('#extraction-${de.uid}').replaceWith('');
-	});
-      </script>
-      <py:if test="i % 3 == 2 or i == len(sorted_extractions) - 1">${Markup(h.close_row)}</py:if>
+          </div>
+	  <script>
+	    $.post('/dashboard/extraction_widget/${dashboard.uid}', {
+	      "uid": ${de.uid},
+	      "visualization": "${de.visualization}",
+	      "graph_axis": "${de.graph_axis}",
+	    }, function (response) {
+	      $('#extraction-${de.uid}-error').replaceWith('');
+	      $('#extraction-${de.uid}').replaceWith(response);
+	    }).fail(function (error) {
+	      console.log(error);
+	      $('#extraction-${de.uid}-error').replaceWith('${de.uid} - ${de.extraction.name} - '
+							   + (error.status === 500 ? error.statusText : error.responseText));
+	      $('#extraction-${de.uid}').replaceWith('');
+	    });
+	  </script>
+	</py:for>
+      </div>
     </py:for>
   </div>
   <script>

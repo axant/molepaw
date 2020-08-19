@@ -22,3 +22,6 @@ class TestLibHelpersAndWidgets(TestController):
         t1 = super(Widget, CodeTextArea).__new__(CodeTextArea(template='none'))
         t1.prepare()
         assert t1.attrs['class'] == ' codetextarea-sql'
+
+    def test_gridify(self):
+        assert h.gridify([6, 4, 3, 6, 6, 6, 1]) == [[6, 4], [3, 6], [6, 6], [1]]

@@ -50,13 +50,15 @@ install_requires = [
     "tgext.admin >= 0.6.1",
     "WebHelpers2",
     "cython",
-    "bokeh == 1.0.4",
     "tgext.evolve >= 0.0.5",
     "numexpr",
     "requests == 2.20.0",
     "axf == 0.0.19",
     "kajiki >= 0.8.0",  # at least this version for python3.8 support
     "tgext.pluggable",
+    "tgext.webassets",
+    "rjsmin",
+    "rcssmin",
     "tgapp-categories == 0.3.1",  # 0.4.0 introduces nested categories, we should upgrade
 ]
 
@@ -68,6 +70,12 @@ if py_version[0] < 3:
     install_requires.append("pandas == 0.24.2")  # latest version for python2
 else:
     install_requires.append('pandas >= 1.0')
+
+if py_version[0] < 3:
+    # you actually need to replace js and add css in public directory
+    install_requires.append("bokeh == 1.0.4")
+else:
+    install_requires.append("bokeh == 2.1.1")
 
 setup(
     name='etl',

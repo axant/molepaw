@@ -15,7 +15,7 @@ install:
   - pip install coveralls
 script:
   - nosetests --tests=etl/tests/e2e -s --cover-min-percentage=30
-  - tox
+  - tox -- --logging-level=DEBUG
 after_success:
   - coveralls
 addons:

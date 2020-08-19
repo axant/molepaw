@@ -8,25 +8,16 @@
   <title py:if="False">Your generic title goes here</title>
 
 
-
-  <link rel="stylesheet" type="text/css" media="screen" href="${tg.url('/css/bootstrap.min.css')}" />
-  <link rel="stylesheet" type="text/css" media="screen" href="${tg.url('/css/style.css')}" />
-  <link rel="stylesheet" type="text/css" media="screen" href="//cdnjs.cloudflare.com/ajax/libs/codemirror/5.9.0/codemirror.min.css"/>
-  <link rel="stylesheet" type="text/css" media="screen" href="  https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.2/toastr.min.css"/>
-  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous" />  <script src="//code.jquery.com/jquery.min.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/5.9.0/codemirror.min.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/5.9.0/mode/sql/sql.min.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/5.9.0/addon/hint/sql-hint.min.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/5.9.0/mode/javascript/javascript.min.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/5.9.0/addon/hint/javascript-hint.min.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.2/toastr.min.js"></script>
-    <py:block name="head"/>
+  <link py:for="asset_url in g.webassets['css_all'].urls()" href="${asset_url}"
+	rel="stylesheet" type="text/css" media="screen" />
+  <script py:for="asset_url in g.webassets['js_all'].urls()" src="${asset_url}"></script>
+  <py:block name="head"/>
 </head>
 
 <body>
   <!-- Navbar -->
   <nav class="navbar navbar-default">
-        <div class="container">
+        <div class="container-full">
             <div class="navbar-header">
                 <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-content">
                     <span class="sr-only">Toggle navigation</span>
@@ -41,7 +32,6 @@
         
             <div class="collapse navbar-collapse" id="navbar-content">
                 <ul class="nav navbar-nav">
-                  <!--
                     <li py:if="request.identity" class="dropdown">
                         <a href="${tg.url('/dashboard')}" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Dashboard</a>
                         <ul class="dropdown-menu">
@@ -51,7 +41,7 @@
                             <li role="separator" class="divider"></li>
                             <li><a href="${tg.url('/dashboard/new')}" onclick="return confirm('create a new dashboard?');">Create dashboard</a></li>
                         </ul>
-                    </li>-->
+                    </li>
                     <li py:if="request.identity">
                         <a href="${tg.url('/extractions')}">Extractions</a>
                     </li>

@@ -23,6 +23,8 @@ class DashboardExtractionAssociation(DeclarativeBase):
     index = Column(Integer)  # for sorting extractions in dashboard
     visualization = Column(Unicode(64), nullable=False)  # visualization type
     graph_axis = Column(Unicode(64), nullable=True)  # fields to visualize
+    columns = Column(Integer, nullable=False)  # size of column for dashboard grid
+
 
 class Dashboard(DeclarativeBase):
     __tablename__ = 'dashboards'

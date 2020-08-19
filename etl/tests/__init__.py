@@ -77,39 +77,68 @@ class TestController(object):
         model.DBSession.flush()
         transaction.commit()
 
-    def create_extraction(self, name=u'extraction one', category=None):
-        extraction = model.Extraction(
-            name=name, 
-            category=category,
-            uid=randint(1, 100000)
-        )
-        model.DBSession.add(extraction)
-        return extraction
+    def create_extraction(self, *a, **kw):
+        return create_extraction(*a, **kw)
 
-    def create_datasource(
-        self,
-        name=u'datasource one',
-        url=u'sqlite:///etl/tests/testdatasource.db',
-    ):
-        ds = model.Datasource(
-            name=name,
-            url=url,
-            uid=randint(1, 100000)
-        )
-        model.DBSession.add(ds)
-        return ds
+    def create_datasource(self, *a, **kw):
+        return create_datasource(*a, **kw)
 
-    def create_dataset(
-        self,
-        datasource,
-        name=u'dataset one',
-        query=u'SELECT * FROM tg_user'
-    ):
-        dataset = model.DataSet(
-            name=name,
-            query=query,
-            datasource=datasource,
-            uid=randint(1, 100000)
-        )
-        model.DBSession.add(dataset)
-        return dataset
+    def create_dataset(self, *a, **kw):
+        return create_dataset(*a, **kw)
+
+
+def create_extraction(name=u'extraction one', category=None):
+    extraction = model.Extraction(
+        name=name, 
+        category=category,
+        uid=randint(1, 100000)
+    )
+    model.DBSession.add(extraction)
+    return extraction
+
+
+def create_datasource(
+    name=u'datasource one',
+    url=u'sqlite:///etl/tests/testdatasource.db',
+):
+    ds = model.Datasource(
+        name=name,
+        url=url,
+        uid=randint(1, 100000)
+    )
+    model.DBSession.add(ds)
+    return ds
+
+
+def create_dataset(
+    datasource,
+    name=u'dataset one',
+    query=u'SELECT * FROM tg_user'
+):
+    dataset = model.DataSet(
+        name=name,
+        query=query,
+        datasource=datasource,
+        uid=randint(1, 100000)
+    )
+    model.DBSession.add(dataset)
+    return dataset
+
+
+def create_extraction_dataset(
+        extraction,
+        dataset,
+        priority=0,
+        join_type='left',
+        join_self_col=None,
+        join_other_col=None
+):
+    exd = model.ExtractionDataSet()
+    exd.extraction = extraction
+    exd.dataset = dataset
+    exd.priority = priority
+    exd.join_type = join_type
+    exd.join_self_col = join_self_col
+    exd.join_other_col = join_other_col
+    model.DBSession.add(exd)
+    return exd
