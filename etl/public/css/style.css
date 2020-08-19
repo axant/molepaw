@@ -110,6 +110,9 @@ select.visualization {
     border: none;
     box-shadow: 0px 0px 4px rgba(0,0,0,0.1);
 }
+.panel-widget * {
+    cursor: pointer !important;
+}
 .panel-widget .panel-heading{
     background-color: transparent;
     border: none;
@@ -165,7 +168,6 @@ select.visualization {
     background-color: #eb6537;
     background: linear-gradient(to right, #ff9b44 0%, #f96868 100%);
     min-height: 65px;
-    overflow: hidden;
 }
 .navbar-brand {
     padding: 25px 15px;
@@ -181,6 +183,7 @@ select.visualization {
     nav.navbar.navbar-default:after {
         content: "";
         display: block;
+        height: 100px;
         width: 870px;
         position: absolute;
         top: -20px;
@@ -188,7 +191,7 @@ select.visualization {
         height: 280px;
         z-index: 1;
         background-color: hsla(0,0%,100%,.06);
-        border-radius: 50% 0 0 50%;
+        border-radius: 120% 0 0 0%;
     }
     .navbar-nav.navbar-right > li {
 	z-index: 2;
@@ -196,7 +199,12 @@ select.visualization {
 }
 
 .navbar-default .navbar-nav > li > a:hover, .navbar-default .navbar-nav > li > a:focus {
-    background-color: #ff8833;
+    background-color: transparent;
+}
+
+.navbar-nav>li>.dropdown-menu {
+    border: none;
+    border-radius: 3px;
 }
 
 :focus {
