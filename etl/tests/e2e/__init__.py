@@ -19,7 +19,7 @@ from tg.util import Bunch
 class TestE2e(object):
     @classmethod
     def setup_class(cls):
-        cls.app = load_app('main','test_e2e.ini')
+        cls.app = load_app('main', 'test_e2e.ini')
         setup_app('test_e2e.ini')
 
         # cmd = ServeCommand(Bunch(options=Bunch(debug=True, log_file=None, relative_plugins=False, verbose_level=1)), Bunch(verbose_level=2))
@@ -70,7 +70,7 @@ class TestE2e(object):
         model.DBSession.add(dataset4)
 
         extraction = model.Extraction(
-            name="Estrazione uno", 
+            name="Estrazione uno",
             category=cat,
             uid=randint(1, 100000)
         )

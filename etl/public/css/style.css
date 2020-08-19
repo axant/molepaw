@@ -188,7 +188,6 @@ select.visualization {
         position: absolute;
         top: -20px;
         right: -300px;
-        height: 280px;
         z-index: 1;
         background-color: hsla(0,0%,100%,.06);
         border-radius: 120% 0 0 0%;
