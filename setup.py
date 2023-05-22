@@ -52,7 +52,7 @@ install_requires = [
     "cython",
     "tgext.evolve >= 0.0.5",
     "numexpr",
-    "requests == 2.20.0",
+    "requests == 2.31.0",
     "axf == 0.0.19",
     "kajiki >= 0.8.0",  # at least this version for python3.8 support
     "tgext.pluggable",
